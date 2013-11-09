@@ -16,6 +16,14 @@ class ChessBoard:
   BLACK = 1
   NOCOLOR = -1
 
+  # Army values
+  CLASSIC = 1
+  NEMESIS = 2
+  REAPER = 3
+  EMPOWERED = 4
+  TWOKINGS = 5
+  ANIMALS = 6
+
   # Promotion values
   QUEEN = 1
   ROOK = 2
@@ -33,8 +41,8 @@ class ChessBoard:
 
   # Result values
   NO_RESULT = 0
-  WHITE_WIN = 1
-  BLACK_WIN = 2
+  WHITE_MATE = 1
+  BLACK_MATE = 2
   STALEMATE = 3
   FIFTY_MOVES_RULE = 4
   THREE_REPETITION_RULE = 5
@@ -46,6 +54,8 @@ class ChessBoard:
   PROMOTION_MOVE = 3
   KING_CASTLE_MOVE = 4
   QUEEN_CASTLE_MOVE = 5
+  WARRIOR_KING_WHIRLWIND = 6
+  WARRIOR_QUEEN_WHIRLWIND = 7
 
   # Text move output type
   AN = 0      # g4 - e3
@@ -64,9 +74,13 @@ class ChessBoard:
   _board = None
   _ep = [0, 0]      #none or the location of the current en pessant pawn
   _fifty = 0
+  _white_army = "classic" # Classic by default.
+  _black_army = "classic" # Classic by default.
 
   _black_king_location = (0, 0)
   _white_king_location = (0, 0)
+  _black_queen_location = (0, 0)
+  _white_queen_location = (0, 0)
 
   # three rep stack
   _three_rep_stack = []
@@ -167,13 +181,17 @@ class ChessBoard:
       return True
     return False
 
-  def updateKingLocations(self):
+  def updateRoyalLocations(self):
     for y in range(0, 8):
       for x in range(0, 8):
         if self._board[y][x] ==  "K":
           self._white_king_location = (x, y)
         if self._board[y][x] ==  "k":
           self._black_king_location = (x, y)
+        if self._board[y][x] ==  "Q":
+          self._white_queen_location = (x, y)
+        if self._board[y][x] ==  "q":
+          self._black_queen_location = (x, y)
 
   def setEP(self, epPos):
     self._ep[0], self._ep[1] = epPos
@@ -313,13 +331,16 @@ class ChessBoard:
       dx, dy = d
       steps = 0
       while True:
+     #while steps < maxSteps::
         x += dx
         y += dy
         if x<0 or x>7 or y<0 or y>7:
           break
         if self.isFree(x, y):
           moves.append((x, y))
-        elif self.getColor(x, y)!= self._turn:
+        #elif not self.isInvulnerable(x, y):
+        #  moves.append((x, y))
+        elif self.getColor(x, y) != self._turn:
           moves.append((x, y))
           break
         else:
@@ -328,8 +349,39 @@ class ChessBoard:
         if steps ==  maxSteps:
           break
     return moves
+  
+  def isInvulnerable(self, x, y):
+    return self._board[y][x] ==  '.'
 
-  def getValidQueenMoves(self, fromPos):
+  '''def IsPieceInvulnerable(self, board, fromTuple, toTuple, currentColor, currentArmy, enemyArmy):
+    # Return true if a piece is Invulnerable
+    fromSquare_r = fromTuple[0]
+    fromSquare_c = fromTuple[1]
+    toSquare_r = toTuple[0]
+    toSquare_c = toTuple[1]
+    fromPiece = board[fromSquare_r][fromSquare_c]
+    toPiece = board[toSquare_r][toSquare_c]
+
+    if currentColor == "black":
+      enemyColor = 'w'
+    if currentColor == "white":
+      enemyColor = 'b'
+
+    if ("K" in fromPiece) or (currentArmy == "twokings" and "Q" in fromPiece):
+      #print "k"
+      if (enemyArmy == "reaper" and "R" in toPiece):
+        return True
+    else:
+      #print "not k"
+      if (enemyArmy == "nemesis" and (str(enemyColor) + "Q") in toPiece) or (enemyArmy == "reaper" and "R" in toPiece):
+        return True
+    if (currentArmy == "animals") or (enemyArmy == "animals") and "R" in toPiece:
+      if self.DistanceTo(fromTuple, toTuple) >= 3:
+        return True
+    else:
+      return False'''
+
+  def getValidClassicQueenMoves(self, fromPos):
     moves = []
     dirs = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1) ]
 
@@ -339,7 +391,24 @@ class ChessBoard:
 
     return moves
 
-  def getValidRookMoves(self, fromPos):
+  def getValidAnimalsJungleQueenMoves(self, fromPos):
+    moves = []
+    dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    fx, fy = fromPos
+
+    moves = self.traceValidMoves(fromPos, dirs)
+
+    m  = [(fx + 1, fy + 2), (fx + 2, fy + 1), (fx + 2, fy - 1), (fx + 1, fy - 2), (fx - 1, fy + 2), (fx - 2, fy + 1), (fx - 1, fy - 2), (fx - 2, fy - 1)]
+    for p in m:
+      if p[0] >=  0 and p[0] <=  7 and p[1] >=  0 and p[1] <=  7:
+        if self.getColor(p[0], p[1])!= self._turn:
+          moves.append(p)
+
+    moves = self.checkKingGuard(fromPos, moves)
+
+    return moves
+
+  def getValidClassicRookMoves(self, fromPos):
     moves = []
     dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
@@ -349,7 +418,7 @@ class ChessBoard:
 
     return moves
 
-  def getValidBishopMoves(self, fromPos):
+  def getValidClassicBishopMoves(self, fromPos):
     moves = []
     dirs = [(1, 1), (-1, 1), (1, -1), (-1, -1) ]
 
@@ -359,7 +428,7 @@ class ChessBoard:
 
     return moves
 
-  def getValidPawnMoves(self, fromPos):
+  def getValidClassicPawnMoves(self, fromPos):
     moves = []
     specialMoves = {}
     fx, fy = fromPos
@@ -399,7 +468,7 @@ class ChessBoard:
 
     return (moves, specialMoves)
 
-  def getValidKnightMoves(self, fromPos):
+  def getValidClassicKnightMoves(self, fromPos):
     moves = []
     fx, fy = fromPos
     m  = [(fx + 1, fy + 2), (fx + 2, fy + 1), (fx + 2, fy - 1), (fx + 1, fy - 2), (fx - 1, fy + 2), (fx - 2, fy + 1), (fx - 1, fy - 2), (fx - 2, fy - 1)]
@@ -412,7 +481,7 @@ class ChessBoard:
 
     return moves
 
-  def getValidKingMoves(self, fromPos):
+  def getValidClassicKingMoves(self, fromPos):
     moves = []
     specialMoves = {}
 
@@ -456,7 +525,7 @@ class ChessBoard:
   # --------------------------- - -
 
   def movePawn(self, fromPos, toPos):
-    moves, specialMoves = self.getValidPawnMoves(fromPos)
+    moves, specialMoves = self.getValidClassicPawnMoves(fromPos)
 
     if not toPos in moves:
       return False
@@ -510,7 +579,7 @@ class ChessBoard:
 
 
   def moveKnight(self, fromPos, toPos):
-    moves = self.getValidKnightMoves(fromPos)
+    moves = self.getValidClassicKnightMoves(fromPos)
 
     if not toPos in moves:
       return False
@@ -538,7 +607,7 @@ class ChessBoard:
       k = "k"
       r = "r"
 
-    moves, specialMoves = self.getValidKingMoves(fromPos)
+    moves, specialMoves = self.getValidClassicKingMoves(fromPos)
 
     if specialMoves.has_key(toPos):
       t = specialMoves[toPos]
@@ -581,11 +650,11 @@ class ChessBoard:
       self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
       self._board[fromPos[1]][fromPos[0]] = "."
 
-    self.updateKingLocations()
+    self.updateRoyalLocations()
     return True
 
   def moveQueen(self, fromPos, toPos):
-    moves = self.getValidQueenMoves(fromPos)
+    moves = self.getValidClassicQueenMoves(fromPos)
 
     if not toPos in moves:
       return False
@@ -603,7 +672,7 @@ class ChessBoard:
     return True
 
   def moveBishop(self, fromPos, toPos):
-    moves = self.getValidBishopMoves(fromPos)
+    moves = self.getValidClassicBishopMoves(fromPos)
 
     if not toPos in moves:
       return False
@@ -621,7 +690,7 @@ class ChessBoard:
     return True
 
   def moveRook(self, fromPos, toPos):
-    moves = self.getValidRookMoves(fromPos)
+    moves = self.getValidClassicRookMoves(fromPos)
 
     if not toPos in moves:
       return False
@@ -818,7 +887,7 @@ class ChessBoard:
     self._reason = 0
     self._game_result = 0
     self.pushState()
-    self.updateKingLocations()
+    self.updateRoyalLocations()
 
   def setFEN(self, fen):
     """
@@ -877,7 +946,7 @@ class ChessBoard:
 
     self._three_rep_stack.append(three_state)
 
-    self.updateKingLocations()
+    self.updateRoyalLocations()
 
   def getFEN(self):
     """
@@ -1029,7 +1098,7 @@ class ChessBoard:
   def getGameResult(self):
     """
     Returns the reason for game over.
-    It can be the following reasons: 1 = WHITE_WIN , 2 = BLACK_WIN, 3 = STALEMATE, 4 = FIFTY_MOVES_RULE, 5 = THREE_REPETITION_RULE.
+    It can be the following reasons: 1 = WHITE_MATE , 2 = BLACK_MATE, 3 = STALEMATE, 4 = FIFTY_MOVES_RULE, 5 = THREE_REPETITION_RULE.
     If game is not over this method returns zero(0).
     """
     return self._game_result
@@ -1051,7 +1120,7 @@ class ChessBoard:
   def getReason(self):
     """
     Returns the reason to why addMove returned False.
-    1 = INAVLID_MOVE, 2 = INVALID_COLOR, 3 = INVALID_FROM_LOCATION, 4 = INVALID_TO_LOCATION, 5 = MUST_SET_PROMOTION, 5 = GAME_IS_OVER
+    1 = INAVLID_MOVE, 2 = INVALID_COLOR, 3 = INVALID_FROM_LOCATION, 4 = INVALID_TO_LOCATION, 5 = MUST_SET_PROMOTION, 6 = GAME_IS_OVER
     """
     return self._reason
 
@@ -1069,26 +1138,90 @@ class ChessBoard:
     if x < 0 or x > 7 or y < 0 or y > 7:
       return False
 
-    self.updateKingLocations()
+    self.updateRoyalLocations()
 
     if self.getColor(x, y) !=  self._turn:
       return []
 
+    '''a reaper reaper
+    b classic bishop
+    c 
+    d other pawn
+    e animals elephant
+    f 
+    g reaper ghost
+    h animals wild horse
+    i 
+    j animals jungle queen
+    k classic king
+    l nemesis pawn
+    m nemesis queen
+    n classic knight
+    o 
+    p classic pawn
+    q classic queen
+    r classic rook
+    s 
+    t animals tiger
+    u empowered trio
+    v two kings warrior queen
+    w two kings warrior king
+    x empowered bishop-knight
+    y empowered bishop-rook
+    z empowered knight-rook'''
+
     p = self._board[y][x].upper()
+#### Classic (Default) Army
     if p ==  'P':
-      m, s = self.getValidPawnMoves(location)
+      m, s = self.getValidClassicPawnMoves(location)
       return m
     elif p ==  'R':
-      return self.getValidRookMoves(location)
+      return self.getValidClassicRookMoves(location)
     elif p ==  'B':
-      return self.getValidBishopMoves(location)
+      return self.getValidClassicBishopMoves(location)
     elif p ==  'Q':
-      return self.getValidQueenMoves(location)
+      return self.getValidClassicQueenMoves(location)
     elif p ==  'K':
-      m, s = self.getValidKingMoves(location)
+      m, s = self.getValidClassicKingMoves(location)
       return m
     elif p ==  'N':
-      return self.getValidKnightMoves(location)
+      return self.getValidClassicKnightMoves(location)
+#### Nemesis Army
+    #elif p == 'L':
+    #  return self.getValidNemesisPawnMoves(location)
+    #elif p == 'M':
+    #  return self.getValidNemesisQueenMoves(location)
+#### Reaper Army
+    #elif p == 'A':
+    #  return self.getValidReaperReaperMoves(location)
+    #elif p == 'G':
+    #  return self.getValidReaperGhostMoves(location)
+#### Empowered Army
+    #elif p == 'U':
+    #  return self.getValidEmpoweredTrioMoves(location)
+    #elif p == 'X':
+    #  return self.getValidEmpoweredBishopKnightMoves(location)
+    #elif p == 'Y':
+    #  return self.getValidBishopRookMoves(location)
+    #elif p == 'Z':
+    #  return self.getValidKnightRookMoves(location)
+#### Two Kings Army
+    #elif p == 'v':
+    #  return self.getValidTwoKingsWarriorKingMoves(location)
+    #elif p == 'W':
+    #  return self.getValidTwoKingsWarriorKingMoves(location)
+#### Animals Army
+    #elif p == 'E':
+    #  return self.getValidAnimalsElephantMoves(location)
+    #elif p == 'H':
+    #  return self.getValidAnimalsWildHorseMoves(location)
+    #elif p == 'J':
+    #  return self.getValidAnimalsJungleQueenMoves(location)
+    #elif p == 'T':
+    #  return self.getValidAnimalsTigerMoves(location)
+#### Army Agnostic
+    #elif p == 'D':
+    #  return self.getValidOtherPawnMoves(location)
     else:
       return []
 
@@ -1109,7 +1242,7 @@ class ChessBoard:
       self._result = self.GAME_IS_OVER
       return False
 
-    self.updateKingLocations()
+    self.updateRoyalLocations()
 
     fx, fy = fromPos
     tx, ty = toPos
@@ -1185,9 +1318,9 @@ class ChessBoard:
       if self.isCheck():
         self._cur_move[5] = "#"
         if self._turn ==  self.WHITE:
-          self.endGame(self.BLACK_WIN)
+          self.endGame(self.BLACK_MATE)
         else:
-          self.endGame(self.WHITE_WIN)
+          self.endGame(self.WHITE_MATE)
       else:
         self.endGame(self.STALEMATE)
     else:

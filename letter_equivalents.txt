@@ -1,0 +1,26 @@
+a reaper reaper
+b classic bishop
+c 
+d other pawn
+e animals elephant
+f 
+g reaper ghost
+h animals wild horse
+i 
+j animals jungle queen
+k classic king
+l nemesis pawn
+m nemesis queen
+n classic knight
+o 
+p classic pawn
+q classic queen
+r classic rook
+s 
+t animals tiger
+v empowered bishop-knight-rook
+u two kings warrior queen
+w two kings warrior king
+x empowered bishop-knight
+y empowered bishop-rook
+z empowered knight-rook
