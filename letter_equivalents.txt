@@ -6,19 +6,19 @@ e animals elephant
 f 
 g reaper ghost
 h animals wild horse
-i 
+i empowered trio
 j animals jungle queen
 k classic king
 l nemesis pawn
 m nemesis queen
 n classic knight
-o 
+o empowered queen
 p classic pawn
 q classic queen
 r classic rook
 s 
 t animals tiger
-v empowered bishop-knight-rook
+v 
 u two kings warrior queen
 w two kings warrior king
 x empowered bishop-knight

@@ -91,14 +91,16 @@ class ChessBoard:
 
   # all moves, stored to make it easier to build textmoves
   #[piece, from, to, takes, promotion, check/checkmate, specialmove]
-  #["KQRNBP", (fx, fy), (tx, ty), True/False, "QRNB"/None, " + #"/None, 0 - 5]
+  #["KQRNBP", (fx, fy), (tx, ty), True/False, "QRNB"/None, "+#"/None, 0 - 5]
   _cur_move = [None, None, None, False, None, None, 0]
   _moves = []
 
   _promotion_value = 0
 
-  def __init__(self):
-    self.resetBoard()
+  def __init__(self, wArmy, bArmy):
+    self._white_army = wArmy
+    self._black_army = bArmy
+    self.resetBoard(wArmy, bArmy)
 
   def state2str(self):
     b = ""
@@ -123,13 +125,9 @@ class ChessBoard:
 
   def loadCurState(self):
     s = self._state_stack[self._state_stack_pointer - 1]
-    print "s: " + str(s)
     b = s[:64]
-    print "b: " + str(b)
     v = s[64:72]
-    print "v: " + str(v)
     f = int(s[73:])
-    print "f: " + str(f)
 
     idx = 0
     for r in range(8):
@@ -331,7 +329,7 @@ class ChessBoard:
       dx, dy = d
       steps = 0
       while True:
-     #while steps < maxSteps::
+      #while steps < maxSteps::
         x += dx
         y += dy
         if x<0 or x>7 or y<0 or y>7:
@@ -349,7 +347,7 @@ class ChessBoard:
         if steps ==  maxSteps:
           break
     return moves
-  
+
   def isInvulnerable(self, x, y):
     return self._board[y][x] ==  '.'
 
@@ -522,7 +520,9 @@ class ChessBoard:
 
     return (moves, specialMoves)
 
-  # --------------------------- - -
+  ########################
+  ## Movement Functions ##
+  ########################
 
   def movePawn(self, fromPos, toPos):
     moves, specialMoves = self.getValidClassicPawnMoves(fromPos)
@@ -577,7 +577,6 @@ class ChessBoard:
     self._fifty = 0
     return True
 
-
   def moveKnight(self, fromPos, toPos):
     moves = self.getValidClassicKnightMoves(fromPos)
 
@@ -595,7 +594,6 @@ class ChessBoard:
     self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
     self._board[fromPos[1]][fromPos[0]] = "."
     return True
-
 
   def moveKing(self, fromPos, toPos):
     if self._turn ==  self.WHITE:
@@ -803,16 +801,16 @@ class ChessBoard:
       res = "%s%s%s%s" % (files[fpos[0]], ranks[fpos[1]], files[tpos[0]], ranks[tpos[1]])
     elif format ==  self.LAN:
       if special ==  self.KING_CASTLE_MOVE:
-        return "O - O"
+        return "O-O"
       elif special ==  self.QUEEN_CASTLE_MOVE:
-        return "O - O - O"
+        return "O-O-O"
 
-      tc = " - "
+      tc = "-"
       if take:
         tc = "x"
       pt = ""
       if promo:
-        pt = " = %s" % promo
+        pt = "=%s" % promo
       if piece ==  "P":
         piece = ""
       if not check:
@@ -820,9 +818,9 @@ class ChessBoard:
       res = "%s%s%s%s%s%s%s%s" % (piece, files[fpos[0]], ranks[fpos[1]], tc, files[tpos[0]], ranks[tpos[1]], pt, check)
     elif format ==  self.SAN:
       if special ==  self.KING_CASTLE_MOVE:
-        return "O - O"
+        return "O-O"
       elif special ==  self.QUEEN_CASTLE_MOVE:
-        return "O - O - O"
+        return "O-O-O"
 
       tc = ""
       if take:
@@ -860,20 +858,50 @@ class ChessBoard:
   # PUBLIC METHODS
   #------------------------- -
 
-  def resetBoard(self):
+  def resetBoard(self, wArmy, bArmy):
     """
     Resets the chess board and all states.
     """
-    self._board = [
-      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-      ['p']*8,
-      ['.']*8,
-      ['.']*8,
-      ['.']*8,
-      ['.']*8,
-      ['P']*8,
-      ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
-      ]
+    armies = {
+      'ClassicBlackSetUp': ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+      'ClassicBlackPawns': ['p'] * 8,
+      'NemesisBlackSetUp': ['r', 'n', 'b', 'm', 'k', 'b', 'n', 'r'],
+      'NemesisBlackPawns': ['l'] * 8,
+      'ReaperBlackSetUp': ['g', 'n', 'b', 'a', 'k', 'b', 'n', 'g'],
+      'EmpoweredBlackSetUp': ['r', 'n', 'b', 'o', 'k', 'b', 'n', 'r'],
+      'TwoKingsBlackSetUp': ['r', 'n', 'b', 'u', 'w', 'b', 'n', 'r'],
+      'AnimalsBlackSetUp': ['e', 'h', 't', 'q', 'k', 't', 'h', 'e'],
+      'OtherBlackPawns': ['d'] * 8,
+      'ClassicWhiteSetUp': ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
+      'ClassicWhitePawns': ['P'] * 8,
+      'NemesisWhiteSetUp': ['R', 'N', 'B', 'M', 'K', 'B', 'N', 'R'],
+      'NemesisWhitePawns': ['L'] * 8,
+      'ReaperWhiteSetUp': ['G', 'N', 'B', 'A', 'K', 'B', 'N', 'G'],
+      'EmpoweredWhiteSetUp': ['R', 'N', 'B', 'O', 'K', 'B', 'N', 'R'],
+      'TwoKingsWhiteSetUp': ['R', 'N', 'B', 'U', 'W', 'B', 'N', 'R'],
+      'AnimalsWhiteSetUp': ['E', 'H', 'T', 'Q', 'K', 'T', 'H', 'E'],
+      'OtherWhitePawns': ['D'] * 8
+    }
+
+    blackPieces = bArmy + 'BlackSetUp'
+    whitePieces = wArmy + 'WhiteSetUp'
+    if bArmy == 'Classic':
+      blackPawns = 'ClassicBlackPawns'
+    else:
+      blackPawns = 'OtherBlackPawns'
+    if wArmy == 'Classic':
+      whitePawns = 'ClassicWhitePawns'
+    else:
+      whitePawns = 'OtherWhitePawns'
+
+    self._board = [armies[blackPieces],
+                   armies[blackPawns],
+                   ['.']*8,
+                   ['.']*8,
+                   ['.']*8,
+                   ['.']*8,
+                   armies[whitePawns],
+                   armies[whitePieces]]
     self._turn = self.WHITE
     self._white_king_castle = True
     self._white_queen_castle = True
@@ -1151,19 +1179,19 @@ class ChessBoard:
     f 
     g reaper ghost
     h animals wild horse
-    i 
+    i empowered trio
     j animals jungle queen
     k classic king
     l nemesis pawn
     m nemesis queen
     n classic knight
-    o 
+    o empowered queen
     p classic pawn
     q classic queen
     r classic rook
     s 
     t animals tiger
-    u empowered trio
+    u 
     v two kings warrior queen
     w two kings warrior king
     x empowered bishop-knight
@@ -1197,7 +1225,7 @@ class ChessBoard:
     #elif p == 'G':
     #  return self.getValidReaperGhostMoves(location)
 #### Empowered Army
-    #elif p == 'U':
+    #elif p == 'I':
     #  return self.getValidEmpoweredTrioMoves(location)
     #elif p == 'X':
     #  return self.getValidEmpoweredBishopKnightMoves(location)
@@ -1312,7 +1340,7 @@ class ChessBoard:
       self._turn = self.WHITE
 
     if self.isCheck():
-      self._cur_move[5] = " + "
+      self._cur_move[5] = "+"
 
     if not self.hasAnyValidMoves():
       if self.isCheck():
