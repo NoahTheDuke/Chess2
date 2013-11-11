@@ -11,8 +11,17 @@ class ChessClient:
   def mainLoop(self):
     pygame.init()
 
+    print "White Player, choose an army:"
+    print "1. Classic   2. Nemesis   3. Reaper"
+    print "4. Empowered 5. Two Kings 6. Animals"
+    wArmy = raw_input("Type the number, not the name: ")
+    print "Black Player, choose an army:"
+    print "1. Classic   2. Nemesis   3. Reaper"
+    print "4. Empowered 5. Two Kings 6. Animals"
+    bArmy = raw_input("Type the number, not the name: ")
+
     pieces = {}
-    chess = ChessBoard("Classic", "Nemesis")
+    chess = ChessBoard(int(wArmy), int(bArmy))
     board = chess.getBoard()
     turn = chess.getTurn()
 
@@ -20,134 +29,132 @@ class ChessClient:
     pygame.display.set_caption('ChessBoard Client')
 
     # load all images
-    # file names format:
-    # (army color)(piece letter)(background color).png
     # pieces format:
     # pieces[background id: 0 = white, 1 = black]["piece letter"]
     pieces = [{}, {}]
+    # file names format:
+    # (army color)(piece letter)(background color).png
     # white background
+    pieces[0]["."] = pygame.image.load("./img/Generic/w.png")
      #black classic
-    pieces[0]["p"] = pygame.image.load("./img/bpw.png")
-    pieces[0]["b"] = pygame.image.load("./img/bbw.png")
-    pieces[0]["n"] = pygame.image.load("./img/bnw.png")
-    pieces[0]["r"] = pygame.image.load("./img/brw.png")
-    pieces[0]["q"] = pygame.image.load("./img/bqw.png")
-    pieces[0]["k"] = pygame.image.load("./img/bkw.png")
+    pieces[0]["p"] = pygame.image.load("./img/Classic/bpw.png")
+    pieces[0]["b"] = pygame.image.load("./img/Classic/bbw.png")
+    pieces[0]["n"] = pygame.image.load("./img/Classic/bnw.png")
+    pieces[0]["r"] = pygame.image.load("./img/Classic/brw.png")
+    pieces[0]["q"] = pygame.image.load("./img/Classic/bqw.png")
+    pieces[0]["k"] = pygame.image.load("./img/Classic/bkw.png")
      #black nemesis
-    pieces[0]["l"] = pygame.image.load("./img/blw.png")
-    pieces[0]["m"] = pygame.image.load("./img/bmw.png")
+    pieces[0]["l"] = pygame.image.load("./img/Nemesis/blw.png")
+    pieces[0]["m"] = pygame.image.load("./img/Nemesis/bmw.png")
      #black reaper
-    pieces[0]["g"] = pygame.image.load("./img/bgw.png")
-    pieces[0]["a"] = pygame.image.load("./img/baw.png")
+    pieces[0]["g"] = pygame.image.load("./img/Reaper/bgw.png")
+    pieces[0]["a"] = pygame.image.load("./img/Reaper/baw.png")
      #black empowered
-    pieces[0]["i"] = pygame.image.load("./img/biw.png")
-    pieces[0]["x"] = pygame.image.load("./img/bxw.png")
-    pieces[0]["y"] = pygame.image.load("./img/byw.png")
-    pieces[0]["z"] = pygame.image.load("./img/bzw.png")
-    pieces[0]["o"] = pygame.image.load("./img/bqw.png")
+    pieces[0]["i"] = pygame.image.load("./img/Empowered/biw.png")
+    pieces[0]["x"] = pygame.image.load("./img/Empowered/bxw.png")
+    pieces[0]["y"] = pygame.image.load("./img/Empowered/byw.png")
+    pieces[0]["z"] = pygame.image.load("./img/Empowered/bzw.png")
+    pieces[0]["o"] = pygame.image.load("./img/Empowered/bow.png")
      #black two kings
-    pieces[0]["u"] = pygame.image.load("./img/buw.png")
-    pieces[0]["w"] = pygame.image.load("./img/bww.png")
+    pieces[0]["u"] = pygame.image.load("./img/TwoKings/buw.png")
+    pieces[0]["w"] = pygame.image.load("./img/TwoKings/bww.png")
      #black animals
-    pieces[0]["t"] = pygame.image.load("./img/bbw.png")
-    pieces[0]["h"] = pygame.image.load("./img/bnw.png")
-    pieces[0]["e"] = pygame.image.load("./img/brw.png")
-    pieces[0]["j"] = pygame.image.load("./img/bqw.png")
+    pieces[0]["t"] = pygame.image.load("./img/Animals/btw.png")
+    pieces[0]["h"] = pygame.image.load("./img/Animals/bhw.png")
+    pieces[0]["e"] = pygame.image.load("./img/Animals/bew.png")
+    pieces[0]["j"] = pygame.image.load("./img/Animals/bjw.png")
      #black other
-    pieces[0]["d"] = pygame.image.load("./img/bdw.png")
+    pieces[0]["d"] = pygame.image.load("./img/Generic/bdw.png")
      #white classic
-    pieces[0]["P"] = pygame.image.load("./img/wpw.png")
-    pieces[0]["B"] = pygame.image.load("./img/wbw.png")
-    pieces[0]["N"] = pygame.image.load("./img/wnw.png")
-    pieces[0]["R"] = pygame.image.load("./img/wrw.png")
-    pieces[0]["Q"] = pygame.image.load("./img/wqw.png")
-    pieces[0]["K"] = pygame.image.load("./img/wkw.png")
+    pieces[0]["P"] = pygame.image.load("./img/Classic/wpw.png")
+    pieces[0]["B"] = pygame.image.load("./img/Classic/wbw.png")
+    pieces[0]["N"] = pygame.image.load("./img/Classic/wnw.png")
+    pieces[0]["R"] = pygame.image.load("./img/Classic/wrw.png")
+    pieces[0]["Q"] = pygame.image.load("./img/Classic/wqw.png")
+    pieces[0]["K"] = pygame.image.load("./img/Classic/wkw.png")
      #white nemesis
-    pieces[0]["L"] = pygame.image.load("./img/wlw.png")
-    pieces[0]["M"] = pygame.image.load("./img/wmw.png")
+    pieces[0]["L"] = pygame.image.load("./img/Nemesis/wlw.png")
+    pieces[0]["M"] = pygame.image.load("./img/Nemesis/wmw.png")
      #white reaper
-    pieces[0]["G"] = pygame.image.load("./img/wgw.png")
-    pieces[0]["A"] = pygame.image.load("./img/waw.png")
+    pieces[0]["G"] = pygame.image.load("./img/Reaper/wgw.png")
+    pieces[0]["A"] = pygame.image.load("./img/Reaper/waw.png")
      #white empowered
-    pieces[0]["I"] = pygame.image.load("./img/wiw.png")
-    pieces[0]["X"] = pygame.image.load("./img/wxw.png")
-    pieces[0]["Y"] = pygame.image.load("./img/wyw.png")
-    pieces[0]["Z"] = pygame.image.load("./img/wzw.png")
-    pieces[0]["O"] = pygame.image.load("./img/wqw.png")
+    pieces[0]["I"] = pygame.image.load("./img/Empowered/wiw.png")
+    pieces[0]["X"] = pygame.image.load("./img/Empowered/wxw.png")
+    pieces[0]["Y"] = pygame.image.load("./img/Empowered/wyw.png")
+    pieces[0]["Z"] = pygame.image.load("./img/Empowered/wzw.png")
+    pieces[0]["O"] = pygame.image.load("./img/Empowered/wow.png")
      #white two kings
-    pieces[0]["U"] = pygame.image.load("./img/wuw.png")
-    pieces[0]["W"] = pygame.image.load("./img/www.png")
+    pieces[0]["U"] = pygame.image.load("./img/TwoKings/wuw.png")
+    pieces[0]["W"] = pygame.image.load("./img/TwoKings/www.png")
      #white animals
-    pieces[0]["T"] = pygame.image.load("./img/wbw.png")
-    pieces[0]["H"] = pygame.image.load("./img/wnw.png")
-    pieces[0]["E"] = pygame.image.load("./img/wrw.png")
-    pieces[0]["J"] = pygame.image.load("./img/wqw.png")
+    pieces[0]["T"] = pygame.image.load("./img/Animals/wtw.png")
+    pieces[0]["H"] = pygame.image.load("./img/Animals/whw.png")
+    pieces[0]["E"] = pygame.image.load("./img/Animals/wew.png")
+    pieces[0]["J"] = pygame.image.load("./img/Animals/wjw.png")
      #white other
-    pieces[0]["D"] = pygame.image.load("./img/wdw.png")
-    # white background
-    pieces[0]["."] = pygame.image.load("./img/w.png")
+    pieces[0]["D"] = pygame.image.load("./img/Generic/wdw.png")
 #######################################################
     # black background
+    pieces[1]["."] = pygame.image.load("./img/Generic/b.png")
      #black classic
-    pieces[1]["p"] = pygame.image.load("./img/bpb.png")
-    pieces[1]["b"] = pygame.image.load("./img/bbb.png")
-    pieces[1]["n"] = pygame.image.load("./img/bnb.png")
-    pieces[1]["r"] = pygame.image.load("./img/brb.png")
-    pieces[1]["q"] = pygame.image.load("./img/bqb.png")
-    pieces[1]["k"] = pygame.image.load("./img/bkb.png")
+    pieces[1]["p"] = pygame.image.load("./img/Classic/bpb.png")
+    pieces[1]["b"] = pygame.image.load("./img/Classic/bbb.png")
+    pieces[1]["n"] = pygame.image.load("./img/Classic/bnb.png")
+    pieces[1]["r"] = pygame.image.load("./img/Classic/brb.png")
+    pieces[1]["q"] = pygame.image.load("./img/Classic/bqb.png")
+    pieces[1]["k"] = pygame.image.load("./img/Classic/bkb.png")
      #black nemesis
-    pieces[1]["l"] = pygame.image.load("./img/blb.png")
-    pieces[1]["m"] = pygame.image.load("./img/bmb.png")
+    pieces[1]["l"] = pygame.image.load("./img/Nemesis/blb.png")
+    pieces[1]["m"] = pygame.image.load("./img/Nemesis/bmb.png")
      #black reaper
-    pieces[1]["g"] = pygame.image.load("./img/bgb.png")
-    pieces[1]["a"] = pygame.image.load("./img/bab.png")
+    pieces[1]["g"] = pygame.image.load("./img/Reaper/bgb.png")
+    pieces[1]["a"] = pygame.image.load("./img/Reaper/bab.png")
      #black empowered
-    pieces[1]["i"] = pygame.image.load("./img/bib.png")
-    pieces[1]["x"] = pygame.image.load("./img/bxb.png")
-    pieces[1]["y"] = pygame.image.load("./img/byb.png")
-    pieces[1]["z"] = pygame.image.load("./img/bzb.png")
-    pieces[1]["o"] = pygame.image.load("./img/bqb.png")
+    pieces[1]["i"] = pygame.image.load("./img/Empowered/bib.png")
+    pieces[1]["x"] = pygame.image.load("./img/Empowered/bxb.png")
+    pieces[1]["y"] = pygame.image.load("./img/Empowered/byb.png")
+    pieces[1]["z"] = pygame.image.load("./img/Empowered/bzb.png")
+    pieces[1]["o"] = pygame.image.load("./img/Empowered/bob.png")
      #black two kings
-    pieces[1]["u"] = pygame.image.load("./img/bub.png")
-    pieces[1]["w"] = pygame.image.load("./img/bwb.png")
+    pieces[1]["u"] = pygame.image.load("./img/TwoKings/bub.png")
+    pieces[1]["w"] = pygame.image.load("./img/TwoKings/bwb.png")
      #black animals
-    pieces[1]["t"] = pygame.image.load("./img/bbb.png")
-    pieces[1]["h"] = pygame.image.load("./img/bnb.png")
-    pieces[1]["e"] = pygame.image.load("./img/brb.png")
-    pieces[1]["j"] = pygame.image.load("./img/bqb.png")
+    pieces[1]["t"] = pygame.image.load("./img/Animals/btb.png")
+    pieces[1]["h"] = pygame.image.load("./img/Animals/bhb.png")
+    pieces[1]["e"] = pygame.image.load("./img/Animals/beb.png")
+    pieces[1]["j"] = pygame.image.load("./img/Animals/bjb.png")
      #black other
-    pieces[1]["d"] = pygame.image.load("./img/bdb.png")
+    pieces[1]["d"] = pygame.image.load("./img/Generic/bdb.png")
      #white classic
-    pieces[1]["P"] = pygame.image.load("./img/wpb.png")
-    pieces[1]["B"] = pygame.image.load("./img/wbb.png")
-    pieces[1]["N"] = pygame.image.load("./img/wnb.png")
-    pieces[1]["R"] = pygame.image.load("./img/wrb.png")
-    pieces[1]["Q"] = pygame.image.load("./img/wqb.png")
-    pieces[1]["K"] = pygame.image.load("./img/wkb.png")
+    pieces[1]["P"] = pygame.image.load("./img/Classic/wpb.png")
+    pieces[1]["B"] = pygame.image.load("./img/Classic/wbb.png")
+    pieces[1]["N"] = pygame.image.load("./img/Classic/wnb.png")
+    pieces[1]["R"] = pygame.image.load("./img/Classic/wrb.png")
+    pieces[1]["Q"] = pygame.image.load("./img/Classic/wqb.png")
+    pieces[1]["K"] = pygame.image.load("./img/Classic/wkb.png")
      #white nemesis
-    pieces[1]["L"] = pygame.image.load("./img/wlb.png")
-    pieces[1]["M"] = pygame.image.load("./img/wmb.png")
+    pieces[1]["L"] = pygame.image.load("./img/Nemesis/wlb.png")
+    pieces[1]["M"] = pygame.image.load("./img/Nemesis/wmb.png")
      #white reaper
-    pieces[1]["G"] = pygame.image.load("./img/wgb.png")
-    pieces[1]["A"] = pygame.image.load("./img/wab.png")
+    pieces[1]["G"] = pygame.image.load("./img/Reaper/wgb.png")
+    pieces[1]["A"] = pygame.image.load("./img/Reaper/wab.png")
      #white empowered
-    pieces[1]["I"] = pygame.image.load("./img/wib.png")
-    pieces[1]["X"] = pygame.image.load("./img/wxb.png")
-    pieces[1]["Y"] = pygame.image.load("./img/wyb.png")
-    pieces[1]["Z"] = pygame.image.load("./img/wzb.png")
-    pieces[1]["O"] = pygame.image.load("./img/wqb.png")
+    pieces[1]["I"] = pygame.image.load("./img/Empowered/wib.png")
+    pieces[1]["X"] = pygame.image.load("./img/Empowered/wxb.png")
+    pieces[1]["Y"] = pygame.image.load("./img/Empowered/wyb.png")
+    pieces[1]["Z"] = pygame.image.load("./img/Empowered/wzb.png")
+    pieces[1]["O"] = pygame.image.load("./img/Empowered/wob.png")
      #white two kings
-    pieces[1]["U"] = pygame.image.load("./img/wub.png")
-    pieces[1]["W"] = pygame.image.load("./img/wwb.png")
+    pieces[1]["U"] = pygame.image.load("./img/TwoKings/wub.png")
+    pieces[1]["W"] = pygame.image.load("./img/TwoKings/wwb.png")
      #white animals
-    pieces[1]["T"] = pygame.image.load("./img/wbb.png")
-    pieces[1]["H"] = pygame.image.load("./img/wnb.png")
-    pieces[1]["E"] = pygame.image.load("./img/wrb.png")
-    pieces[1]["J"] = pygame.image.load("./img/wqb.png")
+    pieces[1]["T"] = pygame.image.load("./img/Animals/wtb.png")
+    pieces[1]["H"] = pygame.image.load("./img/Animals/whb.png")
+    pieces[1]["E"] = pygame.image.load("./img/Animals/web.png")
+    pieces[1]["J"] = pygame.image.load("./img/Animals/wjb.png")
      #white other
-    pieces[1]["D"] = pygame.image.load("./img/wdb.png")
-    # black background
-    pieces[0]["."] = pygame.image.load("./img/b.png")
+    pieces[1]["D"] = pygame.image.load("./img/Generic/wdb.png")
 
     clock = pygame.time.Clock()
 

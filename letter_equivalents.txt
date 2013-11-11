@@ -1,7 +1,7 @@
 a reaper reaper
 b classic bishop
 c 
-d other pawn
+d generic pawn
 e animals elephant
 f 
 g reaper ghost
@@ -18,8 +18,8 @@ q classic queen
 r classic rook
 s 
 t animals tiger
-v 
 u two kings warrior queen
+v 
 w two kings warrior king
 x empowered bishop-knight
 y empowered bishop-rook
