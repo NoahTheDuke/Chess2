@@ -50,12 +50,12 @@ class ChessBoard:
     }
 
     # King and Queen variation strings
-    ROYAL_STRINGS = {
+    royal_to_army_royal_dict = {
         'K': ['K', 'C', 'W', 'U', 'k', 'c', 'w', 'u'],
         'Q': ['Q', 'M', 'A', 'O', 'J', 'q', 'm', 'a', 'o', 'j']
         }
     # and the reverse
-    ROYAL_LOOKUPS = {
+    army_royal_to_royal_dict = {
         'K': ['K'],
         'C': ['K'],
         'W': ['K'],
@@ -68,7 +68,7 @@ class ChessBoard:
         'J': ['Q']
         }
 
-    img_dict = {
+    piece_to_army_dict = {
         "P": "Classic",
         "B": "Classic",
         "N": "Classic",
@@ -259,8 +259,8 @@ class ChessBoard:
     def updateRoyalLocations(self):
         for y in range(0, 8):
             for x in range(0, 8):
-                kings = self.ROYAL_STRINGS['K']
-                queens = self.ROYAL_STRINGS['Q']
+                kings = self.royal_to_army_royal_dict['K']
+                queens = self.royal_to_army_royal_dict['Q']
                 if self._board[y][x] in kings:
                     if self._board[y][x].istitle():
                         self._white_king_location = (x, y)
@@ -272,7 +272,6 @@ class ChessBoard:
                         self._white_queen_location = (x, y)
                     else:
                         self._black_queen_location = (x, y)
-        print "royals updated"
 
     def SurroundedBy(self, board, fromPos, direction=0):
         # opens fromTuple, pings board at the locations: cloister, orthogonal, diagonal
@@ -441,11 +440,8 @@ class ChessBoard:
         for y in range(0, 8):
             for x in range(0, 8):
                 if self.getColor(x, y) == player:
-                    print ((x, y))
                     if len(self.getValidMoves((x, y))):
-                        print "yes, has valid moves"
                         return True
-        print "no, no valid moves"
         return False
 
     #--------------------- - -
@@ -474,7 +470,7 @@ class ChessBoard:
 
     def traceValidNemesisNemesisMoves(self, fromPos, dirs, maxSteps=8):
         moves = []
-        kings = self.ROYAL_STRINGS['K']
+        kings = self.royal_to_army_royal_dict['K']
         for d in dirs:
             x, y = fromPos
             dx, dy = d
@@ -565,8 +561,6 @@ class ChessBoard:
             startrow = 1
             ocol = self.WHITE
             eprow = 4
-
-        print str(self.isFree(fx, fy + movedir))
 
         if self.isFree(fx, fy + movedir):
             moves.append((fx, fy + movedir))
@@ -1333,7 +1327,6 @@ class ChessBoard:
             self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
             self._board[fromPos[1]][fromPos[0]] = "."
         else:
-            ramp = 0
             # if travelling vertically
             if (toPos[0] == fromPos[0]):
                 for distance_y in range(1, 4):
@@ -1344,7 +1337,6 @@ class ChessBoard:
                             #self.squares[max(fromSquare_r - distance_r + 1, 0)][toSquare_c] = fromPiece
                             #break
                         #else:
-                        print str(self._board[max(fromPos[1] - distance_y, 0)][toPos[0]])
                         self._board[max(fromPos[1] - distance_y, 0)][toPos[0]] = fromPiece
                         self._board[max(fromPos[1] - distance_y + 1, 1)][toPos[0]] = "."
                     # if travelling south
@@ -1353,8 +1345,6 @@ class ChessBoard:
                             #self.squares[min(fromSquare_r + distance_r - 1, 7)][toSquare_c] = fromPiece
                             #break
                         #else:
-                        ramp = ramp + 1
-                        print str(ramp)
                         self._board[min(fromPos[1] + distance_y, 7)][toPos[0]] = fromPiece
                         self._board[min(fromPos[1] + distance_y - 1, 6)][toPos[0]] = "."
                     self._board[fromPos[1]][fromPos[0]] = "."
@@ -1368,8 +1358,6 @@ class ChessBoard:
                             #self.squares[toSquare_r][max(fromSquare_c - distance_c + 1, 0)] = fromPiece
                             #break
                         #else:
-                        ramp = ramp + 1
-                        print str(ramp)
                         self._board[toPos[1]][max(fromPos[0] - distance_x, 0)] = fromPiece
                         self._board[toPos[1]][max(fromPos[0] - distance_x + 1, 1)] = "."
                     # if travelling east
@@ -1378,8 +1366,6 @@ class ChessBoard:
                             #self.squares[toSquare_r][min(fromSquare_c + distance_c - 1, 7)] = fromPiece
                             #break
                         #else:
-                        ramp = ramp + 1
-                        print str(ramp)
                         self._board[toPos[1]][min(fromPos[0] + distance_x, 7)] = fromPiece
                         self._board[toPos[1]][min(fromPos[0] + distance_x - 1, 6)] = "."
                     self._board[toPos[1]][fromPos[0]] = "."
@@ -1936,6 +1922,29 @@ class ChessBoard:
             kx, ky = self._black_king_location
         return self.isThreatened2(kx, ky, self._turn)
 
+    def isMidlineInvasion(self):
+        """
+        Returns True if the current player's king (or kings) is over the middle line.
+        """
+        if self._turn == self.WHITE:
+            kingPos = self._white_king_location
+            queenPos = self._white_queen_location
+            if "TwoKings" in self.ARMY_VALUES[self._white_army]:
+                if kingPos[1] < 4 and queenPos[1] < 4:
+                    return True
+            else:
+                if kingPos[1] < 4:
+                    return True
+        else:
+            kingPos = self._black_king_location
+            queenPos = self._black_queen_location
+            if "TwoKings" in self.ARMY_VALUES[self._black_army]:
+                if kingPos[1] < 4 and queenPos[1] < 4:
+                    return True
+            else:
+                if kingPos[1] < 4:
+                    return True
+
     def isGameOver(self):
         """
         Returns True if the game is over by either checkmate or draw.
@@ -2105,7 +2114,7 @@ class ChessBoard:
         self._cur_move = [None, None, None, False, None, None, self.NORMAL_MOVE]
 
         if self._game_result:
-            self._result = self.GAME_IS_OVER
+            self._reason = self.GAME_IS_OVER
             return False
 
         #self.updateRoyalLocations()
@@ -2269,6 +2278,12 @@ class ChessBoard:
                 self.endGame(self.FIFTY_MOVES_RULE)
             elif self.threeRepetitions():
                 self.endGame(self.THREE_REPETITION_RULE)
+            elif self.isMidlineInvasion():
+                self._cur_move[5] = "*"
+                if self._turn == self.WHITE:
+                    self.endGame(self.WHITE_MIDLINE_INVASION)
+                else:
+                    self.endGame(self.BLACK_MIDLINE_INVASION)
 
         self.pushState()
         self.pushMove()

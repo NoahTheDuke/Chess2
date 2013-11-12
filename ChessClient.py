@@ -50,7 +50,6 @@ class ChessClient:
         screen = pygame.display.set_mode((840, 480), 1)
         pygame.display.set_caption('ChessBoard Client')
 
-
         # load all images
         # pieces format:
         # pieces[background id: 0 = white, 1 = black]["piece letter"]
@@ -61,14 +60,20 @@ class ChessClient:
         # file names format:
         # (army color)(piece letter)(background color).png
         # white background
-        for img in chess.img_dict:
+        for img in chess.piece_to_army_dict:
             for color in chess.color_dict:
                 for back in chess.color_dict:
                     if color == 0:
-                        pieces[back][img] = pygame.image.load("./img/" + chess.img_dict[img] + "/" + chess.color_dict[color] + img.lower() + chess.color_dict[back] + ".png")
+                        pieces[back][img] = pygame.image.load("./img/" + \
+                            chess.piece_to_army_dict[img] + "/" + \
+                            chess.color_dict[color] + img.lower() + \
+                            chess.color_dict[back] + ".png")
                     else:
                         img = img.lower()
-                        pieces[back][img] = pygame.image.load("./img/" + chess.img_dict[img.upper()] + "/" + chess.color_dict[color] + img + chess.color_dict[back] + ".png")
+                        pieces[back][img] = pygame.image.load("./img/" + \
+                            chess.piece_to_army_dict[img.upper()] + "/" + \
+                            chess.color_dict[color] + img + \
+                            chess.color_dict[back] + ".png")
 
         clock = pygame.time.Clock()
 
@@ -80,7 +85,10 @@ class ChessClient:
         validMoves = []
         pieceSelected = None
 
-        gameResults = ["", "WHITE WINS!", "BLACK WINS!", "STALEMATE", "DRAW BY THE FIFTHY MOVES RULE", "DRAW BY THE THREE REPETITION RULE"]
+        gameResults = ["", "WHITE WINS!", "BLACK WINS!",
+                "STALEMATE", "DRAW BY THE FIFTHY MOVES RULE",
+                "DRAW BY THE THREE REPETITION RULE", "MIDLINE INVASION BY WHITE!",
+                "MIDLINE INVASION BY BLACK!"]
 
         while 1:
             clock.tick(30)
@@ -162,7 +170,7 @@ class ChessClient:
                                             pieceSelected = None
 
                 if chess.isGameOver():
-                    pygame.display.set_caption("Game Over! (Reason:%s)" % gameResults[chess.getGameResult()])
+                    pygame.display.set_caption("Game Over! %s" % gameResults[chess.getGameResult()])
                     validMove = []
                     markPos[0] = -1
                     markPos[1] = -1
@@ -186,7 +194,7 @@ class ChessClient:
                     posRect.left = v[0] * 60
                     posRect.top = v[1] * 60
                     pygame.draw.rect(screen, (255, 255, 0), posRect, 4)
-                
+
                 pygame.draw.rect(screen, (0, 0, 0), sidebarRect, 0)
                 pygame.display.flip()
 
