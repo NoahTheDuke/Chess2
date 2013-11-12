@@ -1,6 +1,6 @@
 a reaper reaper
 b classic bishop
-c 
+c generic king
 d generic pawn
 e animals elephant
 f 
