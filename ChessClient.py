@@ -6,7 +6,7 @@ import os
 import pygame
 import math
 from pygame.locals import *
-
+import string
 from pprint import pprint
 
 
@@ -15,52 +15,41 @@ class ChessClient:
         pygame.init()
 
         print "White Player, choose an army:"
-        print "1. Classic     2. Nemesis     3. Reaper"
+        print "1. Classic   2. Nemesis   3. Reaper"
         print "4. Empowered 5. Two Kings 6. Animals"
-        wArmy = raw_input("Type the number, not the name: ")
+        while True:
+            userInput = raw_input('Type the number, not the name:')
+            if userInput in string.digits:
+                if int(userInput) < 7:
+                    if int(userInput) > 0:
+                        break
+                print 'Please enter only one of the above.'
+            else:
+                print 'Please enter only one character'
+        wArmy = userInput
+
         print "Black Player, choose an army:"
-        print "1. Classic     2. Nemesis     3. Reaper"
+        print "1. Classic   2. Nemesis   3. Reaper"
         print "4. Empowered 5. Two Kings 6. Animals"
-        bArmy = raw_input("Type the number, not the name: ")
+        while True:
+            userInput = raw_input('Type the number, not the name:')
+            if userInput in string.digits:
+                if int(userInput) < 7:
+                    if int(userInput) > 0:
+                        break
+                print 'Please enter only one of the above.'
+            else:
+                print 'Please enter only one of the above.'
+        bArmy = userInput
 
         pieces = {}
         chess = ChessBoard(int(wArmy), int(bArmy))
         board = chess.getBoard()
         turn = chess.getTurn()
 
-        screen = pygame.display.set_mode((480, 480), 1)
+        screen = pygame.display.set_mode((840, 480), 1)
         pygame.display.set_caption('ChessBoard Client')
 
-        img_dict = {
-            "P": "Classic",
-            "B": "Classic",
-            "N": "Classic",
-            "R": "Classic",
-            "Q": "Classic",
-            "K": "Classic",
-            "L": "Nemesis",
-            "M": "Nemesis",
-            "G": "Reaper",
-            "A": "Reaper",
-            "X": "Empowered",
-            "Y": "Empowered",
-            "Z": "Empowered",
-            "I": "Empowered",
-            "O": "Empowered",
-            "U": "TwoKings",
-            "W": "TwoKings",
-            "T": "Animals",
-            "H": "Animals",
-            "E": "Animals",
-            "J": "Animals",
-            "D": "Generic",
-            "C": "Generic"
-            }
-
-        color_dict = {
-            0: "w",
-            1: "b"
-            }
 
         # load all images
         # pieces format:
@@ -72,18 +61,19 @@ class ChessClient:
         # file names format:
         # (army color)(piece letter)(background color).png
         # white background
-        for img in img_dict:
-            for color in color_dict:
-                for back in color_dict:
+        for img in chess.img_dict:
+            for color in chess.color_dict:
+                for back in chess.color_dict:
                     if color == 0:
-                        pieces[back][img] = pygame.image.load("./img/" + img_dict[img] + "/" + color_dict[color] + img.lower() + color_dict[back] + ".png")
+                        pieces[back][img] = pygame.image.load("./img/" + chess.img_dict[img] + "/" + chess.color_dict[color] + img.lower() + chess.color_dict[back] + ".png")
                     else:
                         img = img.lower()
-                        pieces[back][img] = pygame.image.load("./img/" + img_dict[img.upper()] + "/" + color_dict[color] + img + color_dict[back] + ".png")
+                        pieces[back][img] = pygame.image.load("./img/" + chess.img_dict[img.upper()] + "/" + chess.color_dict[color] + img + chess.color_dict[back] + ".png")
 
         clock = pygame.time.Clock()
 
         posRect = pygame.Rect(0, 0, 60, 60)
+        sidebarRect = pygame.Rect(480, 0, 360, 480)
 
         mousePos = [-1, -1]
         markPos = [-1, -1]
@@ -183,7 +173,7 @@ class ChessClient:
                 for rank in board:
                     x = 0
                     for p in rank:
-                        screen.blit(pieces[(x+y) % 2][p], (x * 60, y * 60))
+                        screen.blit(pieces[(x + y) % 2][p], (x * 60, y * 60))
                         x += 1
                     y += 1
 
@@ -193,10 +183,11 @@ class ChessClient:
                     pygame.draw.rect(screen, (255, 255, 0), posRect, 4)
 
                 for v in validMoves:
-                    posRect.left = v[0]*60
-                    posRect.top = v[1]*60
+                    posRect.left = v[0] * 60
+                    posRect.top = v[1] * 60
                     pygame.draw.rect(screen, (255, 255, 0), posRect, 4)
-
+                
+                pygame.draw.rect(screen, (0, 0, 0), sidebarRect, 0)
                 pygame.display.flip()
 
 

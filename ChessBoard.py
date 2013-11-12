@@ -51,8 +51,8 @@ class ChessBoard:
 
     # King and Queen variation strings
     ROYAL_STRINGS = {
-        'K': ['K', 'C', 'W', 'U'],
-        'Q': ['Q', 'M', 'A', 'O', 'U', 'J']
+        'K': ['K', 'C', 'W', 'U', 'k', 'c', 'w', 'u'],
+        'Q': ['Q', 'M', 'A', 'O', 'J', 'q', 'm', 'a', 'o', 'j']
         }
     # and the reverse
     ROYAL_LOOKUPS = {
@@ -66,6 +66,37 @@ class ChessBoard:
         'O': ['Q'],
         'U': ['Q'],
         'J': ['Q']
+        }
+
+    img_dict = {
+        "P": "Classic",
+        "B": "Classic",
+        "N": "Classic",
+        "R": "Classic",
+        "Q": "Classic",
+        "K": "Classic",
+        "L": "Nemesis",
+        "M": "Nemesis",
+        "G": "Reaper",
+        "A": "Reaper",
+        "X": "Empowered",
+        "Y": "Empowered",
+        "Z": "Empowered",
+        "I": "Empowered",
+        "O": "Empowered",
+        "U": "TwoKings",
+        "W": "TwoKings",
+        "T": "Animals",
+        "H": "Animals",
+        "E": "Animals",
+        "J": "Animals",
+        "D": "Generic",
+        "C": "Generic"
+        }
+
+    color_dict = {
+        0: "w",
+        1: "b"
         }
 
     # Promotion values
@@ -228,42 +259,57 @@ class ChessBoard:
     def updateRoyalLocations(self):
         for y in range(0, 8):
             for x in range(0, 8):
-                if self._board[y][x] == "K":
-                    self._white_king_location = (x, y)
-                if self._board[y][x] == "k":
+                kings = self.ROYAL_STRINGS['K']
+                queens = self.ROYAL_STRINGS['Q']
+                if self._board[y][x] in kings:
+                    if self._board[y][x].istitle():
+                        self._white_king_location = (x, y)
+                    else:
+                        self._black_king_location = (x, y)
                     self._black_king_location = (x, y)
-                if self._board[y][x] == "W":
-                    self._white_king_location = (x, y)
-                if self._board[y][x] == "w":
-                    self._black_king_location = (x, y)
-                if self._board[y][x] == "C":
-                    self._white_king_location = (x, y)
-                if self._board[y][x] == "c":
-                    self._black_king_location = (x, y)
-                if self._board[y][x] == "Q":
-                    self._white_queen_location = (x, y)
-                if self._board[y][x] == "q":
-                    self._black_queen_location = (x, y)
-                if self._board[y][x] == "M":
-                    self._white_queen_location = (x, y)
-                if self._board[y][x] == "m":
-                    self._black_queen_location = (x, y)
-                if self._board[y][x] == "A":
-                    self._white_queen_location = (x, y)
-                if self._board[y][x] == "a":
-                    self._black_queen_location = (x, y)
-                if self._board[y][x] == "O":
-                    self._white_queen_location = (x, y)
-                if self._board[y][x] == "o":
-                    self._black_queen_location = (x, y)
-                if self._board[y][x] == "U":
-                    self._white_queen_location = (x, y)
-                if self._board[y][x] == "u":
-                    self._black_queen_location = (x, y)
-                if self._board[y][x] == "J":
-                    self._white_queen_location = (x, y)
-                if self._board[y][x] == "j":
-                    self._black_queen_location = (x, y)
+                if self._board[y][x] in queens:
+                    if self._board[y][x].istitle():
+                        self._white_queen_location = (x, y)
+                    else:
+                        self._black_queen_location = (x, y)
+        print "royals updated"
+
+    def SurroundedBy(self, board, fromPos, direction=0):
+        # opens fromTuple, pings board at the locations: cloister, orthogonal, diagonal
+        # returns a tuple of board coordinates that aren't empty
+        fromSquare_x = fromPos[0]
+        fromSquare_y = fromPos[1]
+        pieces = []
+        for y in range(fromSquare_y - 1, fromSquare_y + 2):
+            for x in range(fromSquare_x - 1, fromSquare_x + 2):
+                if x < 0 or x > 7 or y < 0 or y > 7 or (x == fromSquare_x and x == fromSquare_x):
+                    continue
+                if direction == 0:  # cloister: all 8 spaces around
+                    if not '.' in self._board[y][x]:
+                        pieces.append((x, y))
+                elif direction == 1:  # orthogonal
+                    if ((x == fromSquare_x - 1 and y == fromSquare_y - 1) or
+                        (x == fromSquare_x + 1 and y == fromSquare_y - 1) or
+                        (x == fromSquare_x - 1 and y == fromSquare_y + 1) or
+                        (x == fromSquare_x + 1 and y == fromSquare_y + 1)):
+                        continue
+                    if not '.' in self._board[y][x]:
+                        pieces.append((x, y))
+                elif direction == 2:  # diagonal
+                    if ((x == fromSquare_x - 1 and y == fromSquare_y) or
+                        (x == fromSquare_x + 1 and y == fromSquare_y) or
+                        (x == fromSquare_x and y == fromSquare_y - 1) or
+                        (x == fromSquare_x and y == fromSquare_y + 1)):
+                        continue
+                    if not '.' in self._board[y][x]:
+                        pieces.append((x, y))
+        return pieces
+
+    def DistanceTo(self, fromPos, toPos):
+        distance_x = abs(fromPos[0] - toPos[0])
+        distance_y = abs(fromPos[1] - toPos[1])
+        distance = int(distance_x + distance_y)
+        return distance
 
     def setEP(self, epPos):
         self._ep[0], self._ep[1] = epPos
@@ -288,7 +334,7 @@ class ChessBoard:
         done = False
         fp = self._board[fy][fx]
         self._board[fy][fx] = "."
-        if not self.isThreatened(kx, ky):
+        if not self.isThreatened2(kx, ky):
             done = True
         self._board[fy][fx] = fp
 
@@ -328,6 +374,11 @@ class ChessBoard:
             return self.WHITE
         elif self._board[y][x].islower():
             return self.BLACK
+
+    def isThreatened2(self, lx, ly, player=None):
+        if player is None:
+            player = self._turn
+        return False
 
     def isThreatened(self, lx, ly, player=None):
         if player is None:
@@ -390,8 +441,11 @@ class ChessBoard:
         for y in range(0, 8):
             for x in range(0, 8):
                 if self.getColor(x, y) == player:
+                    print ((x, y))
                     if len(self.getValidMoves((x, y))):
+                        print "yes, has valid moves"
                         return True
+        print "no, no valid moves"
         return False
 
     #--------------------- - -
@@ -420,6 +474,7 @@ class ChessBoard:
 
     def traceValidNemesisNemesisMoves(self, fromPos, dirs, maxSteps=8):
         moves = []
+        kings = self.ROYAL_STRINGS['K']
         for d in dirs:
             x, y = fromPos
             dx, dy = d
@@ -431,7 +486,7 @@ class ChessBoard:
                     break
                 if self.isFree(x, y):
                     moves.append((x, y))
-                elif (self._board[y][x] in self.ROYAL_LOOKUPS[self._board[y][x]]) and self.getColor(x, y) != self._turn:
+                elif self._board[y][x] in kings and self.getColor(x, y) != self._turn:
                     moves.append((x, y))
                     break
                 else:
@@ -511,11 +566,13 @@ class ChessBoard:
             ocol = self.WHITE
             eprow = 4
 
+        print str(self.isFree(fx, fy + movedir))
+
         if self.isFree(fx, fy + movedir):
             moves.append((fx, fy + movedir))
 
         if fy == startrow:
-            if self.isFree(fx, fy + movedir) and self.isFree(fx, fy + (movedir*2)):
+            if self.isFree(fx, fy + movedir) and self.isFree(fx, fy + (movedir * 2)):
                 moves.append((fx, fy + (movedir*2)))
                 specialMoves[(fx, fy + (movedir*2))] = self.EP_MOVE
         if fx < 7 and self.getColor(fx + 1, fy + movedir) == ocol:
@@ -649,6 +706,59 @@ class ChessBoard:
         moves = self.checkKingGuard(fromPos, moves)
         return moves
 
+    def getValidEmpoweredBishopKnightMoves(self, fromPos):
+        moves = []
+        dirs = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
+        moves = self.traceValidMoves(fromPos, dirs)
+        m = [(fx + 1, fy + 2), (fx + 2, fy + 1), (fx + 2, fy - 1),
+             (fx + 1, fy - 2), (fx - 1, fy + 2), (fx - 2, fy + 1),
+             (fx - 1, fy - 2), (fx - 2, fy - 1)]
+        for p in m:
+            if p[0] >= 0 and p[0] <= 7 and p[1] >= 0 and p[1] <= 7:
+                if self.getColor(p[0], p[1]) != self._turn:
+                    moves.append(p)
+        moves = self.checkKingGuard(fromPos, moves)
+        return moves
+
+    def getValidEmpoweredBishopRookMoves(self, fromPos):
+        moves = []
+        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
+                (1, 1), (-1, 1), (1, -1), (-1, -1)]
+
+        moves = self.traceValidMoves(fromPos, dirs)
+
+        moves = self.checkKingGuard(fromPos, moves)
+        return moves
+
+    def getValidEmpoweredKnightRookMoves(self, fromPos):
+        moves = []
+        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        moves = self.traceValidMoves(fromPos, dirs)
+        m = [(fx + 1, fy + 2), (fx + 2, fy + 1), (fx + 2, fy - 1),
+             (fx + 1, fy - 2), (fx - 1, fy + 2), (fx - 2, fy + 1),
+             (fx - 1, fy - 2), (fx - 2, fy - 1)]
+        for p in m:
+            if p[0] >= 0 and p[0] <= 7 and p[1] >= 0 and p[1] <= 7:
+                if self.getColor(p[0], p[1]) != self._turn:
+                    moves.append(p)
+        moves = self.checkKingGuard(fromPos, moves)
+        return moves
+
+    def getValidEmpoweredTrioMoves(self, fromPos):
+        moves = []
+        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
+                (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        moves = self.traceValidMoves(fromPos, dirs)
+        m = [(fx + 1, fy + 2), (fx + 2, fy + 1), (fx + 2, fy - 1),
+             (fx + 1, fy - 2), (fx - 1, fy + 2), (fx - 2, fy + 1),
+             (fx - 1, fy - 2), (fx - 2, fy - 1)]
+        for p in m:
+            if p[0] >= 0 and p[0] <= 7 and p[1] >= 0 and p[1] <= 7:
+                if self.getColor(p[0], p[1]) != self._turn:
+                    moves.append(p)
+        moves = self.checkKingGuard(fromPos, moves)
+        return moves
+
     def getValidAnimalsTigerMoves(self, fromPos):
         moves = []
         dirs = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
@@ -714,7 +824,8 @@ class ChessBoard:
 
     def getValidClassicQueenMoves(self, fromPos):
         moves = []
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
+                (1, 1), (-1, 1), (1, -1), (-1, -1)]
 
         moves = self.traceValidMoves(fromPos, dirs)
 
@@ -723,7 +834,8 @@ class ChessBoard:
 
     def getValidNemesisNemesisMoves(self, fromPos):
         moves = []
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
+                (1, 1), (-1, 1), (1, -1), (-1, -1)]
 
         moves = self.traceValidNemesisNemesisMoves(fromPos, dirs)
 
@@ -748,7 +860,8 @@ class ChessBoard:
 
     def getValidEmpoweredQueenMoves(self, fromPos):
         moves = []
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
+                (1, 1), (-1, 1), (1, -1), (-1, -1)]
 
         moves = self.traceValidMoves(fromPos, dirs, 1)
 
@@ -762,7 +875,9 @@ class ChessBoard:
 
         moves = self.traceValidMoves(fromPos, dirs)
 
-        m = [(fx + 1, fy + 2), (fx + 2, fy + 1), (fx + 2, fy - 1), (fx + 1, fy - 2), (fx - 1, fy + 2), (fx - 2, fy + 1), (fx - 1, fy - 2), (fx - 2, fy - 1)]
+        m = [(fx + 1, fy + 2), (fx + 2, fy + 1), (fx + 2, fy - 1),
+             (fx + 1, fy - 2), (fx - 1, fy + 2), (fx - 2, fy + 1),
+             (fx - 1, fy - 2), (fx - 2, fy - 1)]
         for p in m:
             if p[0] >= 0 and p[0] <= 7 and p[1] >= 0 and p[1] <= 7:
                 if self.getColor(p[0], p[1]) != self._turn:
@@ -813,58 +928,24 @@ class ChessBoard:
     def getValidTwoKingsWarriorKingMoves(self, fromPos):
         moves = []
         specialMoves = {}
+        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
+                (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        #for m in t_moves:
+            #if not self.isThreatened(m[0], m[1]):
+                #moves.append(m)
+        moves = self.traceValidMoves(fromPos, dirs, 1)
+        return moves, specialMoves
 
-        if self._turn == self.WHITE:
-            c_row = 7
-            c_king = self._white_king_castle
-            c_queen = self._white_queen_castle
-            k = "W"
-        else:
-            c_row = 0
-            c_king = self._black_king_castle
-            c_queen = self._black_queen_castle
-            k = "w"
-
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
-
-        t_moves = self.traceValidMoves(fromPos, dirs, 1)
-
-        self._board[fromPos[1]][fromPos[0]] = '.'
-
-        for m in t_moves:
-            if not self.isThreatened(m[0], m[1]):
-                moves.append(m)
-
-        self._board[fromPos[1]][fromPos[0]] = k
-        return (moves, specialMoves)
-
-    def getValidTwoKingsWarriorKingMoves(self, fromPos):
+    def getValidGenericKingMoves(self, fromPos):
         moves = []
         specialMoves = {}
-
-        if self._turn == self.WHITE:
-            c_row = 7
-            c_king = self._white_king_castle
-            c_queen = self._white_queen_castle
-            k = "C"
-        else:
-            c_row = 0
-            c_king = self._black_king_castle
-            c_queen = self._black_queen_castle
-            k = "c"
-
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
-
-        t_moves = self.traceValidMoves(fromPos, dirs, 1)
-
-        self._board[fromPos[1]][fromPos[0]] = '.'
-
-        for m in t_moves:
-            if not self.isThreatened(m[0], m[1]):
-                moves.append(m)
-
-        self._board[fromPos[1]][fromPos[0]] = k
-        return (moves, specialMoves)
+        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
+                (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        #for m in t_moves:
+            #if not self.isThreatened(m[0], m[1]):
+                #moves.append(m)
+        moves = self.traceValidMoves(fromPos, dirs, 1)
+        return moves, specialMoves
 
     ########################
     ## Movement Functions ##
@@ -1043,6 +1124,78 @@ class ChessBoard:
 
     def moveClassicBishop(self, fromPos, toPos):
         moves = self.getValidClassicBishopMoves(fromPos)
+
+        if not toPos in moves:
+            return False
+
+        self.clearEP()
+
+        if self._board[toPos[1]][toPos[0]] == ".":
+            self._fifty += 1
+        else:
+            self._fifty = 0
+            self._cur_move[3] = True
+
+        self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
+        self._board[fromPos[1]][fromPos[0]] = "."
+        return True
+
+    def moveEmpoweredBishopKnight(self, fromPos, toPos):
+        moves = self.getValidEmpoweredBishopKnight(fromPos)
+
+        if not toPos in moves:
+            return False
+
+        self.clearEP()
+
+        if self._board[toPos[1]][toPos[0]] == ".":
+            self._fifty += 1
+        else:
+            self._fifty = 0
+            self._cur_move[3] = True
+
+        self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
+        self._board[fromPos[1]][fromPos[0]] = "."
+        return True
+
+    def moveEmpoweredBishopRook(self, fromPos, toPos):
+        moves = self.getValidEmpoweredBishopRook(fromPos)
+
+        if not toPos in moves:
+            return False
+
+        self.clearEP()
+
+        if self._board[toPos[1]][toPos[0]] == ".":
+            self._fifty += 1
+        else:
+            self._fifty = 0
+            self._cur_move[3] = True
+
+        self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
+        self._board[fromPos[1]][fromPos[0]] = "."
+        return True
+
+    def moveEmpoweredKnightRook(self, fromPos, toPos):
+        moves = self.getValidEmpoweredKnightRook(fromPos)
+
+        if not toPos in moves:
+            return False
+
+        self.clearEP()
+
+        if self._board[toPos[1]][toPos[0]] == ".":
+            self._fifty += 1
+        else:
+            self._fifty = 0
+            self._cur_move[3] = True
+
+        self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
+        self._board[fromPos[1]][fromPos[0]] = "."
+        return True
+
+    def moveEmpoweredTrio(self, fromPos, toPos):
+        moves = self.getValidEmpoweredTrio(fromPos)
 
         if not toPos in moves:
             return False
@@ -1275,7 +1428,11 @@ class ChessBoard:
             return False
 
         self.clearEP()
-        self._fifty += 1
+        if self._board[toPos[1]][toPos[0]] == ".":
+            self._fifty += 1
+        else:
+            self._fifty = 0
+            self._cur_move[3] = True
 
         self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
         self._board[fromPos[1]][fromPos[0]] = "."
@@ -1333,6 +1490,46 @@ class ChessBoard:
 
             self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
             self._board[fromPos[1]][fromPos[0]] = "."
+
+        self.updateRoyalLocations()
+        return True
+
+    def moveTwoKingsWarriorKing(self, fromPos, toPos):
+        moves, specialMoves = self.getValidTwoKingsWarriorKingMoves(fromPos)
+
+        if not toPos in moves:
+            return False
+
+        self.clearEP()
+
+        if self._board[toPos[1]][toPos[0]] == ".":
+            self._fifty += 1
+        else:
+            self._fifty = 0
+            self._cur_move[3] = True
+
+        self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
+        self._board[fromPos[1]][fromPos[0]] = "."
+
+        self.updateRoyalLocations()
+        return True
+
+    def moveGenericKing(self, fromPos, toPos):
+        moves, specialMoves = self.getValidGenericKingMoves(fromPos)
+
+        if not toPos in moves:
+            return False
+
+        self.clearEP()
+
+        if self._board[toPos[1]][toPos[0]] == ".":
+            self._fifty += 1
+        else:
+            self._fifty = 0
+            self._cur_move[3] = True
+
+        self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
+        self._board[fromPos[1]][fromPos[0]] = "."
 
         self.updateRoyalLocations()
         return True
@@ -1595,7 +1792,7 @@ class ChessBoard:
 
         self._three_rep_stack.append(three_state)
 
-        self.updateRoyalLocations()
+        #self.updateRoyalLocations()
 
     def getFEN(self):
         """
@@ -1737,7 +1934,7 @@ class ChessBoard:
             kx, ky = self._white_king_location
         else:
             kx, ky = self._black_king_location
-        return self.isThreatened(kx, ky, self._turn)
+        return self.isThreatened2(kx, ky, self._turn)
 
     def isGameOver(self):
         """
@@ -1862,9 +2059,9 @@ class ChessBoard:
         elif p == 'X':
             return self.getValidEmpoweredBishopKnightMoves(location)
         elif p == 'Y':
-            return self.getValidBishopRookMoves(location)
+            return self.getValidEmpoweredBishopRookMoves(location)
         elif p == 'Z':
-            return self.getValidKnightRookMoves(location)
+            return self.getValidEmpoweredKnightRookMoves(location)
         elif p == 'I':
             return self.getValidEmpoweredTrioMoves(location)
         elif p == 'O':
@@ -1904,14 +2101,14 @@ class ChessBoard:
         If this method returns False you can use the getReason method to determin why.
         """
         self._reason = 0
-        #                                piece, from, to, take, promotion, check, specialmove
+        #                piece, from, to, take, promotion, check, specialmove
         self._cur_move = [None, None, None, False, None, None, self.NORMAL_MOVE]
 
         if self._game_result:
             self._result = self.GAME_IS_OVER
             return False
 
-        self.updateRoyalLocations()
+        #self.updateRoyalLocations()
 
         fx, fy = fromPos
         tx, ty = toPos
@@ -2014,11 +2211,11 @@ class ChessBoard:
                     return False
         # Two Kings
         elif p == 'U':
-            if not self.moveTwoKingsKing((fx, fy), (tx, ty)):
+            if not self.moveTwoKingsWarriorKing((fx, fy), (tx, ty)):
                 self._reason = self.INVALID_MOVE
                 return False
         elif p == 'W':
-            if not self.moveTwoKingsKing((fx, fy), (tx, ty)):
+            if not self.moveTwoKingsWarriorKing((fx, fy), (tx, ty)):
                 self._reason = self.INVALID_MOVE
                 return False
         # Animals
@@ -2038,9 +2235,13 @@ class ChessBoard:
             if not self.moveAnimalsJungleQueen((fx, fy), (tx, ty)):
                 self._reason = self.INVALID_MOVE
                 return False
-        # Generic Pawns
+        # Generic Pieces
         elif p == 'D':
             if not self.moveGenericPawn((fx, fy), (tx, ty)):
+                self._reason = self.INVALID_MOVE
+                return False
+        elif p == 'C':
+            if not self.moveGenericKing((fx, fy), (tx, ty)):
                 self._reason = self.INVALID_MOVE
                 return False
         else:
