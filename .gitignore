@@ -1,5 +1,6 @@
 *.py[cod]
 *.un~
+*.swp
 
 Thumbs.db
 
