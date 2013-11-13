@@ -340,44 +340,46 @@ class ChessBoard:
             queenPos = self._black_queen_location
             army = self._black_army
 
-        fx, fy = fromPos
+        from_x, from_y = fromPos
 
         done = False
-        fp = self._board[fy][fx]
-        self._board[fy][fx] = "."
+        from_p = self._board[from_y][from_x]
+        self._board[from_y][from_x] = "."
         if "TwoKings" in self.army_names[army]:
             if not self.isThreatened(kingPos, self._turn) and not self.isThreatened(queenPos, self._turn):
                 done = True
         else:
             if not self.isThreatened(kingPos, self._turn):
                 done = True
-        self._board[fy][fx] = fp
+        self._board[from_y][from_x] = from_p
 
         if done:
             return moves
 
         for m in moves:
-            tx, ty = m
+            to_x, to_y = m
             sp = None
-            fp = self._board[fy][fx]
-            tp = self._board[ty][tx]
+            from_p = self._board[from_y][from_x]
+            to_p = self._board[to_y][to_x]
 
-            self._board[fy][fx] = "."
-            self._board[ty][tx] = fp
+            self._board[from_y][from_x] = "."
+            self._board[to_y][to_x] = from_p
 
             if m in specialMoves and specialMoves[m] == self.EP_CAPTURE_MOVE:
                 sp = self._board[self._ep[1]][self._ep[0]]
                 self._board[self._ep[1]][self._ep[0]] = "."
 
+            self.updateRoyalLocations()
+            if self._turn == self.WHITE:
+                kingPos = self._white_king_location
+                queenPos = self._white_queen_location
+                army = self._white_army
+            else:
+                kingPos = self._black_king_location
+                queenPos = self._black_queen_location
+                army = self._black_army
             if "TwoKings" in self.army_names[army]:
-                if self.isThreatened(kingPos, self._turn) != self.isThreatened(queenPos, self._turn):
-                    if self.isThreatened(kingPos, self._turn):
-                        pass  # Put something here, or whatever. I don't know.
-                    elif self.isThreatened(queenPos, self._turn):
-                        pass  # Yeah, same goes for here. What the fuck.
-                    else:
-                        result.append(m)
-                elif not self.isThreatened(kingPos, self._turn) and not self.isThreatened(queenPos, self._turn):
+                if not self.isThreatened(kingPos, self._turn) and not self.isThreatened(queenPos, self._turn):
                     result.append(m)
             else:
                 if not self.isThreatened(kingPos, self._turn):
@@ -386,8 +388,9 @@ class ChessBoard:
             if sp:
                 self._board[self._ep[1]][self._ep[0]] = sp
 
-            self._board[fy][fx] = fp
-            self._board[ty][tx] = tp
+            self._board[from_y][from_x] = from_p
+            self._board[to_y][to_x] = to_p
+            self.updateRoyalLocations()
         return result
 
     def isFree(self, x, y):
@@ -547,10 +550,6 @@ class ChessBoard:
     def isInvulnerable(self, fromPos, moves):
         results = []
         fx, fy = fromPos
-        if self._turn == self.WHITE:
-            kingPos = self._white_king_location
-        else:
-            kingPos = self._black_king_location
         for m in moves:
             mx, my = m
             if any(var in self._board[fy][fx] for var in ('K', 'k', 'W', 'w', 'U', 'u', 'C', 'c')):
@@ -564,6 +563,21 @@ class ChessBoard:
                     continue
             results.append(m)
         return results
+
+    def isPieceInvulnerable(self, fromPos, toPos):
+        results = []
+        fx, fy = fromPos
+        tx, ty = toPos
+        if any(var in self._board[fy][fx] for var in ('K', 'k', 'W', 'w', 'U', 'u', 'C', 'c')):
+            if any(var in self._board[ty][tx] for var in ('G', 'g')):
+                return True
+        else:
+            if any(var in self._board[ty][tx] for var in ('M', 'm', 'G', 'g')):
+                return True
+        if any(var in self._board[ty][tx] for var in ('E', 'e')):
+            if self.DistanceTo(fromPos, toPos) >= 3:
+                return True
+        return False
 
 #############################
 # getValid[Army][Piece]Moves!
@@ -816,7 +830,12 @@ class ChessBoard:
              (fx - 1, fy - 2), (fx - 2, fy - 1)]
         for p in m:
             if p[0] >= 0 and p[0] <= 7 and p[1] >= 0 and p[1] <= 7:
-                moves.append(p)
+                if (any(var in self._board[p[1]][p[0]] for var in ('C', 'c')) and self.getColor(p[0], p[1]) != self._turn):
+                    moves.append(p)
+                elif (any(var in self._board[p[1]][p[0]] for var in ('C', 'c')) and self.getColor(p[0], p[1]) == self._turn):
+                    continue
+                else:
+                    moves.append(p)
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
         return moves
@@ -896,8 +915,9 @@ class ChessBoard:
 
     def getValidEmpoweredQueenMoves(self, fromPos):
         moves = []
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
-                (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        dirs = [(-1, -1), (0, -1), (1, -1),
+                (-1, 0), (1, 0),
+                (-1, 1), (0, 1), (1, 1)]
 
         moves = self.traceValidMoves(fromPos, dirs, 1)
 
@@ -939,9 +959,9 @@ class ChessBoard:
             c_queen = self._black_queen_castle
             k = "k"
 
-        dirs = [(1, 0), (-1, 0), (0, 1),
-                (0, -1), (1, 1), (-1, 1),
-                (1, -1), (-1, -1)]
+        dirs = [(-1, -1), (0, -1), (1, -1),
+                (-1, 0), (1, 0),
+                (-1, 1), (0, 1), (1, 1)]
 
         t_moves = self.traceValidMoves(fromPos, dirs, 1)
 
@@ -964,30 +984,38 @@ class ChessBoard:
 
         self._board[fromPos[1]][fromPos[0]] = k
         self.updateRoyalLocations()
+        moves = self.isInvulnerable(fromPos, moves)
+        moves = self.checkKingGuard(fromPos, moves)
         return (moves, specialMoves)
 
     def getValidTwoKingsWarriorKingMoves(self, fromPos):
         moves = []
         specialMoves = {}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
-                (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        dirs = [(-1, -1), (0, -1), (1, -1),
+                (-1, 0), (1, 0),
+                (-1, 1), (0, 1), (1, 1)]
         t_moves = self.traceValidMoves(fromPos, dirs, 1)
         for m in t_moves:
             if not self.isThreatened(m, self._turn):
                 moves.append(m)
         self.updateRoyalLocations()
+        moves = self.isInvulnerable(fromPos, moves)
+        moves = self.checkKingGuard(fromPos, moves)
         return moves, specialMoves
 
     def getValidGenericKingMoves(self, fromPos):
         moves = []
         specialMoves = {}
-        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
-                (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        dirs = [(-1, -1), (0, -1), (1, -1),
+                (-1, 0), (1, 0),
+                (-1, 1), (0, 1), (1, 1)]
         t_moves = self.traceValidMoves(fromPos, dirs, 1)
         for m in t_moves:
             if not self.isThreatened(m, self._turn):
                 moves.append(m)
         self.updateRoyalLocations()
+        moves = self.isInvulnerable(fromPos, moves)
+        moves = self.checkKingGuard(fromPos, moves)
         return moves, specialMoves
 
     ########################
@@ -1382,20 +1410,20 @@ class ChessBoard:
                     # if travelling north
                     if toPos[1] < fromPos[1]:
                         # check invulnerability of coming spaces: if inv, stop and exit loop. if not, continue.
-                        #if self.IsPieceInvulnerable(fromTuple, (max(fromSquare_r - distance_r, 0), toSquare_c), currentArmy, enemyArmy):
-                            #self.squares[max(fromSquare_r - distance_r + 1, 0)][toSquare_c] = fromPiece
-                            #break
-                        #else:
-                        self._board[max(fromPos[1] - distance_y, 0)][toPos[0]] = fromPiece
-                        self._board[max(fromPos[1] - distance_y + 1, 1)][toPos[0]] = "."
+                        if self.isPieceInvulnerable(fromPos, (toPos[0], max(fromPos[1] - distance_y, 0))):
+                            self._board[max(fromPos[1] - distance_y + 1, 0)][toPos[0]] = fromPiece
+                            break
+                        else:
+                            self._board[max(fromPos[1] - distance_y, 0)][toPos[0]] = fromPiece
+                            self._board[max(fromPos[1] - distance_y + 1, 1)][toPos[0]] = "."
                     # if travelling south
                     else:
-                        #if self.IsPieceInvulnerable(fromTuple, (min(fromSquare_r + distance_r, 7), toSquare_c), currentArmy, enemyArmy):
-                            #self.squares[min(fromSquare_r + distance_r - 1, 7)][toSquare_c] = fromPiece
-                            #break
-                        #else:
-                        self._board[min(fromPos[1] + distance_y, 7)][toPos[0]] = fromPiece
-                        self._board[min(fromPos[1] + distance_y - 1, 6)][toPos[0]] = "."
+                        if self.isPieceInvulnerable(fromPos, (toPos[0], min(fromPos[1] + distance_y, 7))):
+                            self._board[min(fromPos[1] + distance_y - 1, 7)][toPos[0]] = fromPiece
+                            break
+                        else:
+                            self._board[min(fromPos[1] + distance_y, 7)][toPos[0]] = fromPiece
+                            self._board[min(fromPos[1] + distance_y - 1, 6)][toPos[0]] = "."
                     self._board[fromPos[1]][fromPos[0]] = "."
             # if travelling horizontally
             else:
@@ -1403,20 +1431,20 @@ class ChessBoard:
                     # if travelling west
                     if toPos[0] < fromPos[0]:
                         # check invulnerability of coming spaces: if inv, stop and exit loop. if not, continue.
-                        #if self.IsPieceInvulnerable(fromTuple, (toSquare_r, max(fromSquare_c - distance_c, 0)), currentArmy, enemyArmy):
-                            #self.squares[toSquare_r][max(fromSquare_c - distance_c + 1, 0)] = fromPiece
-                            #break
-                        #else:
-                        self._board[toPos[1]][max(fromPos[0] - distance_x, 0)] = fromPiece
-                        self._board[toPos[1]][max(fromPos[0] - distance_x + 1, 1)] = "."
+                        if self.isPieceInvulnerable(fromPos, (max(fromPos[0] - distance_x, 0), toPos[1])):
+                            self._board[toPos[1]][max(fromPos[0] - distance_x + 1, 0)] = fromPiece
+                            break
+                        else:
+                            self._board[toPos[1]][max(fromPos[0] - distance_x, 0)] = fromPiece
+                            self._board[toPos[1]][max(fromPos[0] - distance_x + 1, 1)] = "."
                     # if travelling east
                     else:
-                        #if self.IsPieceInvulnerable(fromTuple, (toSquare_r, min(fromSquare_c + distance_c, 7)), currentArmy, enemyArmy):
-                            #self.squares[toSquare_r][min(fromSquare_c + distance_c - 1, 7)] = fromPiece
-                            #break
-                        #else:
-                        self._board[toPos[1]][min(fromPos[0] + distance_x, 7)] = fromPiece
-                        self._board[toPos[1]][min(fromPos[0] + distance_x - 1, 6)] = "."
+                        if self.isPieceInvulnerable(fromPos, (min(fromPos[0] + distance_x, 7), toPos[1])):
+                            self._board[toPos[1]][min(fromPos[0] + distance_x - 1, 7)] = fromPiece
+                            break
+                        else:
+                            self._board[toPos[1]][min(fromPos[0] + distance_x, 7)] = fromPiece
+                            self._board[toPos[1]][min(fromPos[0] + distance_x - 1, 6)] = "."
                     self._board[toPos[1]][fromPos[0]] = "."
         return True
 
@@ -2004,7 +2032,6 @@ class ChessBoard:
             if "TwoKings" in self.army_names[self._white_army]:
                 kingPos = self._white_king_location
                 queenPos = self._white_queen_location
-                print str(queenPos)
                 return (self.isThreatened(kingPos, self._turn), self.isThreatened(queenPos, self._turn))
             else:
                 kingPos = self._white_king_location
@@ -2328,7 +2355,6 @@ class ChessBoard:
         if self._turn == self.WHITE:
             if "TwoKings" in self.army_names[self._white_army]:
                 k, q = self.isCheck()
-                print str((k, q))
                 if k != q:
                     self._cur_move[5] = "+"
                 elif k and q:
