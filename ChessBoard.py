@@ -645,29 +645,38 @@ class ChessBoard:
             enemycolor = "white"
 
         kx, ky = getattr(self, "_" + enemycolor + "_king_location")
+        qx, qy = getattr(self, "_" + enemycolor + "_queen_location")
 
         # 1 2 3
         # 4   5
         # 6 7 8
-        if ky < fy:
-            if kx < fx:
-                dirs.append((-1, -1))
-            elif kx == fx:
-                dirs.append((0, -1))
-            else:
-                dirs.append((1, -1))
-        elif ky == fy:
-            if kx < fx:
-                dirs.append((-1, 0))
-            else:
-                dirs.append((1, 0))
-        elif ky > fy:
-            if kx < fx:
-                dirs.append((-1, 1))
-            elif kx == fx:
-                dirs.append((0, 1))
-            else:
-                dirs.append((1, 1))
+        if ky < fy or qy < fy:
+            if kx < fx or qx < kx:  # 1
+                dirs.append((-1, -1))  # 1
+                dirs.append((0, -1))  # 2
+                dirs.append((-1, 0))  # 4
+            if kx == fx or qx == kx:  # 2
+                dirs.append((0, -1))  # 2
+            if kx > fx or qx > fx:  # 3
+                dirs.append((0, -1))  # 2
+                dirs.append((1, -1))  # 3
+                dirs.append((1, 0))  # 5
+        if ky == fy or qy == kx:
+            if kx < fx or qx < fx:  # 4
+                dirs.append((-1, 0))  # 4
+            if kx > fx or qx > fx:  # 5
+                dirs.append((1, 0))  # 5
+        if ky > fy or qy > fx:
+            if kx < fx or qx < fx:  # 6
+                dirs.append((-1, 0))  # 4
+                dirs.append((-1, 1))  # 6
+                dirs.append((0, 1))  # 7
+            if kx == fx or qx == fx:  # 7
+                dirs.append((0, 1))  # 7
+            if kx > fx or qx > fx:  # 8
+                dirs.append((1, 0))  # 5
+                dirs.append((0, 1))  # 7
+                dirs.append((1, 1))  # 8
         moves = self.traceValidMoves(fromPos, dirs, 1)
 
         if self.isFree(fx, fy + movedir):
