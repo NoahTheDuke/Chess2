@@ -152,6 +152,7 @@ class ChessClient:
                                             print chess.getLastTextMove(chess.SAN)
                                             board = chess.getBoard()
                                             turn = chess.getTurn()
+                                            chess.updateRoyalLocations()
                                             markPos[0] = -1
                                             validMoves = []
                                             pieceSelected = None
@@ -165,6 +166,7 @@ class ChessClient:
                                             print chess.getLastTextMove(chess.SAN)
                                             board = chess.getBoard()
                                             turn = chess.getTurn()
+                                            chess.updateRoyalLocations()
                                             markPos[0] = -1
                                             validMoves = []
                                             pieceSelected = None
