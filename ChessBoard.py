@@ -25,6 +25,7 @@ class ChessBoard:
 
     # Army values
     army_names = {
+        0: "Dummy",
         1: "Classic",
         2: "Nemesis",
         3: "Reaper",
@@ -33,26 +34,37 @@ class ChessBoard:
         6: "Animals"
     }
 
+    # Army values for writing things
+    army_names2 = {
+        1: "Classic",
+        2: "Nemesis",
+        3: "Reaper",
+        4: "Empowered",
+        5: "Two Kings",
+        6: "Animals"
+    }
     # Army set up dictionaries
     army_set_ups = {
-        'ClassicBlackSetUp': ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-        'ClassicBlackPawns': ['p'] * 8,
-        'NemesisBlackSetUp': ['r', 'n', 'b', 'm', 'c', 'b', 'n', 'r'],
-        'NemesisBlackPawns': ['l'] * 8,
-        'ReaperBlackSetUp': ['g', 'n', 'b', 'a', 'c', 'b', 'n', 'g'],
-        'EmpoweredBlackSetUp': ['r', 'n', 'b', 'o', 'c', 'b', 'n', 'r'],
-        'TwoKingsBlackSetUp': ['r', 'n', 'b', 'u', 'w', 'b', 'n', 'r'],
-        'AnimalsBlackSetUp': ['e', 'h', 't', 'q', 'c', 't', 'h', 'e'],
-        'GenericBlackPawns': ['d'] * 8,
         'ClassicWhiteSetUp': ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
-        'ClassicWhitePawns': ['P'] * 8,
+        'ClassicBlackSetUp': ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
         'NemesisWhiteSetUp': ['R', 'N', 'B', 'M', 'C', 'B', 'N', 'R'],
-        'NemesisWhitePawns': ['L'] * 8,
+        'NemesisBlackSetUp': ['r', 'n', 'b', 'm', 'c', 'b', 'n', 'r'],
         'ReaperWhiteSetUp': ['G', 'N', 'B', 'A', 'C', 'B', 'N', 'G'],
+        'ReaperBlackSetUp': ['g', 'n', 'b', 'a', 'c', 'b', 'n', 'g'],
         'EmpoweredWhiteSetUp': ['R', 'N', 'B', 'O', 'C', 'B', 'N', 'R'],
+        'EmpoweredBlackSetUp': ['r', 'n', 'b', 'o', 'c', 'b', 'n', 'r'],
         'TwoKingsWhiteSetUp': ['R', 'N', 'B', 'U', 'W', 'B', 'N', 'R'],
-        'AnimalsWhiteSetUp': ['E', 'H', 'T', 'Q', 'C', 'T', 'H', 'E'],
-        'GenericWhitePawns': ['D'] * 8
+        'TwoKingsBlackSetUp': ['r', 'n', 'b', 'u', 'w', 'b', 'n', 'r'],
+        'AnimalsWhiteSetUp': ['E', 'H', 'T', 'J', 'C', 'T', 'H', 'E'],
+        'AnimalsBlackSetUp': ['e', 'h', 't', 'j', 'c', 't', 'h', 'e'],
+        'DummyWhiteSetUp': ['.'] * 8,
+        'DummyBlackSetUp': ['.'] * 8,
+        'ClassicWhitePawns': ['P'] * 8,
+        'ClassicBlackPawns': ['p'] * 8,
+        'NemesisWhitePawns': ['L'] * 8,
+        'NemesisBlackPawns': ['l'] * 8,
+        'GenericWhitePawns': ['D'] * 8,
+        'GenericBlackPawns': ['d'] * 8
     }
 
     # King and Queen variation strings
@@ -184,9 +196,7 @@ class ChessBoard:
     _promotion_value = 0
 
     def __init__(self, wArmy, bArmy):
-        self._white_army = wArmy
-        self._black_army = bArmy
-        self.resetBoard(self._white_army, self._black_army)
+        self.resetBoard(wArmy, bArmy)
 
     def state2str(self):
         b = ""
@@ -440,42 +450,28 @@ class ChessBoard:
                 steps += 1
                 x += dx
                 y += dy
-                passable = 0
                 if x < 0 or x > 7 or y < 0 or y > 7:
                     break
                 if self.isFree(x, y):
                     continue
                 elif self.getColor(x, y) == player:
-                    passable += 1
+                    break
                 elif self.getColor(lx, ly) == self.getColor(x, y):
-                    passable += 1
+                    break
                 else:
                     p = self._board[y][x].upper()
                     if any(var in p for var in ('K', 'O', 'U', 'W')) and steps == 1:
-                        if passable == 0:
-                            return True
+                        return True
                     elif any(var in p for var in ('Q', 'M')):
-                        if passable == 0:
-                            return True
-                    elif abs(dx) == abs(dy):
-                        if passable == 0:
-                            if 'B' in p:
-                                    return True
-                            elif 'T' in p and steps < 3:
-                                    return True
-                    elif abs(dx) != abs(dy):
-                        if any(var in p for var in ('R', 'J')):
-                            if passable == 0:
-                                return True
-                        if steps < 4:
-                            if self.isPieceInvulnerable((lx, ly), (x, y)):
-                                print "invul true: " + str(self._board[y][x])
-                                break
-                            print str(self._board[y][x])
-                            if any(var in p for var in ('E', 'e')):
-                                if self.getColor(x, y) == self.getColor(lx, ly):
-                                    break
-                                return True
+                        return True
+                    elif any(var in p for var in ('R', 'J')) and abs(dx) != abs(dy):
+                        return True
+                    elif any(var in p for var in ('E')) and abs(dx) != abs(dy) and steps < 4:
+                        return True
+                    elif 'B' in p and abs(dx) == abs(dy):
+                        return True
+                    elif 'T' in p and abs(dx) == abs(dy) and steps < 3:
+                        return True
                     break
         return False
 
@@ -585,9 +581,7 @@ class ChessBoard:
         fx, fy = fromPos
         tx, ty = toPos
         if any(var in self._board[fy][fx] for var in ('K', 'k', 'W', 'w', 'U', 'u', 'C', 'c')):
-            print "first: " + str(self._board[fy][fx]) + " " + str(self._board[ty][tx])
             if any(var in self._board[ty][tx] for var in ('G', 'g')):
-                print "second"
                 return True
         else:
             if any(var in self._board[ty][tx] for var in ('M', 'm', 'G', 'g')):
@@ -1820,19 +1814,25 @@ class ChessBoard:
         """
         Resets the chess board and all states.
         """
-        blackPieces = self.army_names[bArmy] + 'BlackSetUp'
-        whitePieces = self.army_names[wArmy] + 'WhiteSetUp'
+        self._white_army = wArmy
+        self._black_army = bArmy
+        blackPieces = self.army_names[self._black_army] + 'BlackSetUp'
+        whitePieces = self.army_names[self._white_army] + 'WhiteSetUp'
 
-        if bArmy == 1:
+        if self._black_army == 0:
+            blackPawns = 'DummyBlackSetUp'
+        elif self._black_army == 1:
             blackPawns = 'ClassicBlackPawns'
-        elif bArmy == 2:
+        elif self._black_army == 2:
             blackPawns = 'NemesisBlackPawns'
         else:
             blackPawns = 'GenericBlackPawns'
 
-        if wArmy == 1:
+        if self._white_army == 0:
+            whitePawns = 'DummyWhiteSetUp'
+        elif self._white_army == 1:
             whitePawns = 'ClassicWhitePawns'
-        elif wArmy == 2:
+        elif self._white_army == 2:
             whitePawns = 'NemesisWhitePawns'
         else:
             whitePawns = 'GenericWhitePawns'
@@ -2560,3 +2560,4 @@ class ChessBoard:
             rank -= 1
         print "     + ----- - - + "
         print "        A B C D E F G H"
+
