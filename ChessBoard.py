@@ -288,7 +288,7 @@ class ChessBoard:
         pieces = []
         for y in range(fromSquare_y - 1, fromSquare_y + 2):
             for x in range(fromSquare_x - 1, fromSquare_x + 2):
-                if x < 0 or x > 7 or y < 0 or y > 7 or (x == fromSquare_x and x == fromSquare_x):
+                if x < 0 or x > 7 or y < 0 or y > 7:
                     continue
                 if direction == 0:  # cloister: all 8 spaces around
                     if not '.' in self._board[y][x]:
@@ -421,11 +421,21 @@ class ChessBoard:
                        (lx + 1, ly - 2), (lx - 1, ly + 2), (lx - 2, ly + 1),
                        (lx - 1, ly - 2), (lx - 2, ly - 1)]
         for d in knight_dirs:
-            if d[0] >= 0 and d[0] <= 7 and d[1] >= 0 and d[1] <= 7:
-                if any(var in self._board[d[1]][d[0]] for var in ('n', 'j', 'h')) and player == self.WHITE:
+            if d[0] >= 0 and d[0] < 8 and d[1] >= 0 and d[1] < 8:
+                if any(var in self._board[d[1]][d[0]] for var in ('n', 'y', 'j', 'h')) and player == self.WHITE:
                     return True
-                elif any(var in self._board[d[1]][d[0]] for var in ('N', 'J', 'H')) and player == self.BLACK:
+                elif any(var in self._board[d[1]][d[0]] for var in ('N', 'Y', 'J', 'H')) and player == self.BLACK:
                     return True
+                elif any(var in self._board[d[1]][d[0]] for var in ('X', 'Z')) and player == self.BLACK:
+                    temp = self.SurroundedBy((d[0], d[1]), 1)
+                    for places in temp:
+                        if 'Y' in self._board[places[1]][places[0]]:
+                            return True
+                elif any(var in self._board[d[1]][d[0]] for var in ('x', 'z')) and player == self.WHITE:
+                    temp = self.SurroundedBy((d[0], d[1]), 1)
+                    for places in temp:
+                        if 'y' in self._board[places[1]][places[0]]:
+                            return True
 
         dirs = [(-1, -1), (0, -1), (1, -1),
                 (-1, 0), (1, 0),
