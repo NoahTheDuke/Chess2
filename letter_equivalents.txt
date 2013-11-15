@@ -1,12 +1,12 @@
 a reaper reaper
 b classic bishop
-c generic king
-d generic pawn
+c
+d other pawn
 e animals elephant
-f 
+f
 g reaper ghost
 h animals wild horse
-i empowered trio
+i
 j animals jungle queen
 k classic king
 l nemesis pawn
@@ -16,11 +16,11 @@ o empowered queen
 p classic pawn
 q classic queen
 r classic rook
-s 
+s
 t animals tiger
+v
 u two kings warrior queen
-v 
 w two kings warrior king
-x empowered bishop-knight
-y empowered bishop-rook
-z empowered knight-rook
+x empowered bishop
+y empowered knight
+z empowered rook
