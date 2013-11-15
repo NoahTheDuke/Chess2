@@ -463,14 +463,19 @@ class ChessBoard:
                         return True
                     elif any(var in p for var in ('Q', 'M')):
                         return True
-                    elif any(var in p for var in ('R', 'J')) and abs(dx) != abs(dy):
+                    elif any(var in p for var in ('R', 'J', 'Z')) and abs(dx) != abs(dy):
                         return True
-                    elif any(var in p for var in ('E')) and abs(dx) != abs(dy) and steps < 4:
-                        return True
-                    elif 'B' in p and abs(dx) == abs(dy):
+                    elif 'E' in p and abs(dx) != abs(dy) and steps < 4:
                         return True
                     elif 'T' in p and abs(dx) == abs(dy) and steps < 3:
                         return True
+                    elif any(var in p for var in ('B', 'X') and abs(dx) == abs(dy):
+                        return True
+                    #elif any(var in self._board[d[1]][d[0]] for var in ('x', 'z')) and player == self.WHITE:
+                        #temp = self.SurroundedBy((d[0], d[1]), 1)
+                        #for places in temp:
+                            #if 'y' in self._board[places[1]][places[0]]:
+                                #return True
                     break
         return False
 
