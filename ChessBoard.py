@@ -440,42 +440,28 @@ class ChessBoard:
                 steps += 1
                 x += dx
                 y += dy
-                passable = 0
                 if x < 0 or x > 7 or y < 0 or y > 7:
                     break
                 if self.isFree(x, y):
                     continue
                 elif self.getColor(x, y) == player:
-                    passable += 1
+                    break
                 elif self.getColor(lx, ly) == self.getColor(x, y):
-                    passable += 1
+                    break
                 else:
                     p = self._board[y][x].upper()
                     if any(var in p for var in ('K', 'O', 'U', 'W')) and steps == 1:
-                        if passable == 0:
-                            return True
+                        return True
                     elif any(var in p for var in ('Q', 'M')):
-                        if passable == 0:
-                            return True
-                    elif abs(dx) == abs(dy):
-                        if passable == 0:
-                            if 'B' in p:
-                                    return True
-                            elif 'T' in p and steps < 3:
-                                    return True
-                    elif abs(dx) != abs(dy):
-                        if any(var in p for var in ('R', 'J')):
-                            if passable == 0:
-                                return True
-                        if steps < 4:
-                            if self.isPieceInvulnerable((lx, ly), (x, y)):
-                                print "invul true: " + str(self._board[y][x])
-                                break
-                            print str(self._board[y][x])
-                            if any(var in p for var in ('E', 'e')):
-                                if self.getColor(x, y) == self.getColor(lx, ly):
-                                    break
-                                return True
+                        return True
+                    elif any(var in p for var in ('R', 'J')) and abs(dx) != abs(dy):
+                        return True
+                    elif any(var in p for var in ('E')) and abs(dx) != abs(dy) and steps < 4:
+                        return True
+                    elif 'B' in p and abs(dx) == abs(dy):
+                        return True
+                    elif 'T' in p and abs(dx) == abs(dy) and steps < 3:
+                        return True
                     break
         return False
 
@@ -585,9 +571,7 @@ class ChessBoard:
         fx, fy = fromPos
         tx, ty = toPos
         if any(var in self._board[fy][fx] for var in ('K', 'k', 'W', 'w', 'U', 'u', 'C', 'c')):
-            print "first: " + str(self._board[fy][fx]) + " " + str(self._board[ty][tx])
             if any(var in self._board[ty][tx] for var in ('G', 'g')):
-                print "second"
                 return True
         else:
             if any(var in self._board[ty][tx] for var in ('M', 'm', 'G', 'g')):
