@@ -463,19 +463,30 @@ class ChessBoard:
                         return True
                     elif any(var in p for var in ('Q', 'M')):
                         return True
-                    elif any(var in p for var in ('R', 'J', 'Z')) and abs(dx) != abs(dy):
-                        return True
-                    elif 'E' in p and abs(dx) != abs(dy) and steps < 4:
-                        return True
-                    elif 'T' in p and abs(dx) == abs(dy) and steps < 3:
-                        return True
-                    elif any(var in p for var in ('B', 'X') and abs(dx) == abs(dy):
-                        return True
-                    #elif any(var in self._board[d[1]][d[0]] for var in ('x', 'z')) and player == self.WHITE:
-                        #temp = self.SurroundedBy((d[0], d[1]), 1)
-                        #for places in temp:
-                            #if 'y' in self._board[places[1]][places[0]]:
-                                #return True
+                    elif abs(dx) != abs(dy):  # orthogonal
+                        if any(var in p for var in ('R', 'J', 'Z')):
+                            return True
+                        elif 'E' in p and steps < 4:
+                            return True
+                        elif any(var in p for var in ('X', 'Y')):
+                            temp = self.SurroundedBy((x, y), 1)
+                            for places in temp:
+                                if 'Z' in self._board[places[1]][places[0]] and player == self.BLACK:
+                                    return True
+                                elif 'z' in self._board[places[1]][places[0]] and player == self.WHITE:
+                                    return True
+                    elif abs(dx) == abs(dy):  # diagonal
+                        if any(var in p for var in ('B', 'X')):
+                            return True
+                        elif 'T' in p and steps < 3:
+                            return True
+                        elif any(var in p for var in ('Y', 'Z')):
+                            temp = self.SurroundedBy((x, y), 1)
+                            for places in temp:
+                                if 'X' in self._board[places[1]][places[0]] and player == self.BLACK:
+                                    return True
+                                elif 'x' in self._board[places[1]][places[0]] and player == self.WHITE:
+                                    return True
                     break
         return False
 
