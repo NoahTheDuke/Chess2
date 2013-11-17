@@ -35,33 +35,31 @@ class ChessBoard:
 
     # Army set up dictionaries
     army_set_ups = {
-        'ClassicBlackSetUp': ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-        'ClassicBlackPawns': ['p'] * 8,
-        'NemesisBlackSetUp': ['r', 'n', 'b', 'm', 'c', 'b', 'n', 'r'],
-        'NemesisBlackPawns': ['l'] * 8,
-        'ReaperBlackSetUp': ['g', 'n', 'b', 'a', 'c', 'b', 'n', 'g'],
-        'EmpoweredBlackSetUp': ['z', 'y', 'x', 'o', 'c', 'x', 'y', 'z'],
-        'TwoKingsBlackSetUp': ['r', 'n', 'b', 'u', 'w', 'b', 'n', 'r'],
-        'AnimalsBlackSetUp': ['e', 'h', 't', 'q', 'c', 't', 'h', 'e'],
-        'GenericBlackPawns': ['d'] * 8,
         'ClassicWhiteSetUp': ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
-        'ClassicWhitePawns': ['P'] * 8,
+        'ClassicBlackSetUp': ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
         'NemesisWhiteSetUp': ['R', 'N', 'B', 'M', 'C', 'B', 'N', 'R'],
-        'NemesisWhitePawns': ['L'] * 8,
+        'NemesisBlackSetUp': ['r', 'n', 'b', 'm', 'c', 'b', 'n', 'r'],
         'ReaperWhiteSetUp': ['G', 'N', 'B', 'A', 'C', 'B', 'N', 'G'],
+        'ReaperBlackSetUp': ['g', 'n', 'b', 'a', 'c', 'b', 'n', 'g'],
         'EmpoweredWhiteSetUp': ['Z', 'Y', 'X', 'O', 'C', 'X', 'Y', 'Z'],
+        'EmpoweredBlackSetUp': ['z', 'y', 'x', 'o', 'c', 'x', 'y', 'z'],
         'TwoKingsWhiteSetUp': ['R', 'N', 'B', 'U', 'W', 'B', 'N', 'R'],
+        'TwoKingsBlackSetUp': ['r', 'n', 'b', 'u', 'w', 'b', 'n', 'r'],
         'AnimalsWhiteSetUp': ['E', 'H', 'T', 'Q', 'C', 'T', 'H', 'E'],
-        'GenericWhitePawns': ['D'] * 8
-    }
+        'AnimalsBlackSetUp': ['e', 'h', 't', 'q', 'c', 't', 'h', 'e'],
+        'ClassicWhitePawns': ['P'] * 8,
+        'ClassicBlackPawns': ['p'] * 8,
+        'NemesisWhitePawns': ['L'] * 8,
+        'NemesisBlackPawns': ['l'] * 8,
+        'GenericWhitePawns': ['D'] * 8,
+        'GenericBlackPawns': ['d'] * 8}
 
     # King and Queen variation strings
     royal_to_army_royal_dict = {
         'K': ['K', 'C', 'W'],
         'k': ['k', 'c', 'w'],
         'Q': ['Q', 'M', 'A', 'O', 'U', 'J'],
-        'q': ['q', 'm', 'a', 'o', 'u', 'j'],
-        }
+        'q': ['q', 'm', 'a', 'o', 'u', 'j']}
 
     # and the reverse
     army_royal_to_royal_dict = {
@@ -74,8 +72,7 @@ class ChessBoard:
         'A': ['Q'],
         'O': ['Q'],
         'U': ['Q'],
-        'J': ['Q']
-        }
+        'J': ['Q']}
 
     piece_to_army_dict = {
         "P": "Classic",
@@ -99,13 +96,35 @@ class ChessBoard:
         "E": "Animals",
         "J": "Animals",
         "D": "Generic",
-        "C": "Generic"
-        }
+        "C": "Generic"}
+
+    piece_to_name_dict = {
+        "P": "Pawn",
+        "B": "Bishop",
+        "N": "Knight",
+        "R": "Rook",
+        "Q": "Queen",
+        "K": "King",
+        "L": "Pawn",
+        "M": "Nemesis",
+        "G": "Ghost",
+        "A": "Reaper",
+        "X": "Bishop",
+        "Y": "Knight",
+        "Z": "Rook",
+        "O": "Queen",
+        "U": "WarriorKing",
+        "W": "WarriorKing",
+        "T": "Tiger",
+        "H": "WildHorse",
+        "E": "Elephant",
+        "J": "JungleQueen",
+        "D": "Pawn",
+        "C": "King"}
 
     color_dict = {
         0: "w",
-        1: "b"
-        }
+        1: "b"}
 
     # Promotion values
     QUEEN = 1
@@ -234,7 +253,8 @@ class ChessBoard:
     def pushState(self):
         if self._state_stack_pointer != len(self._state_stack):
             self._state_stack = self._state_stack[:self._state_stack_pointer]
-            self._three_rep_stack = self._three_rep_stack[:self._state_stack_pointer]
+            self._three_rep_stack = (
+                self._three_rep_stack[:self._state_stack_pointer])
             self._moves = self._moves[:self._state_stack_pointer - 1]
 
         three_state = [self._white_king_castle,
@@ -281,7 +301,7 @@ class ChessBoard:
                     self._black_queen_location = (x, y)
 
     def SurroundedBy(self, fromPos, direction=0):
-        # opens fromTuple, pings board at the locations: cloister, orthogonal, diagonal
+        # checks board at the locations: cloister, orthogonal, diagonal
         # returns a tuple of board coordinates that aren't empty
         fromSquare_x = fromPos[0]
         fromSquare_y = fromPos[1]
@@ -631,8 +651,8 @@ class ChessBoard:
 
         if fy == startrow:
             if self.isFree(fx, fy + movedir) and self.isFree(fx, fy + (movedir * 2)):
-                moves.append((fx, fy + (movedir*2)))
-                specialMoves[(fx, fy + (movedir*2))] = self.EP_MOVE
+                moves.append((fx, fy + (movedir * 2)))
+                specialMoves[(fx, fy + (movedir * 2))] = self.EP_MOVE
         if fx < 7 and self.getColor(fx + 1, fy + movedir) == ocol:
             moves.append((fx + 1, fy + movedir))
         if fx > 0 and self.getColor(fx - 1, fy + movedir) == ocol:
@@ -1222,8 +1242,7 @@ class ChessBoard:
                 3: ['A', 'G', 'N', 'B'],
                 4: ['O', 'R', 'N', 'B'],
                 5: ['R', 'N', 'B'],
-                6: ['J', 'E', 'H', 'T']
-                }
+                6: ['J', 'E', 'H', 'T']}
             pc = tempArmy[self._white_army]
             p = pc[pv - 1]
             self._cur_move[4] = p
@@ -1237,8 +1256,7 @@ class ChessBoard:
                 3: ['a', 'g', 'n', 'b'],
                 4: ['o', 'r', 'n', 'b'],
                 5: ['r', 'n', 'b'],
-                6: ['j', 'e', 'h', 't']
-                }
+                6: ['j', 'e', 'h', 't']}
             pc = tempArmy[self._black_army]
             p = pc[pv - 1]
             self._cur_move[4] = p
@@ -1863,10 +1881,10 @@ class ChessBoard:
 
         self._board = [self.army_set_ups[blackPieces],
                        self.army_set_ups[blackPawns],
-                       ['.']*8,
-                       ['.']*8,
-                       ['.']*8,
-                       ['.']*8,
+                       ['.'] * 8,
+                       ['.'] * 8,
+                       ['.'] * 8,
+                       ['.'] * 8,
                        self.army_set_ups[whitePawns],
                        self.army_set_ups[whitePieces]]
         self._turn = self.WHITE
@@ -1994,7 +2012,7 @@ class ChessBoard:
             elif turn == "w" and (self._board[y][x - 1] == 'P' or self._board[y][x + 1] == 'P'):
                 ep = "%s%s" % (("abcdefgh")[x], ("87654321")[y - 1])
 
-        move = (self._state_stack_pointer + 1)/2
+        move = (self._state_stack_pointer + 1) / 2
         return "%s %s %s %s %s %d" % (board, turn, kq, ep, fifty, move)
 
     def getMoveCount(self):
@@ -2290,110 +2308,11 @@ class ChessBoard:
             self._reason = self.INVALID_COLOR
             return False
 
-        # Call the correct handler
         p = self._board[fy][fx].upper()
         self._cur_move[0] = p
-        # Classic
-        if p == 'P':
-            if not self.moveClassicPawn((fx, fy), (tx, ty)):
-                if not self._reason:
-                    self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'B':
-            if not self.moveClassicBishop((fx, fy), (tx, ty)):
+        if not getattr(self, 'move%s%s' % (self.piece_to_army_dict[p], self.piece_to_name_dict[p]))((fx, fy), (tx, ty)):
+            if not self._reason:
                 self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'N':
-            if not self.moveClassicKnight((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'R':
-            if not self.moveClassicRook((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'Q':
-            if not self.moveClassicQueen((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'K':
-            if not self.moveClassicKing((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        # Nemesis
-        elif p == 'L':
-            if not self.moveNemesisPawn((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'M':
-            if not self.moveNemesisNemesis((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        # Reaper
-        elif p == 'G':
-            if not self.moveReaperGhost((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'A':
-            if not self.moveReaperReaper((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        # Empowered
-        elif p == 'X':
-            if not self.moveEmpoweredBishop((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'Y':
-            if not self.moveEmpoweredKnight((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'Z':
-            if not self.moveEmpoweredRook((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'I':
-            if not self.moveEmpoweredTrio((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'O':
-            if not self.moveEmpoweredQueen((fx, fy), (tx, ty)):
-                    self._reason = self.INVALID_MOVE
-                    return False
-        # Two Kings
-        elif p == 'U':
-            if not self.moveTwoKingsWarriorKing((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'W':
-            if not self.moveTwoKingsWarriorKing((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        # Animals
-        elif p == 'T':
-            if not self.moveAnimalsTiger((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'H':
-            if not self.moveAnimalsWildHorse((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'E':
-            if not self.moveAnimalsElephant((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'J':
-            if not self.moveAnimalsJungleQueen((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        # Generic Pieces
-        elif p == 'D':
-            if not self.moveGenericPawn((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        elif p == 'C':
-            if not self.moveGenericKing((fx, fy), (tx, ty)):
-                self._reason = self.INVALID_MOVE
-                return False
-        else:
             return False
 
         if self._turn == self.WHITE:
