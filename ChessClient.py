@@ -87,11 +87,6 @@ class ChessClient:
         validMoves = []
         pieceSelected = None
 
-        gameResults = ["", "WHITE WINS!", "BLACK WINS!",
-                       "STALEMATE", "DRAW BY THE FIFTHY MOVES RULE",
-                       "DRAW BY THE THREE REPETITION RULE", "MIDLINE INVASION BY WHITE!",
-                       "MIDLINE INVASION BY BLACK!"]
-
         while 1:
             clock.tick(30)
 
@@ -174,7 +169,7 @@ class ChessClient:
                                             pieceSelected = None
 
                 if chess.isGameOver():
-                    pygame.display.set_caption("Game Over! %s" % gameResults[chess.getGameResult()])
+                    pygame.display.set_caption("Game Over! %s" % chess.game_result_dict[chess.getGameResult()])
                     validMove = []
                     markPos[0] = -1
                     markPos[1] = -1

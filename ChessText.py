@@ -76,6 +76,12 @@ class ChessClient:
                         board = chess.getBoard()
                         turn = chess.getTurn()
                         chess.updateRoyalLocations()
+                    else:
+                        print "%s" % chess.move_reason_list[chess.getReason()]
+            else:
+                break
+        chess.printBoard()
+        print "Game over! %s" % chess.game_result_list[chess.getGameResult()]
 
 
 def main():

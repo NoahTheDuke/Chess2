@@ -168,6 +168,13 @@ class ChessBoard:
     GAME_IS_OVER = 6
     AMBIGUOUS_MOVE = 7
 
+    move_reason_list = ["", "Invalid move.", "Invalid color.",
+                        "Invalid move from that square.",
+                        "Invalid move to that square.",
+                        "Must choose promotion.",
+                        "Can't move, game is over."
+                        "Ambiguous move. Disambiguate."]
+
     # Result values
     NO_RESULT = 0
     WHITE_MATE = 1
@@ -177,6 +184,12 @@ class ChessBoard:
     THREE_REPETITION_RULE = 5
     WHITE_MIDLINE_INVASION = 6
     BLACK_MIDLINE_INVASION = 7
+
+    game_result_dict = ["", "White wins!", "Black wins!",
+                        "Stalemate", "Draw by the fifthy moves rule",
+                        "Draw by the three repetition rule",
+                        "Midline invasion by white!",
+                        "Midline invasion by black!"]
 
     # Special moves
     NORMAL_MOVE = 0
