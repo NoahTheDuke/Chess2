@@ -1756,7 +1756,7 @@ class ChessBoard:
         dest_y = ranks[t[-1]]
 
         # Pick out the hints
-        t = t[: -2]
+        t = t[:-2]
         for h in t:
             if h in ('K', 'Q', 'R', 'N', 'B', 'P'):
                 h_piece = h
@@ -1784,6 +1784,58 @@ class ChessBoard:
             piece = "Q"
         elif piece in ("C", "U", "W"):
             piece = "K"
+        return piece
+
+    def _reversePieceNames(self, piece):
+        if self._turn == self.BLACK:
+            curArmy = self._black_army
+        else:
+            curArmy = self._white_army
+
+        if piece == "P":
+            if curArmy == 1:
+                piece = "P"
+            if curArmy == 2:
+                piece = "L"
+            else:
+                piece = "D"
+        elif piece == "B":
+            if curArmy == 6:
+                piece = "T"
+            else:
+                piece = "B"
+        elif piece == "N":
+            if curArmy == 6:
+                piece = "H"
+            else:
+                piece = "N"
+        elif piece == "R":
+            if curArmy == 3:
+                piece = "G"
+            elif curArmy == 6:
+                piece = "E"
+            else:
+                piece = "R"
+        elif piece == "Q":
+            if curArmy == 1:
+                piece = "Q"
+            elif curArmy == 2:
+                piece = "M"
+            elif curArmy == 3:
+                piece = "A"
+            elif curArmy == 4:
+                piece = "O"
+            elif curArmy == 5:
+                piece = "U"
+            elif curArmy == 6:
+                piece = "J"
+        elif piece == "K":
+            if curArmy == 1:
+                piece = "K"
+            elif curArmy == 5:
+                piece = "W"
+            else:
+                piece = "C"
         return piece
 
     def _formatTextMove(self, move, format):
@@ -2426,6 +2478,7 @@ class ChessBoard:
         if not piece:
             return self.addMove((fx, fy), (tx, ty))
 
+        piece = self._reversePieceNames(piece)
         if self._turn == self.BLACK:
             piece = piece.lower()
 
@@ -2500,6 +2553,7 @@ class ChessBoard:
         print "  +-----------------+"
         rank = 8
         for l in self._board:
+            l = [self._formatPieceNames(var) for var in l]
             print "%d | %s %s %s %s %s %s %s %s |" % (rank, l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7])
             rank -= 1
         print "  +-----------------+"

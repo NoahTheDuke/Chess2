@@ -3,6 +3,7 @@
 from ChessBoard import ChessBoard
 
 import os
+import sys
 import pygame
 import math
 from pygame.locals import *
@@ -46,16 +47,23 @@ class ChessClient:
         chess = ChessBoard(int(wArmy), int(bArmy))
         board = chess.getBoard()
         turn = chess.getTurn()
-        chess.printBoard()
-        print str(turn)
 
-        if not chess.isGameOver():
-            print "%s's turn. Type your move." % str(chess.value_to_color_dict[turn])
-            move = raw_input("> ")
-            if len(move) < 2:
-                print "Type a real move, ya dope."
-            else:
-                print "got it."
+        while 1:
+            if not chess.isGameOver():
+                chess.printBoard()
+                print "%s's turn. Type your move." % str(chess.value_to_color_dict[turn])
+                move = raw_input("> ")
+                if move == "exit":
+                    sys.exit(0)
+                elif len(move) < 2:
+                    print "Type a real move, ya dope."
+                else:
+                    res = chess.addTextMove(move)
+                    if res:
+                        print chess.getLastTextMove(chess.SAN)
+                        board = chess.getBoard()
+                        turn = chess.getTurn()
+                        chess.updateRoyalLocations()
 
 
 def main():
