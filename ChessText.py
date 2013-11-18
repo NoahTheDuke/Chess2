@@ -48,13 +48,25 @@ class ChessClient:
         board = chess.getBoard()
         turn = chess.getTurn()
 
-        while 1:
+        while True:
             if not chess.isGameOver():
                 chess.printBoard()
                 print "%s's turn. Type your move." % str(chess.value_to_color_dict[turn])
                 move = raw_input("> ")
                 if move == "exit":
                     sys.exit(0)
+                elif move == "whirlwind":
+                    print "Which Warrior King performs the whirlwind?"
+                    while True:
+                        location = raw_input("> ")
+                        if len(location) != 2:
+                            print "Please only enter the square."
+                        else:
+                            location = chess.locationToTuple(location)
+                            res = chess.moveTwoKingsWhirlwind(location)
+                            if not res:
+                                print "Can't whirlwind there."
+                            break
                 elif len(move) < 2:
                     print "Type a real move, ya dope."
                 else:
