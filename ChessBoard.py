@@ -23,6 +23,10 @@ class ChessBoard:
     BLACK = 1
     NOCOLOR = -1
 
+    value_to_color_dict = {
+        0: "White",
+        1: "Black"}
+
     # Army values
     army_names = {
         1: "Classic",
@@ -30,8 +34,7 @@ class ChessBoard:
         3: "Reaper",
         4: "Empowered",
         5: "TwoKings",
-        6: "Animals"
-    }
+        6: "Animals"}
 
     # Army set up dictionaries
     army_set_ups = {
@@ -1753,7 +1756,7 @@ class ChessBoard:
         dest_y = ranks[t[-1]]
 
         # Pick out the hints
-        t = t[: - 2]
+        t = t[: -2]
         for h in t:
             if h in ('K', 'Q', 'R', 'N', 'B', 'P'):
                 h_piece = h
@@ -1777,9 +1780,9 @@ class ChessBoard:
             piece = "N"
         elif piece in ("G", "Z", "E"):
             piece = "R"
-        elif piece in ("M", "O", "A", "U", "J"):
+        elif piece in ("M", "O", "A", "J"):
             piece = "Q"
-        elif piece in ("C", "W"):
+        elif piece in ("C", "U", "W"):
             piece = "K"
         return piece
 
@@ -2494,10 +2497,10 @@ class ChessBoard:
         """
         Print the current board layout.
         """
-        print "     + ----- - - + "
+        print "  +-----------------+"
         rank = 8
         for l in self._board:
             print "%d | %s %s %s %s %s %s %s %s |" % (rank, l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7])
             rank -= 1
-        print "     + ----- - - + "
-        print "        A B C D E F G H"
+        print "  +-----------------+"
+        print "    a b c d e f g h"

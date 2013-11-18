@@ -64,15 +64,17 @@ class ChessClient:
             for color in chess.color_dict:
                 for back in chess.color_dict:
                     if color == 0:
-                        pieces[back][img] = pygame.image.load("./img/" + \
-                            chess.piece_to_army_dict[img] + "/" + \
-                            chess.color_dict[color] + img.lower() + \
+                        pieces[back][img] = pygame.image.load(
+                            "./img/" +
+                            chess.piece_to_army_dict[img] + "/" +
+                            chess.color_dict[color] + img.lower() +
                             chess.color_dict[back] + ".png")
                     else:
                         img = img.lower()
-                        pieces[back][img] = pygame.image.load("./img/" + \
-                            chess.piece_to_army_dict[img.upper()] + "/" + \
-                            chess.color_dict[color] + img + \
+                        pieces[back][img] = pygame.image.load(
+                            "./img/" +
+                            chess.piece_to_army_dict[img.upper()] + "/" +
+                            chess.color_dict[color] + img +
                             chess.color_dict[back] + ".png")
 
         clock = pygame.time.Clock()
@@ -86,9 +88,9 @@ class ChessClient:
         pieceSelected = None
 
         gameResults = ["", "WHITE WINS!", "BLACK WINS!",
-                "STALEMATE", "DRAW BY THE FIFTHY MOVES RULE",
-                "DRAW BY THE THREE REPETITION RULE", "MIDLINE INVASION BY WHITE!",
-                "MIDLINE INVASION BY BLACK!"]
+                       "STALEMATE", "DRAW BY THE FIFTHY MOVES RULE",
+                       "DRAW BY THE THREE REPETITION RULE", "MIDLINE INVASION BY WHITE!",
+                       "MIDLINE INVASION BY BLACK!"]
 
         while 1:
             clock.tick(30)
@@ -126,8 +128,8 @@ class ChessClient:
                     if event.type == MOUSEMOTION:
                         mx = event.pos[0]
                         my = event.pos[1]
-                        mousePos[0] = mx/60
-                        mousePos[1] = my/60
+                        mousePos[0] = mx / 60
+                        mousePos[1] = my / 60
                     elif event.type == MOUSEBUTTONDOWN:
                         if mousePos[0] != -1:
                             if markPos[0] == mousePos[0] and markPos[1] == mousePos[1]:
