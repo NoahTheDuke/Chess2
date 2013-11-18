@@ -67,6 +67,20 @@ class ChessClient:
                             if not res:
                                 print "Can't whirlwind there."
                             break
+                elif any(var in move for var in ("AN", "an")):
+                    an = chess.getAllTextMoves(chess.AN)
+                    if an:
+                        print "AN: " + ", ".join(an)
+                elif any(var in move for var in ("SAN", "san")):
+                    san = chess.getAllTextMoves(chess.SAN)
+                    if san:
+                        print "SAN: " + ", ".join(an)
+                elif any(var in move for var in ("LAN", "lan")):
+                    lan = chess.getAllTextMoves(chess.LAN)
+                    if lan:
+                        print "LAN: " + ", ".join(lan)
+                elif any(var in move for var in ("FEN", "fen")):
+                    print chess.getFEN()
                 elif len(move) < 2:
                     print "Type a real move, ya dope."
                 else:

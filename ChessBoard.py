@@ -2086,6 +2086,7 @@ class ChessBoard:
         b = s[:64]
         v = s[64:72]
         fifty = s[73:]
+        b = [self._formatPieceNames(var) for var in b]
 
         rows = []
         for i in range(8):
@@ -2108,20 +2109,22 @@ class ChessBoard:
         turn = (["w", "b"])[int(v[0])]
 
         kq = ""
-        if int(v[1]):
-            kq += "K"
-        if int(v[2]):
-            kq += "Q"
-        if int(v[3]):
-            kq += "k"
-        if int(v[4]):
-            kq += "q"
+        if self._white_army == 1:
+            if int(v[1]):
+                kq += "K"
+            if int(v[2]):
+                kq += "Q"
+        if self._black_army == 1:
+            if int(v[3]):
+                kq += "k"
+            if int(v[4]):
+                kq += "q"
         if not kq:
-            kq = " - "
+            kq = "-"
 
         x = int(v[5])
         y = int(v[6])
-        ep = " - "
+        ep = "-"
         if not (x == 0 and y == 0):
             if turn == "b" and (self._board[y][x - 1] == 'p' or self._board[y][x + 1] == 'p'):
                 ep = "%s%s" % (("abcdefgh")[x], ("87654321")[y + 1])
