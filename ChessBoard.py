@@ -36,6 +36,13 @@ class ChessBoard:
         5: "TwoKings",
         6: "Animals"}
 
+    CLASSIC = 1
+    NEMESIS = 2
+    REAPER = 3
+    EMPOWERED = 4
+    TWOKINGS = 5
+    ANIMALS = 6
+
     # Army set up dictionaries
     army_set_up_dict = {
         'ClassicWhiteSetUp': ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
@@ -85,9 +92,9 @@ class ChessBoard:
         "P": "Pawn", "B": "Bishop", "N": "Knight", "R": "Rook", "Q": "Queen", "K": "King",
         "L": "Pawn", "M": "Nemesis",
         "G": "Ghost", "A": "Reaper",
-        "X": "Bishop", "Y": "Knight", "Z": "Rook", "O": "Queen", "U": "WarriorKing",
-        "W": "WarriorKing", "T": "Tiger",
-        "H": "WildHorse", "E": "Elephant", "J": "JungleQueen",
+        "X": "Bishop", "Y": "Knight", "Z": "Rook", "O": "Queen",
+        "U": "WarriorKing", "W": "WarriorKing",
+        "T": "Tiger", "H": "WildHorse", "E": "Elephant", "J": "JungleQueen",
         "D": "Pawn", "C": "King"}
 
     army_piece_to_classic_piece_dict = {
@@ -95,7 +102,7 @@ class ChessBoard:
         "L": "P", "M": "Q",
         "G": "R", "A": "Q",
         "X": "B", "Y": "N", "Z": "R", "O": "Q",
-        "U": "K", "W": "K",
+        "U": "Q", "W": "K",
         "T": "B", "H": "N", "E": "R", "J": "Q",
         "D": "P", "C": "K"}
 
@@ -135,7 +142,7 @@ class ChessBoard:
     WHITE_MIDLINE_INVASION = 6
     BLACK_MIDLINE_INVASION = 7
 
-    game_result_dict = ["", "White wins!", "Black wins!",
+    game_result_list = ["", "White wins!", "Black wins!",
                         "Stalemate", "Draw by the fifthy moves rule",
                         "Draw by the three repetition rule",
                         "Midline invasion by white!",
@@ -161,6 +168,7 @@ class ChessBoard:
 
     # States
     _turn = WHITE
+    _secondTurn = False
     _white_king_castle = True
     _white_queen_castle = True
     _black_king_castle = True
@@ -1712,6 +1720,12 @@ class ChessBoard:
                 continue
             else:
                 self._board[goners[1]][goners[0]] = "."
+        if self._secondTurn:
+            self._secondTurn = False
+            if self._turn == self.WHITE:
+                self._turn = self.BLACK
+            else:
+                self._turn = self.WHITE
         return True
 
 ######################################################
@@ -1797,46 +1811,46 @@ class ChessBoard:
             curArmy = self._white_army
 
         if piece == "P":
-            if curArmy == 1:
+            if curArmy == self.CLASSIC:
                 piece = "P"
-            elif curArmy == 2:
+            elif curArmy == self.NEMESIS:
                 piece = "L"
             else:
                 piece = "D"
         elif piece == "B":
-            if curArmy == 6:
+            if curArmy == self.ANIMALS:
                 piece = "T"
             else:
                 piece = "B"
         elif piece == "N":
-            if curArmy == 6:
+            if curArmy == self.ANIMALS:
                 piece = "H"
             else:
                 piece = "N"
         elif piece == "R":
-            if curArmy == 3:
+            if curArmy == self.REAPER:
                 piece = "G"
-            elif curArmy == 6:
+            elif curArmy == self.ANIMALS:
                 piece = "E"
             else:
                 piece = "R"
         elif piece == "Q":
-            if curArmy == 1:
+            if curArmy == self.CLASSIC:
                 piece = "Q"
-            elif curArmy == 2:
+            elif curArmy == self.NEMESIS:
                 piece = "M"
-            elif curArmy == 3:
+            elif curArmy == self.REAPER:
                 piece = "A"
-            elif curArmy == 4:
+            elif curArmy == self.EMPOWERED:
                 piece = "O"
-            elif curArmy == 5:
+            elif curArmy == self.TWOKINGS:
                 piece = "U"
-            elif curArmy == 6:
+            elif curArmy == self.ANIMALS:
                 piece = "J"
         elif piece == "K":
-            if curArmy == 1:
+            if curArmy == self.CLASSIC:
                 piece = "K"
-            elif curArmy == 5:
+            elif curArmy == self.TWOKINGS:
                 piece = "W"
             else:
                 piece = "C"
@@ -2385,10 +2399,18 @@ class ChessBoard:
                 self._reason = self.INVALID_MOVE
             return False
 
-        if self._turn == self.WHITE:
-            self._turn = self.BLACK
+        if self._turn == self.BLACK:
+            curArmy = self._black_army
         else:
-            self._turn = self.WHITE
+            curArmy = self._white_army
+
+        if curArmy == self.TWOKINGS:
+            self._secondTurn = True
+        else:
+            if self._turn == self.WHITE:
+                self._turn = self.BLACK
+            else:
+                self._turn = self.WHITE
 
         if self._turn == self.WHITE:
             if "TwoKings" in self.arm_names_dict[self._white_army]:
@@ -2487,23 +2509,41 @@ class ChessBoard:
 
         p = self._board[fy][fx].upper()
         self._cur_move[0] = p
-        if not getattr(self, 'move%s%s' % (self.piece_to_army_dict[p], self.piece_to_name_dict[p]))((fx, fy), (tx, ty)):
+        if not self.moveTwoKingsWarriorKing((fx, fy), (tx, ty)):
             if not self._reason:
                 self._reason = self.INVALID_MOVE
             return False
 
-        if self._turn == self.WHITE:
-            k, q = self.isCheck()
-            if k != q:
-                self._cur_move[5] = "+"
-            elif k and q:
-                self._cur_move[5] = "++"
+        if self._turn == self.BLACK:
+            curArmy = self._black_army
         else:
-            k, q = self.isCheck()
-            if k != q:
-                self._cur_move[5] = "+"
-            elif k and q:
-                self._cur_move[5] = "++"
+            curArmy = self._white_army
+
+        if self._turn == self.WHITE:
+            self._turn = self.BLACK
+        else:
+            self._turn = self.WHITE
+
+        if self._turn == self.WHITE:
+            if "TwoKings" in self.arm_names_dict[self._white_army]:
+                k, q = self.isCheck()
+                if k != q:
+                    self._cur_move[5] = "+"
+                elif k and q:
+                    self._cur_move[5] = "++"
+            else:
+                if self.isCheck():
+                    self._cur_move[5] = "+"
+        else:
+            if "TwoKings" in self.arm_names_dict[self._black_army]:
+                k, q = self.isCheck()
+                if k != q:
+                    self._cur_move[5] = "+"
+                elif k and q:
+                    self._cur_move[5] = "++"
+            else:
+                if self.isCheck():
+                    self._cur_move[5] = "+"
 
         if not self.hasAnyValidMoves():
             if self.isCheck():
@@ -2528,6 +2568,7 @@ class ChessBoard:
 
         self.pushState()
         self.pushMove()
+        self._secondTurn = False
         return True
 
     def getLastMoveType(self):
@@ -2590,6 +2631,11 @@ class ChessBoard:
             return self.addMove((fx, fy), (tx, ty))
 
         piece = self._reversePieceNames(piece)
+        if self._secondTurn:
+            if not any(var in piece for var in ('W', 'w', 'U', 'u')):
+                self._reason = self.INVALID_MOVE
+                return False
+
         if self._turn == self.BLACK:
             piece = piece.lower()
 
@@ -2614,7 +2660,10 @@ class ChessBoard:
                             move_to = (tx, ty)
 
         if found_move:
-            return self.addMove(move_from, move_to)
+            if self._secondTurn:
+                return self.addSecondKingMove(move_from, move_to)
+            else:
+                return self.addMove(move_from, move_to)
 
         self._reason = self.INVALID_MOVE
         return False

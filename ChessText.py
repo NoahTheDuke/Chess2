@@ -53,7 +53,10 @@ class ChessClient:
                     curArmy = chess._black_army
                 else:
                     curArmy = chess._white_army
-                print "%s's turn. Type your move." % str(chess.value_to_color_dict[turn])
+                if chess._secondTurn:
+                    print "%s's Warrior King turn. Type your move, or type \"decline\" to skip." % str(chess.value_to_color_dict[turn])
+                else:
+                    print "%s's turn. Type your move." % str(chess.value_to_color_dict[turn])
                 move = raw_input("> ")
                 if move == "exit":
                     sys.exit(0)
@@ -75,9 +78,9 @@ class ChessClient:
                 elif any(var in move for var in ("FEN", "fen")):
                     print chess.getFEN()
                 elif len(move) < 2:
-                    print "Type a real move, ya dope."
+                    print "Type a real move."
                 elif move == "whirlwind":
-                    if curArmy == 5:
+                    if curArmy == chess.TWOKINGS:
                         print "Which Warrior King performs the whirlwind?"
                         while True:
                             location = raw_input("> ")
@@ -88,13 +91,27 @@ class ChessClient:
                                 res = chess.moveTwoKingsWhirlwind(location)
                                 if not res:
                                     print "Can't whirlwind there."
+                                board = chess.getBoard()
+                                turn = chess.getTurn()
                                 break
                     else:
-                        print "You're not playing Two Kings, dummy!"
+                        print "You're not playing Two Kings!"
+                elif move == "decline":
+                    if curArmy == chess.TWOKINGS:
+                        if chess._secondTurn:
+                            print "Second turn skipped."
+                            chess._secondTurn = False
+                            if chess._turn == chess.BLACK:
+                                chess._turn = chess.WHITE
+                            else:
+                                chess._turn = chess.BLACK
+                            board = chess.getBoard()
+                            turn = chess.getTurn()
+                    else:
+                        print "You're not playing Two Kings!"
                 else:
                     res = chess.addTextMove(move)
                     if res:
-                        print chess.getLastTextMove(chess.SAN)
                         board = chess.getBoard()
                         turn = chess.getTurn()
                         chess.updateRoyalLocations()
