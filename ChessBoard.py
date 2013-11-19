@@ -125,11 +125,12 @@ class ChessBoard:
     GAME_IS_OVER = 6
     AMBIGUOUS_MOVE = 7
 
-    move_reason_list = ["", "Invalid move.", "Invalid color.",
+    move_reason_list = ["", "Invalid move.",
+                        "Invalid color.",
                         "Invalid move from that square.",
                         "Invalid move to that square.",
                         "Must choose promotion.",
-                        "Can't move, game is over."
+                        "Can't move, game is over.",
                         "Ambiguous move. Disambiguate."]
 
     # Result values
@@ -783,6 +784,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves, specialMoves)
+        moves = set(moves)
         return (moves, specialMoves)
 
     def getValidClassicBishopMoves(self, fromPos):
@@ -793,6 +795,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidEmpoweredBishopMoves(self, fromPos):
@@ -823,6 +826,7 @@ class ChessBoard:
                     if len(m) > 0:
                         for n in m:
                             moves.append(n)
+        moves = set(moves)
         return moves
 
     def getValidAnimalsTigerMoves(self, fromPos):
@@ -833,6 +837,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidClassicKnightMoves(self, fromPos):
@@ -847,6 +852,7 @@ class ChessBoard:
                     moves.append(p)
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidEmpoweredKnightMoves(self, fromPos):
@@ -877,6 +883,7 @@ class ChessBoard:
                     if len(m) > 0:
                         for n in m:
                             moves.append(n)
+        moves = set(moves)
         return moves
 
     def getValidAnimalsWildHorseMoves(self, fromPos):
@@ -895,6 +902,7 @@ class ChessBoard:
                     moves.append(p)
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidClassicRookMoves(self, fromPos):
@@ -905,6 +913,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidReaperGhostMoves(self, fromPos):
@@ -917,6 +926,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidEmpoweredRookMoves(self, fromPos):
@@ -947,6 +957,7 @@ class ChessBoard:
                     if len(m) > 0:
                         for n in m:
                             moves.append(m)
+        moves = set(moves)
         return moves
 
     def getValidAnimalsElephantMoves(self, fromPos):
@@ -957,6 +968,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidClassicQueenMoves(self, fromPos):
@@ -969,6 +981,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidNemesisNemesisMoves(self, fromPos):
@@ -981,6 +994,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidReaperReaperMoves(self, fromPos):
@@ -998,6 +1012,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidEmpoweredQueenMoves(self, fromPos):
@@ -1010,6 +1025,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidAnimalsJungleQueenMoves(self, fromPos):
@@ -1029,6 +1045,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves
 
     def getValidClassicKingMoves(self, fromPos):
@@ -1073,6 +1090,7 @@ class ChessBoard:
         self.updateRoyalLocations()
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return (moves, specialMoves)
 
     def getValidTwoKingsWarriorKingMoves(self, fromPos):
@@ -1088,6 +1106,7 @@ class ChessBoard:
         self.updateRoyalLocations()
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves, specialMoves
 
     def getValidGenericKingMoves(self, fromPos):
@@ -1103,6 +1122,7 @@ class ChessBoard:
         self.updateRoyalLocations()
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
+        moves = set(moves)
         return moves, specialMoves
 
     ########################

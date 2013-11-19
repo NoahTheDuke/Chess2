@@ -60,19 +60,19 @@ class ChessClient:
                 move = raw_input("> ")
                 if move == "exit":
                     sys.exit(0)
-                elif any(var in move for var in ("AN", "an")):
-                    an = chess.getAllTextMoves(chess.AN)
-                    if an:
-                        for x, y in self.grouped(an, 2):
-                            print "%s %s" % (x, y)
                 elif any(var in move for var in ("SAN", "san")):
                     san = chess.getAllTextMoves(chess.SAN)
                     if san:
-                        for x, y in self.grouped(an, 2):
+                        for x, y in self.grouped(san, 2):
                             print "%s %s" % (x, y)
                 elif any(var in move for var in ("LAN", "lan")):
                     lan = chess.getAllTextMoves(chess.LAN)
                     if lan:
+                        for x, y in self.grouped(lan, 2):
+                            print "%s %s" % (x, y)
+                elif any(var in move for var in ("AN", "an")):
+                    an = chess.getAllTextMoves(chess.AN)
+                    if an:
                         for x, y in self.grouped(an, 2):
                             print "%s %s" % (x, y)
                 elif any(var in move for var in ("FEN", "fen")):
