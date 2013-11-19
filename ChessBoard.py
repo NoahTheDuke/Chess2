@@ -66,88 +66,38 @@ class ChessBoard:
 
     # and the reverse
     army_royal_to_royal_dict = {
-        'K': ['K'],
-        'C': ['K'],
-        'W': ['K'],
-        'U': ['K'],
-        'Q': ['Q'],
-        'M': ['Q'],
-        'A': ['Q'],
-        'O': ['Q'],
-        'U': ['Q'],
-        'J': ['Q']}
+        'K': ['K'], 'C': ['K'],
+        'W': ['K'], 'U': ['K'],
+        'Q': ['Q'], 'M': ['Q'],
+        'A': ['Q'], 'O': ['Q'],
+        'U': ['Q'], 'J': ['Q']}
 
     piece_to_army_dict = {
-        "P": "Classic",
-        "B": "Classic",
-        "N": "Classic",
-        "R": "Classic",
-        "Q": "Classic",
-        "K": "Classic",
-        "L": "Nemesis",
-        "M": "Nemesis",
-        "G": "Reaper",
-        "A": "Reaper",
-        "X": "Empowered",
-        "Y": "Empowered",
-        "Z": "Empowered",
-        "O": "Empowered",
-        "U": "TwoKings",
-        "W": "TwoKings",
-        "T": "Animals",
-        "H": "Animals",
-        "E": "Animals",
-        "J": "Animals",
-        "D": "Generic",
-        "C": "Generic"}
+        "P": "Classic", "B": "Classic", "N": "Classic", "R": "Classic", "Q": "Classic", "K": "Classic",
+        "L": "Nemesis", "M": "Nemesis",
+        "G": "Reaper", "A": "Reaper",
+        "X": "Empowered", "Y": "Empowered", "Z": "Empowered", "O": "Empowered",
+        "U": "TwoKings", "W": "TwoKings",
+        "T": "Animals", "H": "Animals", "E": "Animals", "J": "Animals",
+        "D": "Generic", "C": "Generic"}
 
     piece_to_name_dict = {
-        "P": "Pawn",
-        "B": "Bishop",
-        "N": "Knight",
-        "R": "Rook",
-        "Q": "Queen",
-        "K": "King",
-        "L": "Pawn",
-        "M": "Nemesis",
-        "G": "Ghost",
-        "A": "Reaper",
-        "X": "Bishop",
-        "Y": "Knight",
-        "Z": "Rook",
-        "O": "Queen",
-        "U": "WarriorKing",
-        "W": "WarriorKing",
-        "T": "Tiger",
-        "H": "WildHorse",
-        "E": "Elephant",
-        "J": "JungleQueen",
-        "D": "Pawn",
-        "C": "King"}
+        "P": "Pawn", "B": "Bishop", "N": "Knight", "R": "Rook", "Q": "Queen", "K": "King",
+        "L": "Pawn", "M": "Nemesis",
+        "G": "Ghost", "A": "Reaper",
+        "X": "Bishop", "Y": "Knight", "Z": "Rook", "O": "Queen", "U": "WarriorKing",
+        "W": "WarriorKing", "T": "Tiger",
+        "H": "WildHorse", "E": "Elephant", "J": "JungleQueen",
+        "D": "Pawn", "C": "King"}
 
     army_piece_to_classic_piece_dict = {
-        "P": "P",
-        "B": "B",
-        "N": "N",
-        "R": "R",
-        "Q": "Q",
-        "K": "K",
-        "L": "P",
-        "M": "Q",
-        "G": "R",
-        "A": "Q",
-        "X": "B",
-        "Y": "N",
-        "Z": "R",
-        "O": "Q",
-        "U": "K",
-        "W": "K",
-        "T": "B",
-        "H": "N",
-        "E": "R",
-        "J": "Q",
-        "D": "P",
-        "C": "K"}
+        "P": "P", "B": "B", "N": "N", "R": "R", "Q": "Q", "K": "K",
+        "L": "P", "M": "Q",
+        "G": "R", "A": "Q",
+        "X": "B", "Y": "N", "Z": "R", "O": "Q",
+        "U": "K", "W": "K",
+        "T": "B", "H": "N", "E": "R", "J": "Q",
+        "D": "P", "C": "K"}
 
     color_dict = {
         0: "w",
@@ -199,7 +149,7 @@ class ChessBoard:
     KING_CASTLE_MOVE = 4
     QUEEN_CASTLE_MOVE = 5
     WARRIOR_KING_WHIRLWIND = 6
-    WARRIOR_QUEEN_WHIRLWIND = 7
+    SECOND_WARRIOR_KING_MOVE = 7
 
     # Text move output type
     AN = 0  # g4 - e3
@@ -235,7 +185,7 @@ class ChessBoard:
 
     # all moves, stored to make it easier to build textmoves
     #[piece, from, to, takes, promotion, check/checkmate, specialmove]
-    #["KQRNBP", (fx, fy), (tx, ty), True/False, "QRNB"/None, "+#"/None, 0 - 5]
+    #["KQRNBP", (fx, fy), (tx, ty), True/False, "QRNB"/None, "+#"/None, 0-5]
     _cur_move = [None, None, None, False, None, None, 0]
     _moves = []
 
@@ -1752,6 +1702,7 @@ class ChessBoard:
         for blank in pieces:
             if any(var in self._board[blank[1]][blank[0]] for var in ('g', 'G')):
                 return False
+        self._cur_move[6] = self.WARRIOR_KING_WHIRLWIND
         for goners in pieces:
             if self._board[fromPos[1]][fromPos[0]] == self._board[goners[1]][goners[0]]:
                 continue
@@ -2485,6 +2436,100 @@ class ChessBoard:
         self.pushMove()
         return True
 
+    def addSecondKingMove(self, fromPos, toPos):
+        """
+        Tries to move the piece located om fromPos to toPos. Returns True if that was a valid move.
+        The position arguments must be tuples containing x, y value Ex. (4, 6).
+        This method also detects game over.
+
+        If this method returns False you can use the getReason method to determin why.
+        """
+        self._reason = 0
+        #                piece, from, to, take, promotion, check, specialmove
+        self._cur_move = [None, None, None, False, None, None, self.SECOND_WARRIOR_KING_MOVE]
+
+        if self._game_result:
+            self._reason = self.GAME_IS_OVER
+            return False
+
+        self.updateRoyalLocations()
+
+        fx, fy = fromPos
+        tx, ty = toPos
+
+        self._cur_move[1] = fromPos
+        self._cur_move[2] = toPos
+
+        #check invalid coordinates
+        if fx < 0 or fx > 7 or fy < 0 or fy > 7:
+            self._reason = self.INVALID_FROM_LOCATION
+            return False
+
+        #check invalid coordinates
+        if tx < 0 or tx > 7 or ty < 0 or ty > 7:
+            self._reason = self.INVALID_TO_LOCATION
+            return False
+
+        #check if any move at all
+        if fx == tx and fy == ty:
+            self._reason = self.INVALID_TO_LOCATION
+            return False
+
+        #check if piece on location
+        if self.isFree(fx, fy):
+            self._reason = self.INVALID_FROM_LOCATION
+            return False
+
+        #check color of piece
+        if self.getColor(fx, fy) != self._turn:
+            self._reason = self.INVALID_COLOR
+            return False
+
+        p = self._board[fy][fx].upper()
+        self._cur_move[0] = p
+        if not getattr(self, 'move%s%s' % (self.piece_to_army_dict[p], self.piece_to_name_dict[p]))((fx, fy), (tx, ty)):
+            if not self._reason:
+                self._reason = self.INVALID_MOVE
+            return False
+
+        if self._turn == self.WHITE:
+            k, q = self.isCheck()
+            if k != q:
+                self._cur_move[5] = "+"
+            elif k and q:
+                self._cur_move[5] = "++"
+        else:
+            k, q = self.isCheck()
+            if k != q:
+                self._cur_move[5] = "+"
+            elif k and q:
+                self._cur_move[5] = "++"
+
+        if not self.hasAnyValidMoves():
+            if self.isCheck():
+                self._cur_move[5] = "#"
+                if self._turn == self.WHITE:
+                    self.endGame(self.BLACK_MATE)
+                else:
+                    self.endGame(self.WHITE_MATE)
+            else:
+                self.endGame(self.STALEMATE)
+        else:
+            if self._fifty == 100:
+                self.endGame(self.FIFTY_MOVES_RULE)
+            elif self.threeRepetitions():
+                self.endGame(self.THREE_REPETITION_RULE)
+            elif self.isMidlineInvasion():
+                self._cur_move[5] = "*"
+                if self._turn == self.BLACK:
+                    self.endGame(self.WHITE_MIDLINE_INVASION)
+                else:
+                    self.endGame(self.BLACK_MIDLINE_INVASION)
+
+        self.pushState()
+        self.pushMove()
+        return True
+
     def getLastMoveType(self):
         """
         Returns a value that indicates if the last move was a "special move".
@@ -2496,6 +2541,8 @@ class ChessBoard:
         3 = PROMOTION_MOVE (A pawn has been promoted. Use getPromotion() to see the promotion piece.)
         4 = KING_CASTLE_MOVE (Castling on the king side.)
         5 = QUEEN_CASTLE_MOVE (Castling on the queen side.)
+        6 = WARRIOR_KING_WHIRLWIND (Two Kings uses whirlwind)
+        7 = SECOND_WARRIOR_KING_MOVE (Two Kings uses it's second move.)
         """
         if self._state_stack_pointer <= 1:  # No move has been done at thos pointer
             return -1
