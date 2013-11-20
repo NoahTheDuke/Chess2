@@ -28,7 +28,7 @@ class ChessBoard:
         1: "Black"}
 
     # Army values
-    arm_names_dict = {
+    army_name_dict = {
         1: "Classic",
         2: "Nemesis",
         3: "Reaper",
@@ -106,6 +106,15 @@ class ChessBoard:
         "T": "B", "H": "N", "E": "R", "J": "Q",
         "D": "P", "C": "K"}
 
+    dueling_rank_dict = {
+        "P": 1, "B": 2, "N": 2, "R": 3, "Q": 4,
+        "L": 1, "M": 4,
+        "G": 3, "A": 4,
+        "X": 2, "Y": 2, "Z": 3, "O": 4,
+        "U": 4,
+        "T": 2, "H": 2, "E": 3, "J": "Q",
+        "D": 1}
+
     color_dict = {
         0: "w",
         1: "b"}
@@ -179,6 +188,8 @@ class ChessBoard:
     _fifty = 0
     _white_army = 1  # Classic by default.
     _black_army = 1  # Classic by default.
+    _white_stones = 3
+    _black_stones = 3
 
     _black_king_location = (0, 0)
     _white_king_location = (0, 0)
@@ -363,7 +374,7 @@ class ChessBoard:
         done = False
         from_p = self._board[from_y][from_x]
         self._board[from_y][from_x] = "."
-        if "TwoKings" in self.arm_names_dict[army]:
+        if "TwoKings" in self.army_name_dict[army]:
             if not self.isThreatened(kingPos, self._turn) and not self.isThreatened(queenPos, self._turn):
                 done = True
         else:
@@ -396,7 +407,7 @@ class ChessBoard:
                 kingPos = self._black_king_location
                 queenPos = self._black_queen_location
                 army = self._black_army
-            if "TwoKings" in self.arm_names_dict[army]:
+            if "TwoKings" in self.army_name_dict[army]:
                 if not self.isThreatened(kingPos, self._turn) and not self.isThreatened(queenPos, self._turn):
                     result.append(m)
             else:
@@ -625,9 +636,74 @@ class ChessBoard:
                 return True
         return False
 
-#############################
-# getValid[Army][Piece]Moves!
-#############################
+#################################
+# Functions for handling Duels! #
+#################################
+
+    def checkDuel(self, attacking_piece, defending_piece):
+        attacker = self._board[attacking_piece[1]][attacking_piece[0]]
+        defender = self._board[defending_piece[1]][defending_piece[0]]
+        attacker = attacker.upper()
+        defender = defender.upper()
+        if self.dueling_rank_dict[attacker] > self.dueling_rank_dict[defender]:
+            cost = 1
+        else:
+            cost = 0
+        return cost
+
+    def getStones(self, player):
+        if player == self.WHITE:
+            return self._white_stones
+        else:
+            return self._black_stones
+
+    def addStones(self, player, amount):
+        if player == self.WHITE:
+            if self._white_stones + amount > 6:
+                self._white_stones = 6
+            else:
+                self._white_stones = self._white_stones + amount
+        else:
+            if self._black_stones + amount > 6:
+                self._black_stones = 6
+            else:
+                self._black_stones = self._black_stones + amount
+
+    def payDuelCost(self, cost):
+        if self.getTurn == self.WHITE:
+            self._black_stones = self._black_stones - cost
+        else:
+            self._white_stones = self._white_stones - cost
+
+    def initiateDuel(self, attacking_bid, defending_bid):
+        if self.getTurn() == self.WHITE:
+            if self._white_stones < attacking_bid:
+                return None
+            elif self._black_stones < defending_bid:
+                return None
+        else:
+            if self._black_stones < attacking_bid:
+                return None
+            elif self._white_stones < defending_bid:
+                return None
+
+        self.resolveDuel(attacking_bid, defending_bid)
+        if attacking_bid >= defending_bid:
+            return 1
+        else:
+            return 2
+
+    def resolveDuel(self, attacking_bid, defending_bid):
+        if self.getTurn == self.WHITE:
+            self._white_stones = self._white_stones - attacking_bid
+            self._black_stones = self._black_stones - defending_bid
+        else:
+            self._black_stones = self._black_stones - attacking_bid
+            self._white_stones = self._white_stones - defending_bid
+
+###############################
+# getValid[Army][Piece]Moves! #
+###############################
 
     def getValidClassicPawnMoves(self, fromPos):
         moves = []
@@ -1720,6 +1796,8 @@ class ChessBoard:
         return True
 
     def moveTwoKingsWhirlwind(self, fromPos):
+        addStone = 0
+        dead_list = {}
         if not any(var in self._board[fromPos[1]][fromPos[0]] for var in ('w', 'W', 'U', 'u')):
             return False
         if self._turn == self.BLACK:
@@ -1739,7 +1817,18 @@ class ChessBoard:
             elif curArmy == self._white_army and (self._board[goners[1]][goners[0]] == 'U' or self._board[goners[1]][goners[0]] == 'W'):
                 continue
             else:
+                if self._turn == self.BLACK and any(var in self._board[goners[1]][goners[0]] for var in ('P', 'L', 'D')):
+                    addStone = addStone + 1
+                elif self._turn == self.WHITE and any(var in self._board[goners[1]][goners[0]] for var in ('p', 'l', 'd')):
+                    addStone = addStone + 1
+                dead_list[(goners[0], goners[1])] = (self._board[goners[1]][goners[0]])
                 self._board[goners[1]][goners[0]] = "."
+        if self.isThreatened(fromPos, self._turn):
+            for items in dead_list:
+                self._board[items[1]][items[0]] = dead_list[(items[0], items[1])]
+            return False
+        if addStone:
+            self.addStones(self._turn, addStone)
         if self._secondTurn:
             self._secondTurn = False
             if self._turn == self.WHITE:
@@ -1963,8 +2052,8 @@ class ChessBoard:
         """
         Resets the chess board and all states.
         """
-        blackPieces = self.arm_names_dict[bArmy] + 'BlackSetUp'
-        whitePieces = self.arm_names_dict[wArmy] + 'WhiteSetUp'
+        blackPieces = self.army_name_dict[bArmy] + 'BlackSetUp'
+        whitePieces = self.army_name_dict[wArmy] + 'WhiteSetUp'
 
         if bArmy == 1:
             blackPawns = 'ClassicBlackPawns'
@@ -2202,14 +2291,14 @@ class ChessBoard:
         Returns True if the current players king is checked.
         """
         if self._turn == self.WHITE:
-            if "TwoKings" in self.arm_names_dict[self._white_army]:
+            if "TwoKings" in self.army_name_dict[self._white_army]:
                 kingPos = self._white_king_location
                 queenPos = self._white_queen_location
                 return (self.isThreatened(kingPos, self._turn), self.isThreatened(queenPos, self._turn))
             else:
                 kingPos = self._white_king_location
         else:
-            if "TwoKings" in self.arm_names_dict[self._black_army]:
+            if "TwoKings" in self.army_name_dict[self._black_army]:
                 kingPos = self._black_king_location
                 queenPos = self._black_queen_location
                 return (self.isThreatened(kingPos, self._turn), self.isThreatened(queenPos, self._turn))
@@ -2224,7 +2313,7 @@ class ChessBoard:
         if self._turn == self.BLACK:
             kingPos = self._white_king_location
             queenPos = self._white_queen_location
-            if "TwoKings" in self.arm_names_dict[self._white_army]:
+            if "TwoKings" in self.army_name_dict[self._white_army]:
                 if kingPos[1] < 4 and queenPos[1] < 4:
                     return True
             else:
@@ -2233,7 +2322,7 @@ class ChessBoard:
         else:
             kingPos = self._black_king_location
             queenPos = self._black_queen_location
-            if "TwoKings" in self.arm_names_dict[self._black_army]:
+            if "TwoKings" in self.army_name_dict[self._black_army]:
                 if kingPos[1] > 3 and queenPos[1] > 3:
                     return True
             else:
@@ -2267,7 +2356,7 @@ class ChessBoard:
         """
         Returns a copy of the current board layout. Uppercase letters for white, lowercase for black.
         K = King, Q = Queen, B = Bishop, N = Night, R = Rook, P = Pawn.
-        Empty squares are markt with a period (.)
+        Empty squares are marked with a period (.)
         """
         return deepcopy(self._board)
 
@@ -2413,11 +2502,18 @@ class ChessBoard:
             return False
 
         p = self._board[fy][fx].upper()
+        stone_check = self._board[ty][tx].upper()
         self._cur_move[0] = p
         if not getattr(self, 'move%s%s' % (self.piece_to_army_dict[p], self.piece_to_name_dict[p]))((fx, fy), (tx, ty)):
             if not self._reason:
                 self._reason = self.INVALID_MOVE
             return False
+
+        if any(var in stone_check for var in ('P', 'D', 'L')):
+            if self._turn == self.BLACK:
+                self.addStones(self.BLACK, 1)
+            else:
+                self.addStones(self.WHITE, 1)
 
         if self._turn == self.BLACK:
             curArmy = self._black_army
@@ -2433,7 +2529,7 @@ class ChessBoard:
                 self._turn = self.WHITE
 
         if self._turn == self.WHITE:
-            if "TwoKings" in self.arm_names_dict[self._white_army]:
+            if "TwoKings" in self.army_name_dict[self._white_army]:
                 k, q = self.isCheck()
                 if k != q:
                     self._cur_move[5] = "+"
@@ -2443,7 +2539,7 @@ class ChessBoard:
                 if self.isCheck():
                     self._cur_move[5] = "+"
         else:
-            if "TwoKings" in self.arm_names_dict[self._black_army]:
+            if "TwoKings" in self.army_name_dict[self._black_army]:
                 k, q = self.isCheck()
                 if k != q:
                     self._cur_move[5] = "+"
@@ -2545,7 +2641,7 @@ class ChessBoard:
             self._turn = self.WHITE
 
         if self._turn == self.WHITE:
-            if "TwoKings" in self.arm_names_dict[self._white_army]:
+            if "TwoKings" in self.army_name_dict[self._white_army]:
                 k, q = self.isCheck()
                 if k != q:
                     self._cur_move[5] = "+"
@@ -2555,7 +2651,7 @@ class ChessBoard:
                 if self.isCheck():
                     self._cur_move[5] = "+"
         else:
-            if "TwoKings" in self.arm_names_dict[self._black_army]:
+            if "TwoKings" in self.army_name_dict[self._black_army]:
                 k, q = self.isCheck()
                 if k != q:
                     self._cur_move[5] = "+"
@@ -2630,12 +2726,12 @@ class ChessBoard:
         self.redo()
         return res
 
-    def addTextMove(self, txt):
+    def checkTextMove(self, txt):
         """
         Adds a move using several different standards of the Algebraic chess notation.
         AN Examples: 'e2e4' 'f1d1' 'd7-d8' 'g1-f3'
-        SAN Examples: 'e4' 'Rfxd1' 'd8=Q' 'Nxf3 + '
-        LAN Examples: 'Pe2e4' 'Rf1xd1' 'Pd7d8=Q' 'Ng1xf3+ '
+        SAN Examples: 'e4' 'Rfxd1' 'd8=Q' 'Nxf3+'
+        LAN Examples: 'Pe2e4' 'Rf1xd1' 'Pd7d8=Q' 'Ng1xf3+'
         """
         res = self._parseTextMove(txt)
         if not res:
@@ -2678,12 +2774,65 @@ class ChessBoard:
                             found_move = True
                             move_from = (x, y)
                             move_to = (tx, ty)
+        if found_move:
+            if self._board[ty][tx] == ".":
+                return -1
+            else:
+                return self.checkDuel(move_from, move_to)
 
+        self._reason = self.INVALID_MOVE
+        return False
+
+    def addTextMove(self, txt, clearLocation=False):
+        res = self._parseTextMove(txt)
+        if not res:
+            self._reason = self.INVALID_MOVE
+            return False
+        else:
+            piece, fx, fy, tx, ty, promo = res
+
+        if promo:
+            self.setPromotion(promo)
+
+        if not piece:
+            return self.addMove((fx, fy), (tx, ty))
+
+        piece = self._reversePieceNames(piece)
+        if self._secondTurn:
+            if not any(var in piece for var in ('W', 'w', 'U', 'u')):
+                self._reason = self.INVALID_MOVE
+                return False
+
+        if self._turn == self.BLACK:
+            piece = piece.lower()
+
+        move_to = None
+        move_from = None
+        found_move = False
+        for y in range(8):
+            for x in range(8):
+                if self._board[y][x] == piece:
+                    if fx > -1 and fx != x:
+                        continue
+                    if fy > -1 and fy != y:
+                        continue
+                    vm = self.getValidMoves((x, y))
+                    for m in vm:
+                        if m[0] == tx and m[1] == ty:
+                            if found_move:
+                                self._reason = self.AMBIGUOUS_MOVE
+                                return False
+                            found_move = True
+                            move_from = (x, y)
+                            move_to = (tx, ty)
         if found_move:
             if self._secondTurn:
                 return self.addSecondKingMove(move_from, move_to)
             else:
-                return self.addMove(move_from, move_to)
+                movement = self.addMove(move_from, move_to)
+                if clearLocation:
+                    self._board[ty][tx] = '.'
+                return movement
 
         self._reason = self.INVALID_MOVE
         return False
@@ -2730,6 +2879,8 @@ class ChessBoard:
         """
         Print the current board layout.
         """
+        print ""
+        print "White %s vs Black %s" % (self.army_name_dict[self._white_army], self.army_name_dict[self._black_army])
         print "  +-----------------+"
         rank = 8
         for l in self._board:
@@ -2738,3 +2889,6 @@ class ChessBoard:
             rank -= 1
         print "  +-----------------+"
         print "    a b c d e f g h"
+        print ""
+        print "White stones: %d" % self.getStones(self.WHITE)
+        print "Black stones: %d" % self.getStones(self.BLACK)

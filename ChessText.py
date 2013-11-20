@@ -2,6 +2,7 @@
 
 from ChessBoard import ChessBoard
 import sys
+import getpass
 import math
 import string
 from itertools import izip_longest
@@ -17,7 +18,8 @@ class ChessClient:
         print "1. Classic   2. Nemesis   3. Reaper"
         print "4. Empowered 5. Two Kings 6. Animals"
         while True:
-            userInput = raw_input('Type the number, not the name:')
+            print 'Type the number, not the name.'
+            userInput = getpass.getpass('> ')
             if userInput in string.digits:
                 if int(userInput) < 7:
                     if int(userInput) > 0:
@@ -31,7 +33,8 @@ class ChessClient:
         print "1. Classic   2. Nemesis   3. Reaper"
         print "4. Empowered 5. Two Kings 6. Animals"
         while True:
-            userInput = raw_input('Type the number, not the name:')
+            print 'Type the number, not the name.'
+            userInput = getpass.getpass('> ')
             if userInput in string.digits:
                 if int(userInput) < 7:
                     if int(userInput) > 0:
@@ -79,12 +82,14 @@ class ChessClient:
                     print chess.getFEN()
                 elif len(move) < 2:
                     print "Type a real move."
-                elif move == "whirlwind":
+                elif any(var in move for var in ("whirlwind", "ww", "Whirlwind", "WW"):
                     if curArmy == chess.TWOKINGS:
                         print "Which Warrior King performs the whirlwind?"
                         while True:
                             location = raw_input("> ")
-                            if len(location) != 2:
+                            if location == "exit":
+                                sys.exit(0)
+                            elif len(location) != 2:
                                 print "Please only enter the square."
                             else:
                                 location = chess.locationToTuple(location)
@@ -110,13 +115,88 @@ class ChessClient:
                     else:
                         print "You're not playing Two Kings!"
                 else:
-                    res = chess.addTextMove(move)
-                    if res:
-                        board = chess.getBoard()
-                        turn = chess.getTurn()
-                        chess.updateRoyalLocations()
+                    res = chess.checkTextMove(move)
+                    if res == -1 or (not res):
+                        result = chess.addTextMove(move)
+                        if result:
+                            print chess.getLastTextMove(chess.SAN)
+                            board = chess.getBoard()
+                            turn = chess.getTurn()
+                            chess.updateRoyalLocations()
+                        else:
+                            print "%s" % chess.move_reason_list[chess.getReason()]
                     else:
-                        print "%s" % chess.move_reason_list[chess.getReason()]
+                        if turn == 0:
+                            unturn = 1
+                        else:
+                            unturn = 0
+                        print "%s, would you like to initiate a duel? It will cost %d." % (str(chess.value_to_color_dict[unturn]), res)
+                        while True:
+                            answer = raw_input("> ")
+                            if any(var in answer for var in ('y', 'Y', 'Yes', 'yes')):
+                                chess.payDuelCost(res)
+                                print "White stones: %d" % chess.getStones(chess.WHITE)
+                                print "Black stones: %d" % chess.getStones(chess.BLACK)
+                                print "%s, how much would you like to bid?" % str(chess.value_to_color_dict[unturn])
+                                while True:
+                                    defending_bid = getpass.getpass("> ")
+                                    if defending_bid == "exit":
+                                        sys.exit(0)
+                                    elif defending_bid in string.digits:
+                                        if int(defending_bid) < 3:
+                                            if int(defending_bid) > -1:
+                                                break
+                                            print 'Please only bid a number of stones between 0 and 2.'
+                                        print 'Please only bid a number of stones between 0 and 2.'
+                                    else:
+                                        print 'Please only bid a number of stones between 0 and 2.'
+                                print "%s, how much would you like to bid?" % str(chess.value_to_color_dict[turn])
+                                while True:
+                                    attacking_bid = getpass.getpass("> ")
+                                    if attacking_bid == "exit":
+                                        sys.exit(0)
+                                    elif attacking_bid in string.digits:
+                                        if int(attacking_bid) < 3:
+                                            if int(attacking_bid) > -1:
+                                                break
+                                            print 'Please only bid a number of stones between 0 and 2.'
+                                        print 'Please only bid a number of stones between 0 and 2.'
+                                    else:
+                                        print 'Please only bid a number of stones between 0 and 2.'
+                                duel_results = chess.initiateDuel(int(attacking_bid), int(defending_bid))
+                                # duel_results will now be either None, 1, or 2
+                                print "Attacker bid: %d" % int(attacking_bid)
+                                print "Defender bid: %d" % int(defending_bid)
+                                if duel_results is None:
+                                    print "Someone tried to bid too much!"
+                                    break
+                                elif duel_results == 1:
+                                    print "Attacker wins!"
+                                    att_result = chess.addTextMove(move)
+                                    if att_result:
+                                        print chess.getLastTextMove(chess.SAN)
+                                        board = chess.getBoard()
+                                        turn = chess.getTurn()
+                                        chess.updateRoyalLocations()
+                                    else:
+                                        print "%s" % chess.move_reason_list[chess.getReason()]
+                                else:
+                                    print "Defender wins!"
+                                    att_result = chess.addTextMove(move, True)
+                                    if att_result:
+                                        print chess.getLastTextMove(chess.SAN)
+                                        board = chess.getBoard()
+                                        turn = chess.getTurn()
+                                        chess.updateRoyalLocations()
+                                    else:
+                                        print "%s" % chess.move_reason_list[chess.getReason()]
+                                board = chess.getBoard()
+                                turn = chess.getTurn()
+                                break
+                            else:
+                                board = chess.getBoard()
+                                turn = chess.getTurn()
+                                break
             else:
                 break
         chess.printBoard()

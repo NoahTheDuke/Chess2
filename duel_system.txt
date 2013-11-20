@@ -1,0 +1,22 @@
+normal way:
+* player inputs a move
+* ui sends move to addTextMove
+* addTextMove parses move and calls addMove for that move
+* addMove calls necessary things, which moves the piece.
+* everything returns True up the stack, passing off to UI
+* UI prints success or failure depending
+
+duel method:
+* player inputs a move
+* UI sends move to checkTextMove
+* checkTextMove parses from and to locations
+* if to location is empty, call addTextMove for that move
+* if to location is occupied, call checkDuel
+* checkDuel compares cost to stone pool, subtracts cost if available and returns boolean depending on success
+* UI asks for bid amount from attacker, checks number of available stones and returns error if too much
+* UI asks the same of the defender
+* UI calls initiateDuel
+* initiateDuel subtracts the stones from respective stone pools, returns winner
+* if attacker: UI calls addTextMove
+* if defender: UI calls addTextMove and clearLocation
+* clearLocation sets the from location to "."
