@@ -12,12 +12,17 @@ To run: clone, cd into Chess2, "python ChessText.py".
 
 Input
 =====
-Input moves with: e4, e2e4, e2-e4, Ke2, etc.
-Whirlwind with: ww, whirlwind
-Skip Two Kings second turn with: decline, d, skip, s
-Bluffing gain or loss with: gain, g; lose, l
-List moves so far with: an, san, lan
-Print out FEN with: fen
+* Input moves with: e4, e2e4, e2-e4, Ke2, etc.
+
+* Whirlwind with: ww, whirlwind
+
+* Skip Two Kings second turn with: decline, d, skip, s
+
+* Bluffing gain or loss with: gain, g; lose, l
+
+* List moves so far with: an, san, lan
+
+* Print out FEN with: fen
 
 Issues
 ======
