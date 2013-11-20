@@ -82,7 +82,7 @@ class ChessClient:
                     print chess.getFEN()
                 elif len(move) < 2:
                     print "Type a real move."
-                elif any(var in move for var in ("whirlwind", "ww", "Whirlwind", "WW"):
+                elif any(var in move for var in ("whirlwind", "ww", "Whirlwind", "WW")):
                     if curArmy == chess.TWOKINGS:
                         print "Which Warrior King performs the whirlwind?"
                         while True:
@@ -116,7 +116,7 @@ class ChessClient:
                         print "You're not playing Two Kings!"
                 else:
                     res = chess.checkTextMove(move)
-                    if res == -1 or (not res):
+                    if res == -1 or (res is False):
                         result = chess.addTextMove(move)
                         if result:
                             print chess.getLastTextMove(chess.SAN)
@@ -165,11 +165,26 @@ class ChessClient:
                                         print 'Please only bid a number of stones between 0 and 2.'
                                 duel_results = chess.initiateDuel(int(attacking_bid), int(defending_bid))
                                 # duel_results will now be either None, 1, or 2
-                                print "Attacker bid: %d" % int(attacking_bid)
-                                print "Defender bid: %d" % int(defending_bid)
+                                print "%s bid: %d" % (chess.value_to_color_dict[chess._turn], int(attacking_bid))
+                                print "%s bid: %d" % (chess.value_to_color_dict[chess._unturn], int(defending_bid))
                                 if duel_results is None:
                                     print "Someone tried to bid too much!"
                                     break
+                                elif duel_results == 0:
+                                    print "%s called the bluff! Do you want to gain a stone or force %s to lose a stone?" % (
+                                        chess.value_to_color_dict[chess._turn], chess.value_to_color_dict[chess._unturn])
+                                    while True:
+                                        bluff_choice = raw_input("> ")
+                                        if bluff_choice == "exit":
+                                            sys.exit(0)
+                                        elif any(var in bluff_choice for var in ("g", "gain", "G", "Gain")):
+                                            chess.addStones(chess._turn, 1)
+                                            break
+                                        elif any(var in bluff_choice for var in ("l", "lose", "L", "Lose")):
+                                            chess.addStones(chess._unturn, -1)
+                                            break
+                                        else:
+                                            print 'Please only bid a number of stones between 0 and 2.'
                                 elif duel_results == 1:
                                     print "Attacker wins!"
                                     att_result = chess.addTextMove(move)

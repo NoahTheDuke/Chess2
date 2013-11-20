@@ -178,6 +178,7 @@ class ChessBoard:
 
     # States
     _turn = WHITE
+    _unturn = BLACK
     _secondTurn = False
     _white_king_castle = True
     _white_queen_castle = True
@@ -661,11 +662,15 @@ class ChessBoard:
         if player == self.WHITE:
             if self._white_stones + amount > 6:
                 self._white_stones = 6
+            elif self._white_stones + amount < 0:
+                self._white_stones = 0
             else:
                 self._white_stones = self._white_stones + amount
         else:
             if self._black_stones + amount > 6:
                 self._black_stones = 6
+            elif self._black_stones + amount < 0:
+                self._black_stones = 0
             else:
                 self._black_stones = self._black_stones + amount
 
@@ -688,7 +693,9 @@ class ChessBoard:
                 return None
 
         self.resolveDuel(attacking_bid, defending_bid)
-        if attacking_bid >= defending_bid:
+        if attacking_bid == 0 and defending_bid == 0:
+            return 0
+        elif attacking_bid >= defending_bid:
             return 1
         else:
             return 2
@@ -1808,13 +1815,11 @@ class ChessBoard:
         for blank in pieces:
             if any(var in self._board[blank[1]][blank[0]] for var in ('g', 'G')):
                 return False
-        self._cur_move[6] = self.WARRIOR_KING_WHIRLWIND
+            elif (any(var in self._board[blank[1]][blank[0]] for var in ('u', 'U', 'w', 'W')) and
+                    self._board[fromPos[1]][fromPos[0]] == self._board[blank[1]][blank[0]]):
+                return False
         for goners in pieces:
             if self._board[fromPos[1]][fromPos[0]] == self._board[goners[1]][goners[0]]:
-                continue
-            elif curArmy == self._black_army and (self._board[goners[1]][goners[0]] == 'u' or self._board[goners[1]][goners[0]] == 'w'):
-                continue
-            elif curArmy == self._white_army and (self._board[goners[1]][goners[0]] == 'U' or self._board[goners[1]][goners[0]] == 'W'):
                 continue
             else:
                 if self._turn == self.BLACK and any(var in self._board[goners[1]][goners[0]] for var in ('P', 'L', 'D')):
@@ -1827,14 +1832,17 @@ class ChessBoard:
             for items in dead_list:
                 self._board[items[1]][items[0]] = dead_list[(items[0], items[1])]
             return False
+        self._cur_move[6] = self.WARRIOR_KING_WHIRLWIND
         if addStone:
             self.addStones(self._turn, addStone)
         if self._secondTurn:
             self._secondTurn = False
             if self._turn == self.WHITE:
                 self._turn = self.BLACK
+                self._unturn = self.WHITE
             else:
                 self._turn = self.WHITE
+                self._unturn = self.BLACK
         return True
 
 ######################################################
@@ -2525,8 +2533,10 @@ class ChessBoard:
         else:
             if self._turn == self.WHITE:
                 self._turn = self.BLACK
+                self._unturn = self.WHITE
             else:
                 self._turn = self.WHITE
+                self._unturn = self.BLACK
 
         if self._turn == self.WHITE:
             if "TwoKings" in self.army_name_dict[self._white_army]:
@@ -2637,8 +2647,10 @@ class ChessBoard:
 
         if self._turn == self.WHITE:
             self._turn = self.BLACK
+            self._unturn = self.WHITE
         else:
             self._turn = self.WHITE
+            self._unturn = self.BLACK
 
         if self._turn == self.WHITE:
             if "TwoKings" in self.army_name_dict[self._white_army]:
