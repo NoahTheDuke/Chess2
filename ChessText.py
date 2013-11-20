@@ -101,7 +101,7 @@ class ChessClient:
                                 break
                     else:
                         print "You're not playing Two Kings!"
-                elif move == "decline":
+                elif any(var in move for var in ("decline", "d", "Decline", "D", "skip", "s", "Skip", "S")):
                     if curArmy == chess.TWOKINGS:
                         if chess._secondTurn:
                             print "Second turn skipped."
