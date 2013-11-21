@@ -1,4 +1,4 @@
-﻿#/usr/bin/env python
+﻿
 
 #####################################################################
 # ChessBoard v2.05 is created by John Eriksson - http://arainyday.se
@@ -35,6 +35,15 @@ class ChessBoard:
         4: "Empowered",
         5: "TwoKings",
         6: "Animals"}
+
+    # Army values
+    army_abr_dict = {
+        1: "C",
+        2: "N",
+        3: "R",
+        4: "E",
+        5: "T",
+        6: "A"}
 
     CLASSIC = 1
     NEMESIS = 2
@@ -134,7 +143,8 @@ class ChessBoard:
     GAME_IS_OVER = 6
     AMBIGUOUS_MOVE = 7
 
-    move_reason_list = ["", "Invalid move.",
+    move_reason_list = ["",
+                        "Invalid move.",
                         "Invalid color.",
                         "Invalid move from that square.",
                         "Invalid move to that square.",
@@ -232,17 +242,22 @@ class ChessBoard:
              self._ep[0],
              self._ep[1],
              self._game_result,
+             self._white_army,
+             self._white_stones,
+             self._black_army,
+             self._black_stones,
              self._fifty)
 
-        #turn, wkc, wqc, bkc, bqc, epx, epy, game_result, fifty
-        s = "%s%d%d%d%d%d%d%d%d:%d" % d
+        #board, turn, wkc, wqc, bkc, bqc, epx, epy, game_result, warm, wsts, barm, bsts : fifty
+        s = "%s%d%d%d%d%d%d%d%d%d%d%d%d:%d" % d
         return s
 
     def loadCurState(self):
         s = self._state_stack[self._state_stack_pointer - 1]
         b = s[:64]
         v = s[64:72]
-        f = int(s[73:])
+        a = s[72:76]
+        f = int(s[77:])
 
         idx = 0
         for r in range(8):
@@ -258,6 +273,11 @@ class ChessBoard:
         self._ep[0] = int(v[5])
         self._ep[1] = int(v[6])
         self._game_result = int(v[7])
+
+        self._white_army = int(a[0])
+        self._white_stones = int(a[1])
+        self._black_army = int(a[2])
+        self._black_stones = int(a[3])
 
         self._fifty = f
 
@@ -2100,47 +2120,58 @@ class ChessBoard:
 
     def setFEN(self, fen):
         """
-        Sets the board and states accoring from a Forsyth - Edwards Notation string.
-        Ex. 'rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2'
+        Sets the board and states accoring from a Chess 2 Forsyth-Edwards Notation string.
+        Ex. 'n3T1 rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2'
         """
         self._three_rep_stack = []
         self._state_stack = []
         self._moves = []
         self._reason = 0
         self._game_result = 0
+        self._white_army = 1
+        self._black_army = 1
+        self._white_stones = 3
+        self._black_stones = 3
 
         fparts = fen.split()
         newstate = ""
 
         #BOARD
-        for c in fparts[0]:
+        for c in fparts[1]:
             if c in "kqrnbpKQRNBP":
                 newstate += c
             elif c in "12345678":
                 newstate += '.' * int(c)
         #TURN
-        newstate += str("wb".index(fparts[1]))
+        newstate += str("wb".index(fparts[2]))
 
         #CASTLING
         kq = "KQkq"
         for p in kq:
-            if p in fparts[2]:
+            if p in fparts[3]:
                 newstate += "1"
             else:
                 newstate += "0"
 
         #EN PASSANT
-        if len(fparts[3]) == 2:
-            newstate += str("abcdefgh".index(fparts[3][0].lower()))
-            newstate += str("87654321".index(fparts[3][1]))
+        if len(fparts[4]) == 2:
+            newstate += str("abcdefgh".index(fparts[4][0].lower()))
+            newstate += str("87654321".index(fparts[4][1]))
         else:
             newstate += "00"
 
         #GAME RESULT
         newstate += "0"
 
+        #ARMIES + STONES
+        for a in fparts[0]:
+            if a in "cnretaCNRETA":
+                newstate += c
+            elif a in "0123456":
+                newstate += c
+
         #HALF COUNT
-        newstate += ":%s" % fparts[4]
+        newstate += ":%s" % fparts[5]
 
         self._state_stack.append(newstate)
         self._state_stack_pointer = 1
@@ -2165,7 +2196,8 @@ class ChessBoard:
 
         b = s[:64]
         v = s[64:72]
-        fifty = s[73:]
+        a = s[72:76]
+        fifty = s[77:]
         b = [self._formatPieceNames(var) for var in b]
 
         rows = []
@@ -2187,6 +2219,12 @@ class ChessBoard:
         board = "/".join(rows)
 
         turn = (["w", "b"])[int(v[0])]
+
+        armystones = ""
+        armystones += self.army_abr_dict[int(a[0])]  # white army
+        armystones += a[1]  # white stones
+        armystones += self.army_abr_dict[int(a[2])].lower()  # black army
+        armystones += a[3]  # black stones
 
         kq = ""
         if self._white_army == 1:
@@ -2212,7 +2250,7 @@ class ChessBoard:
                 ep = "%s%s" % (("abcdefgh")[x], ("87654321")[y - 1])
 
         move = (self._state_stack_pointer + 1) / 2
-        return "%s %s %s %s %s %d" % (board, turn, kq, ep, fifty, move)
+        return "%s %s %s %s %s %s %d" % (armystones, board, turn, kq, ep, fifty, move)
 
     def getMoveCount(self):
         """
@@ -2346,6 +2384,7 @@ class ChessBoard:
     def getGameResult(self):
         """
         Returns the reason for game over.
+        If game is not over this method returns zero (0).
         It can be the following reasons:
         1: WHITE_MATE
         2: BLACK_MATE
@@ -2354,7 +2393,6 @@ class ChessBoard:
         5: THREE_REPETITION_RULE
         6: WHITE_MIDLINE_INVASION
         7: BLACK_MIDLINE_INVASION
-        If game is not over this method returns zero(0).
         """
         return self._game_result
 
@@ -2375,13 +2413,20 @@ class ChessBoard:
     def getReason(self):
         """
         Returns the reason to why addMove returned False.
-        1 = INAVLID_MOVE, 2 = INVALID_COLOR, 3 = INVALID_FROM_LOCATION, 4 = INVALID_TO_LOCATION, 5 = MUST_SET_PROMOTION, 6 = GAME_IS_OVER, 7 = AMBIGUOUS_MOVE
+        1 = INAVLID_MOVE
+        2 = INVALID_COLOR
+        3 = INVALID_FROM_LOCATION
+        4 = INVALID_TO_LOCATION
+        5 = MUST_SET_PROMOTION
+        6 = GAME_IS_OVER
+        7 = AMBIGUOUS_MOVE
         """
         return self._reason
 
     def getValidMoves(self, location):
         """
-        Returns a list of valid moves. (ex [ [3, 4], [3, 5], [3, 6] ... ] ) If there isn't a valid piece on that location or the piece on the selected
+        Returns a list of valid moves. (ex [ [3, 4], [3, 5], [3, 6] ... ] )
+        If there isn't a valid piece on that location or the piece on the selected
         location hasn't got any valid moves an empty list is returned.
         The location argument must be a tuple containing an x, y value Ex. (3, 3)
         """
@@ -2397,7 +2442,7 @@ class ChessBoard:
             return []
 
         p = self._board[y][x].upper()
-#### Classic (Default) Army
+        #### Classic (Default) Army
         if p == 'P':
             m, s = self.getValidClassicPawnMoves(location)
             return m
@@ -2412,18 +2457,18 @@ class ChessBoard:
         elif p == 'K':
             m, s = self.getValidClassicKingMoves(location)
             return m
-### Nemesis Army
+        ### Nemesis Army
         elif p == 'L':
             m, s = self.getValidNemesisPawnMoves(location)
             return m
         elif p == 'M':
             return self.getValidNemesisNemesisMoves(location)
-### Reaper Army
+        ### Reaper Army
         elif p == 'G':
             return self.getValidReaperGhostMoves(location)
         elif p == 'A':
             return self.getValidReaperReaperMoves(location)
-### Empowered Army
+        ### Empowered Army
         elif p == 'X':
             return self.getValidEmpoweredBishopMoves(location)
         elif p == 'Y':
@@ -2432,14 +2477,14 @@ class ChessBoard:
             return self.getValidEmpoweredRookMoves(location)
         elif p == 'O':
             return self.getValidEmpoweredQueenMoves(location)
-### Two Kings Army
+        ### Two Kings Army
         elif p == 'U':
             m, s = self.getValidTwoKingsWarriorKingMoves(location)
             return m
         elif p == 'W':
             m, s = self.getValidTwoKingsWarriorKingMoves(location)
             return m
-### Animals Army
+        ### Animals Army
         elif p == 'T':
             return self.getValidAnimalsTigerMoves(location)
         elif p == 'H':
@@ -2448,7 +2493,7 @@ class ChessBoard:
             return self.getValidAnimalsElephantMoves(location)
         elif p == 'J':
             return self.getValidAnimalsJungleQueenMoves(location)
-### Army Agnostic
+        ### Army Agnostic
         elif p == 'D':
             m, s = self.getValidGenericPawnMoves(location)
             return m
@@ -2752,9 +2797,6 @@ class ChessBoard:
 
         if promo:
             self.setPromotion(promo)
-
-        if not piece:
-            return self.addMove((fx, fy), (tx, ty))
 
         piece = self._reversePieceNames(piece)
         if self._secondTurn:

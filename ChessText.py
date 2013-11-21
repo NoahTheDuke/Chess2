@@ -133,7 +133,9 @@ class ChessClient:
                         print "%s, would you like to initiate a duel? It will cost %d." % (str(chess.value_to_color_dict[unturn]), res)
                         while True:
                             answer = raw_input("> ")
-                            if any(var in answer for var in ('y', 'Y', 'Yes', 'yes')):
+                            if answer == "exit":
+                                sys.exit(0)
+                            elif any(var in answer for var in ('y', 'Y', 'Yes', 'yes')):
                                 chess.payDuelCost(res)
                                 print "White stones: %d" % chess.getStones(chess.WHITE)
                                 print "Black stones: %d" % chess.getStones(chess.BLACK)
