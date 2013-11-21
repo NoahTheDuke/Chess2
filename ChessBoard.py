@@ -1644,11 +1644,7 @@ class ChessBoard:
 
         self.clearEP()
 
-        if self._board[toPos[1]][toPos[0]] == ".":
-            self._fifty += 1
-        else:
-            self._fifty = 0
-            self._cur_move[3] = True
+        self._fifty += 1
 
         self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
         self._board[fromPos[1]][fromPos[0]] = "."
@@ -1832,6 +1828,8 @@ class ChessBoard:
             for items in dead_list:
                 self._board[items[1]][items[0]] = dead_list[(items[0], items[1])]
             return False
+        self._fifty = 0
+        self._cur_move[3] = True
         self._cur_move[6] = self.WARRIOR_KING_WHIRLWIND
         if addStone:
             self.addStones(self._turn, addStone)
@@ -1982,7 +1980,7 @@ class ChessBoard:
         return (dest_x, dest_y)
 
     def _formatTextMove(self, move, format):
-        #piece, from, to, take, promotion, check
+        #piece, from, to, take, promotion, check, special
 
         piece = move[0]
         piece = self._formatPieceNames(piece)
@@ -2172,7 +2170,7 @@ class ChessBoard:
 
         rows = []
         for i in range(8):
-            row = b[i * 8: (i + 1) * 8]
+            row = b[i * 8:(i + 1) * 8]  # A slice for each row.
             cnt = 0
             res = ""
             for c in row:
@@ -2184,7 +2182,7 @@ class ChessBoard:
                         cnt = 0
                     res += c
             if cnt:
-                    res += str(cnt)
+                res += str(cnt)
             rows.append(res)
         board = "/".join(rows)
 
