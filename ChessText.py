@@ -66,18 +66,24 @@ class ChessClient:
                 elif any(var in move for var in ("SAN", "san")):
                     san = chess.getAllTextMoves(chess.SAN)
                     if san:
+                        length = 1
                         for x, y in self.grouped(san, 2):
-                            print "%s %s" % (x, y)
+                            print "%d. %s %s" % (length, x, y)
+                            length += 1
                 elif any(var in move for var in ("LAN", "lan")):
                     lan = chess.getAllTextMoves(chess.LAN)
                     if lan:
+                        length = 1
                         for x, y in self.grouped(lan, 2):
-                            print "%s %s" % (x, y)
+                            print "%d. %s %s" % (length, x, y)
+                            length += 1
                 elif any(var in move for var in ("AN", "an")):
                     an = chess.getAllTextMoves(chess.AN)
                     if an:
+                        length = 1
                         for x, y in self.grouped(an, 2):
-                            print "%s %s" % (x, y)
+                            print "%d. %s %s" % (length, x, y)
+                            length += 1
                 elif any(var in move for var in ("FEN", "fen")):
                     print chess.getFEN()
                 elif len(move) < 2:
@@ -180,10 +186,10 @@ class ChessClient:
                                         if bluff_choice == "exit":
                                             sys.exit(0)
                                         elif any(var in bluff_choice for var in ("g", "gain", "G", "Gain")):
-                                            chess.addStones(chess._turn, 1)
+                                            chess.calledBluff(1)
                                             break
                                         elif any(var in bluff_choice for var in ("l", "lose", "L", "Lose")):
-                                            chess.addStones(chess._unturn, -1)
+                                            chess.calledBluff(-1)
                                             break
                                         else:
                                             print 'Please only bid a number of stones between 0 and 2.'

@@ -215,9 +215,9 @@ class ChessBoard:
     _state_stack_pointer = 0
 
     # all moves, stored to make it easier to build textmoves
-    #[piece, from, to, takes, promotion, check/checkmate, specialmove]
-    #["KQRNBP", (fx, fy), (tx, ty), True/False, "QRNB"/None, "+#"/None, 0-5]
-    _cur_move = [None, None, None, False, None, None, 0]
+    #[piece, from, to, takes, duel, bluff, promotion, check/checkmate, specialmove]
+    #["KQRNBPLMOGAUXTHEJDC", (fx, fy), (tx, ty), True/False, [0-6, 0-6]/None, "+-"/None, "QRNB"/None, "+#*"/None, 0-7]
+    _cur_move = [None, None, None, False, None, None, None, None, 0]
     _moves = []
 
     _promotion_value = 0
@@ -694,6 +694,14 @@ class ChessBoard:
             else:
                 self._black_stones = self._black_stones + amount
 
+    def calledBluff(self, amount):
+        if amount > 0:
+            self._cur_move[5] = "+"
+            self.addStones(self._turn, 1)
+        else:
+            self._cur_move[5] = "-"
+            self.addStones(self._unturn, -1)
+
     def payDuelCost(self, cost):
         if self.getTurn == self.WHITE:
             self._black_stones = self._black_stones - cost
@@ -714,10 +722,13 @@ class ChessBoard:
 
         self.resolveDuel(attacking_bid, defending_bid)
         if attacking_bid == 0 and defending_bid == 0:
+            self._cur_move[4] = (attacking_bid, defending_bid)
             return 0
         elif attacking_bid >= defending_bid:
+            self._cur_move[4] = (attacking_bid, defending_bid)
             return 1
         else:
+            self._cur_move[4] = (attacking_bid, defending_bid)
             return 2
 
     def resolveDuel(self, attacking_bid, defending_bid):
@@ -1246,7 +1257,7 @@ class ChessBoard:
         if t == self.EP_CAPTURE_MOVE:
             self._board[self._ep[1]][self._ep[0]] = '.'
             self._cur_move[3] = True
-            self._cur_move[6] = self.EP_CAPTURE_MOVE
+            self._cur_move[8] = self.EP_CAPTURE_MOVE
 
         pv = self._promotion_value
         if self._turn == self.WHITE and toPos[1] == 0:
@@ -1255,8 +1266,8 @@ class ChessBoard:
                 return False
             pc = ['Q', 'R', 'N', 'B']
             p = pc[pv - 1]
-            self._cur_move[4] = p
-            self._cur_move[6] = self.PROMOTION_MOVE
+            self._cur_move[6] = p
+            self._cur_move[8] = self.PROMOTION_MOVE
             #self._promotion_value = 0
         elif self._turn == self.BLACK and toPos[1] == 7:
             if pv == 0:
@@ -1264,15 +1275,15 @@ class ChessBoard:
                 return False
             pc = ['q', 'r', 'n', 'b']
             p = pc[pv - 1]
-            self._cur_move[4] = p
-            self._cur_move[6] = self.PROMOTION_MOVE
+            self._cur_move[6] = p
+            self._cur_move[8] = self.PROMOTION_MOVE
             #self._promotion_value = 0
         else:
             p = self._board[fromPos[1]][fromPos[0]]
 
         if t == self.EP_MOVE:
             self.setEP(toPos)
-            self._cur_move[6] = self.EP_MOVE
+            self._cur_move[8] = self.EP_MOVE
         else:
             self.clearEP()
 
@@ -1299,7 +1310,7 @@ class ChessBoard:
         if t == self.EP_CAPTURE_MOVE:
             self._board[self._ep[1]][self._ep[0]] = '.'
             self._cur_move[3] = True
-            self._cur_move[6] = self.EP_CAPTURE_MOVE
+            self._cur_move[8] = self.EP_CAPTURE_MOVE
 
         pv = self._promotion_value
         if self._turn == self.WHITE and toPos[1] == 0:
@@ -1308,8 +1319,8 @@ class ChessBoard:
                 return False
             pc = ['M', 'R', 'N', 'B']
             p = pc[pv - 1]
-            self._cur_move[4] = p
-            self._cur_move[6] = self.PROMOTION_MOVE
+            self._cur_move[6] = p
+            self._cur_move[8] = self.PROMOTION_MOVE
             #self._promotion_value = 0
         elif self._turn == self.BLACK and toPos[1] == 7:
             if pv == 0:
@@ -1317,15 +1328,15 @@ class ChessBoard:
                 return False
             pc = ['m', 'r', 'n', 'b']
             p = pc[pv - 1]
-            self._cur_move[4] = p
-            self._cur_move[6] = self.PROMOTION_MOVE
+            self._cur_move[6] = p
+            self._cur_move[8] = self.PROMOTION_MOVE
             #self._promotion_value = 0
         else:
             p = self._board[fromPos[1]][fromPos[0]]
 
         if t == self.EP_MOVE:
             self.setEP(toPos)
-            self._cur_move[6] = self.EP_MOVE
+            self._cur_move[8] = self.EP_MOVE
         else:
             self.clearEP()
 
@@ -1352,7 +1363,7 @@ class ChessBoard:
         if t == self.EP_CAPTURE_MOVE:
             self._board[self._ep[1]][self._ep[0]] = '.'
             self._cur_move[3] = True
-            self._cur_move[6] = self.EP_CAPTURE_MOVE
+            self._cur_move[8] = self.EP_CAPTURE_MOVE
 
         pv = self._promotion_value
         if self._turn == self.WHITE and toPos[1] == 0:
@@ -1366,8 +1377,8 @@ class ChessBoard:
                 6: ['J', 'E', 'H', 'T']}
             pc = tempArmy[self._white_army]
             p = pc[pv - 1]
-            self._cur_move[4] = p
-            self._cur_move[6] = self.PROMOTION_MOVE
+            self._cur_move[6] = p
+            self._cur_move[8] = self.PROMOTION_MOVE
             #self._promotion_value = 0
         elif self._turn == self.BLACK and toPos[1] == 7:
             if pv == 0:
@@ -1380,15 +1391,15 @@ class ChessBoard:
                 6: ['j', 'e', 'h', 't']}
             pc = tempArmy[self._black_army]
             p = pc[pv - 1]
-            self._cur_move[4] = p
-            self._cur_move[6] = self.PROMOTION_MOVE
+            self._cur_move[6] = p
+            self._cur_move[8] = self.PROMOTION_MOVE
             #self._promotion_value = 0
         else:
             p = self._board[fromPos[1]][fromPos[0]]
 
         if t == self.EP_MOVE:
             self.setEP(toPos)
-            self._cur_move[6] = self.EP_MOVE
+            self._cur_move[8] = self.EP_MOVE
         else:
             self.clearEP()
 
@@ -1757,14 +1768,14 @@ class ChessBoard:
             self._board[c_row][6] = k
             self._board[c_row][7] = "."
             self._board[c_row][5] = r
-            self._cur_move[6] = self.KING_CASTLE_MOVE
+            self._cur_move[8] = self.KING_CASTLE_MOVE
         elif t == self.QUEEN_CASTLE_MOVE:
             self._fifty += 1
             self._board[c_row][4] = "."
             self._board[c_row][2] = k
             self._board[c_row][0] = "."
             self._board[c_row][3] = r
-            self._cur_move[6] = self.QUEEN_CASTLE_MOVE
+            self._cur_move[8] = self.QUEEN_CASTLE_MOVE
         else:
             if self._board[toPos[1]][toPos[0]] == ".":
                 self._fifty += 1
@@ -1850,7 +1861,7 @@ class ChessBoard:
             return False
         self._fifty = 0
         self._cur_move[3] = True
-        self._cur_move[6] = self.WARRIOR_KING_WHIRLWIND
+        self._cur_move[8] = self.WARRIOR_KING_WHIRLWIND
         if addStone:
             self.addStones(self._turn, addStone)
         if self._secondTurn:
@@ -2007,9 +2018,11 @@ class ChessBoard:
         fpos = tuple(move[1])
         tpos = tuple(move[2])
         take = move[3]
-        promo = move[4]
-        check = move[5]
-        special = move[6]
+        duel = move[4]
+        bluff = move[5]
+        promo = move[6]
+        check = move[7]
+        special = move[8]
 
         files = "abcdefgh"
         ranks = "87654321"
@@ -2512,8 +2525,8 @@ class ChessBoard:
         If this method returns False you can use the getReason method to determin why.
         """
         self._reason = 0
-        #                piece, from, to, take, promotion, check, specialmove
-        self._cur_move = [None, None, None, False, None, None, self.NORMAL_MOVE]
+        #                piece, from, to, take, duel, bluff, promotion, check, specialmove
+        self._cur_move = [None, None, None, False, None, None, None, None, self.NORMAL_MOVE]
 
         if self._game_result:
             self._reason = self.GAME_IS_OVER
@@ -2585,26 +2598,26 @@ class ChessBoard:
             if "TwoKings" in self.army_name_dict[self._white_army]:
                 k, q = self.isCheck()
                 if k != q:
-                    self._cur_move[5] = "+"
+                    self._cur_move[7] = "+"
                 elif k and q:
-                    self._cur_move[5] = "++"
+                    self._cur_move[7] = "++"
             else:
                 if self.isCheck():
-                    self._cur_move[5] = "+"
+                    self._cur_move[7] = "+"
         else:
             if "TwoKings" in self.army_name_dict[self._black_army]:
                 k, q = self.isCheck()
                 if k != q:
-                    self._cur_move[5] = "+"
+                    self._cur_move[7] = "+"
                 elif k and q:
-                    self._cur_move[5] = "++"
+                    self._cur_move[7] = "++"
             else:
                 if self.isCheck():
-                    self._cur_move[5] = "+"
+                    self._cur_move[7] = "+"
 
         if not self.hasAnyValidMoves():
             if self.isCheck():
-                self._cur_move[5] = "#"
+                self._cur_move[7] = "#"
                 if self._turn == self.WHITE:
                     self.endGame(self.BLACK_MATE)
                 else:
@@ -2617,7 +2630,7 @@ class ChessBoard:
             elif self.threeRepetitions():
                 self.endGame(self.THREE_REPETITION_RULE)
             elif self.isMidlineInvasion():
-                self._cur_move[5] = "*"
+                self._cur_move[7] = "*"
                 if self._turn == self.BLACK:
                     self.endGame(self.WHITE_MIDLINE_INVASION)
                 else:
@@ -2636,8 +2649,8 @@ class ChessBoard:
         If this method returns False you can use the getReason method to determin why.
         """
         self._reason = 0
-        #                piece, from, to, take, promotion, check, specialmove
-        self._cur_move = [None, None, None, False, None, None, self.SECOND_WARRIOR_KING_MOVE]
+        #                piece, from, to, take, duel, bluff, promotion, check, specialmove
+        self._cur_move = [None, None, None, False, None, None, None, None, self.SECOND_WARRIOR_KING_MOVE]
 
         if self._game_result:
             self._reason = self.GAME_IS_OVER
@@ -2699,26 +2712,26 @@ class ChessBoard:
             if "TwoKings" in self.army_name_dict[self._white_army]:
                 k, q = self.isCheck()
                 if k != q:
-                    self._cur_move[5] = "+"
+                    self._cur_move[7] = "+"
                 elif k and q:
-                    self._cur_move[5] = "++"
+                    self._cur_move[7] = "++"
             else:
                 if self.isCheck():
-                    self._cur_move[5] = "+"
+                    self._cur_move[7] = "+"
         else:
             if "TwoKings" in self.army_name_dict[self._black_army]:
                 k, q = self.isCheck()
                 if k != q:
-                    self._cur_move[5] = "+"
+                    self._cur_move[7] = "+"
                 elif k and q:
-                    self._cur_move[5] = "++"
+                    self._cur_move[7] = "++"
             else:
                 if self.isCheck():
-                    self._cur_move[5] = "+"
+                    self._cur_move[7] = "+"
 
         if not self.hasAnyValidMoves():
             if self.isCheck():
-                self._cur_move[5] = "#"
+                self._cur_move[7] = "#"
                 if self._turn == self.WHITE:
                     self.endGame(self.BLACK_MATE)
                 else:
@@ -2731,7 +2744,7 @@ class ChessBoard:
             elif self.threeRepetitions():
                 self.endGame(self.THREE_REPETITION_RULE)
             elif self.isMidlineInvasion():
-                self._cur_move[5] = "*"
+                self._cur_move[7] = "*"
                 if self._turn == self.BLACK:
                     self.endGame(self.WHITE_MIDLINE_INVASION)
                 else:
@@ -2804,8 +2817,9 @@ class ChessBoard:
                 self._reason = self.INVALID_MOVE
                 return False
 
-        if self._turn == self.BLACK:
-            piece = piece.lower()
+        if piece is not None:
+            if self._turn == self.BLACK:
+                piece = piece.lower()
 
         move_to = None
         move_from = None
@@ -2904,7 +2918,14 @@ class ChessBoard:
         self.gotoFirst()
         while True:
             move = self._moves[self._state_stack_pointer - 1]
-            res.append(self._formatTextMove(move, format))
+            if move[0].istitle():
+                if move[8] == self.SECOND_WARRIOR_KING_MOVE:
+                    res.append("....")
+                res.append(self._formatTextMove(move, format))
+            else:
+                res.append(self._formatTextMove(move, format))
+                if move[8] == self.SECOND_WARRIOR_KING_MOVE:
+                    res.append("....")
             if self._state_stack_pointer >= len(self._state_stack) - 1:
                 break
             self.redo()
@@ -2931,16 +2952,19 @@ class ChessBoard:
         """
         Print the current board layout.
         """
-        print ""
-        print "White %s vs Black %s" % (self.army_name_dict[self._white_army], self.army_name_dict[self._black_army])
-        print "  +-----------------+"
+        board = []
+        board.append("")
+        board.append("White %s vs Black %s" % (self.army_name_dict[self._white_army], self.army_name_dict[self._black_army]))
+        board.append("  +-----------------+")
         rank = 8
         for l in self._board:
             l = [self._formatPieceNames(var) for var in l]
-            print "%d | %s %s %s %s %s %s %s %s |" % (rank, l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7])
+            board.append("%d | %s %s %s %s %s %s %s %s |" % (rank, l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7]))
             rank -= 1
-        print "  +-----------------+"
-        print "    a b c d e f g h"
-        print ""
-        print "White stones: %d" % self.getStones(self.WHITE)
-        print "Black stones: %d" % self.getStones(self.BLACK)
+        board.append("  +-----------------+")
+        board.append("    a b c d e f g h")
+        board.append("")
+        board.append("White stones: %d" % self.getStones(self.WHITE))
+        board.append("Black stones: %d" % self.getStones(self.BLACK))
+        for line in board:
+            print line
