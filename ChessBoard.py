@@ -1,4 +1,4 @@
-﻿
+﻿#/usr/bin/env python
 
 #####################################################################
 # ChessBoard v2.05 is created by John Eriksson - http://arainyday.se
@@ -14,6 +14,7 @@
 
 from copy import deepcopy
 from pprint import pprint
+from itertools import izip_longest
 
 
 class ChessBoard:
@@ -213,6 +214,7 @@ class ChessBoard:
     # full state stack
     _state_stack = []
     _state_stack_pointer = 0
+    _stack_second_turns = 0
 
     # all moves, stored to make it easier to build textmoves
     #[piece, from, to, takes, duel, bluff, promotion, check/checkmate, specialmove]
@@ -243,8 +245,8 @@ class ChessBoard:
              self._ep[1],
              self._game_result,
              self._white_army,
-             self._white_stones,
              self._black_army,
+             self._white_stones,
              self._black_stones,
              self._fifty)
 
@@ -275,8 +277,8 @@ class ChessBoard:
         self._game_result = int(v[7])
 
         self._white_army = int(a[0])
-        self._white_stones = int(a[1])
-        self._black_army = int(a[2])
+        self._black_army = int(a[1])
+        self._white_stones = int(a[2])
         self._black_stones = int(a[3])
 
         self._fifty = f
@@ -2134,7 +2136,7 @@ class ChessBoard:
     def setFEN(self, fen):
         """
         Sets the board and states accoring from a Chess 2 Forsyth-Edwards Notation string.
-        Ex. 'n3T1 rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2'
+        Ex. 'Tc 31 rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b kq - 1 2'
         """
         self._three_rep_stack = []
         self._state_stack = []
@@ -2150,26 +2152,26 @@ class ChessBoard:
         newstate = ""
 
         #BOARD
-        for c in fparts[1]:
+        for c in fparts[2]:
             if c in "kqrnbpKQRNBP":
                 newstate += c
             elif c in "12345678":
                 newstate += '.' * int(c)
         #TURN
-        newstate += str("wb".index(fparts[2]))
+        newstate += str("wb".index(fparts[3]))
 
         #CASTLING
         kq = "KQkq"
         for p in kq:
-            if p in fparts[3]:
+            if p in fparts[4]:
                 newstate += "1"
             else:
                 newstate += "0"
 
         #EN PASSANT
-        if len(fparts[4]) == 2:
-            newstate += str("abcdefgh".index(fparts[4][0].lower()))
-            newstate += str("87654321".index(fparts[4][1]))
+        if len(fparts[5]) == 2:
+            newstate += str("abcdefgh".index(fparts[5][0].lower()))
+            newstate += str("87654321".index(fparts[5][1]))
         else:
             newstate += "00"
 
@@ -2184,7 +2186,7 @@ class ChessBoard:
                 newstate += c
 
         #HALF COUNT
-        newstate += ":%s" % fparts[5]
+        newstate += ":%s" % fparts[6]
 
         self._state_stack.append(newstate)
         self._state_stack_pointer = 1
@@ -2210,6 +2212,7 @@ class ChessBoard:
         b = s[:64]
         v = s[64:72]
         a = s[72:76]
+        print str(a)
         fifty = s[77:]
         b = [self._formatPieceNames(var) for var in b]
 
@@ -2235,17 +2238,18 @@ class ChessBoard:
 
         armystones = ""
         armystones += self.army_abr_dict[int(a[0])]  # white army
-        armystones += a[1]  # white stones
-        armystones += self.army_abr_dict[int(a[2])].lower()  # black army
+        armystones += self.army_abr_dict[int(a[1])].lower()  # black army
+        armystones += " "
+        armystones += a[2]  # white stones
         armystones += a[3]  # black stones
 
         kq = ""
-        if self._white_army == 1:
+        if self._white_army == self.CLASSIC:
             if int(v[1]):
                 kq += "K"
             if int(v[2]):
                 kq += "Q"
-        if self._black_army == 1:
+        if self._black_army == self.CLASSIC:
             if int(v[3]):
                 kq += "k"
             if int(v[4]):
@@ -2262,7 +2266,7 @@ class ChessBoard:
             elif turn == "w" and (self._board[y][x - 1] == 'P' or self._board[y][x + 1] == 'P'):
                 ep = "%s%s" % (("abcdefgh")[x], ("87654321")[y - 1])
 
-        move = (self._state_stack_pointer + 1) / 2
+        move = (self._state_stack_pointer - self._stack_second_turns + 1) / 2
         return "%s %s %s %s %s %s %d" % (armystones, board, turn, kq, ep, fifty, move)
 
     def getMoveCount(self):
@@ -2270,7 +2274,7 @@ class ChessBoard:
         Returns the number of halfmoves in the stack.
         Zero (0) means no moves has been made.
         """
-        return len(self._state_stack) - 1
+        return len(self._state_stack - self._stack_second_turns) - 1
 
     def getCurrentMove(self):
         """
@@ -2695,6 +2699,7 @@ class ChessBoard:
             if not self._reason:
                 self._reason = self.INVALID_MOVE
             return False
+        self._stack_second_turns += 1
 
         if self._turn == self.BLACK:
             curArmy = self._black_army
@@ -2843,6 +2848,8 @@ class ChessBoard:
         if found_move:
             if self._board[ty][tx] == ".":
                 return -1
+            elif any(var in self._board[fy][fx] for var in ('E', 'e')):
+                return -1
             else:
                 return self.checkDuel(move_from, move_to)
 
@@ -2917,22 +2924,39 @@ class ChessBoard:
 
         self.gotoFirst()
         while True:
+            if self._state_stack_pointer > len(self._state_stack) - 1:
+                break
             move = self._moves[self._state_stack_pointer - 1]
             if move[0].istitle():
                 if move[8] == self.SECOND_WARRIOR_KING_MOVE:
-                    res.append("....")
-                res.append(self._formatTextMove(move, format))
+                    res.append(".....")
+                    res.append("2" + str(self._formatTextMove(move, format)))
+                else:
+                    res.append(self._formatTextMove(move, format))
             else:
                 res.append(self._formatTextMove(move, format))
                 if move[8] == self.SECOND_WARRIOR_KING_MOVE:
-                    res.append("....")
-            if self._state_stack_pointer >= len(self._state_stack) - 1:
-                break
+                    res.append(".....")
             self.redo()
 
         self._state_stack_pointer = point
         self.loadCurState()
-        return res
+        moves = []
+        length = 0
+        for x, y in self.grouped(res, 2):
+            if x[0] == "2":
+                moves.append((length, x[1:], y))
+            else:
+                if "." in x:
+                    moves.append((length, x, y))
+                else:
+                    length += 1
+                    moves.append((length, x, y))
+        return moves
+
+    def grouped(self, iterable, n):
+        "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
+        return izip_longest(*[iter(iterable)] * n)
 
     def getLastTextMove(self, format=1):
         """

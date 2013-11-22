@@ -5,7 +5,6 @@ import sys
 import getpass
 import math
 import string
-from itertools import izip_longest
 
 
 class ChessClient:
@@ -66,24 +65,21 @@ class ChessClient:
                 elif any(var in move for var in ("SAN", "san")):
                     san = chess.getAllTextMoves(chess.SAN)
                     if san:
-                        length = 1
-                        for x, y in self.grouped(san, 2):
+                        for moves in san:
+                            length, x, y = moves
                             print "%d. %s %s" % (length, x, y)
-                            length += 1
                 elif any(var in move for var in ("LAN", "lan")):
                     lan = chess.getAllTextMoves(chess.LAN)
                     if lan:
-                        length = 1
-                        for x, y in self.grouped(lan, 2):
+                        for moves in lan:
+                            length, x, y = moves
                             print "%d. %s %s" % (length, x, y)
-                            length += 1
                 elif any(var in move for var in ("AN", "an")):
                     an = chess.getAllTextMoves(chess.AN)
                     if an:
-                        length = 1
-                        for x, y in self.grouped(an, 2):
+                        for moves in an:
+                            length, x, y = moves
                             print "%d. %s %s" % (length, x, y)
-                            length += 1
                 elif any(var in move for var in ("FEN", "fen")):
                     print chess.getFEN()
                 elif len(move) < 2:
