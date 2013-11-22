@@ -103,7 +103,7 @@ class ChessClient:
                                 break
                     else:
                         print "You're not playing Two Kings!"
-                elif any(var in move for var in ("decline", "d", "Decline", "D", "skip", "s", "Skip", "S")):
+                elif any(var in move for var in ("decline", "Decline", "skip", "s", "Skip", "S")):
                     if curArmy == chess.TWOKINGS:
                         if chess._secondTurn:
                             print "Second turn skipped."
@@ -125,6 +125,28 @@ class ChessClient:
                             board = chess.getBoard()
                             turn = chess.getTurn()
                             chess.updateRoyalLocations()
+                        elif chess.getReason() == chess.MUST_SET_PROMOTION:
+                            print "{}, what do you want to promote to?".format(chess.value_to_color_dict[turn])
+                            print 'Please enter the letter of the piece: QRNB.'
+                            while True:
+                                promo = raw_input("> ")
+                                if promo in string.letters:
+                                    if len(promo) < 2:
+                                        if int(promo) > 0:
+                                            break
+                                        print 'Please enter the letter of the piece: QRNB.'
+                                    print 'Please enter the letter of the piece: QRNB.'
+                                else:
+                                    print 'Please enter the letter of the piece: QRNB.'
+                            chess.setPromotion(promo)
+                            result = chess.addTextMove(move)
+                            if result:
+                                print chess.getLastTextMove(chess.SAN)
+                                board = chess.getBoard()
+                                turn = chess.getTurn()
+                                chess.updateRoyalLocations()
+                            else:
+                                print "%s" % chess.move_reason_list[chess.getReason()]
                         else:
                             print "%s" % chess.move_reason_list[chess.getReason()]
                     else:
@@ -213,8 +235,34 @@ class ChessClient:
                                 turn = chess.getTurn()
                                 break
                             else:
-                                board = chess.getBoard()
-                                turn = chess.getTurn()
+                                result = chess.addTextMove(move)
+                                if result:
+                                    print chess.getLastTextMove(chess.SAN)
+                                    board = chess.getBoard()
+                                    turn = chess.getTurn()
+                                    chess.updateRoyalLocations()
+                                elif chess.getReason() == chess.MUST_SET_PROMOTION:
+                                    print "{}, what do you want to promote to?".format(chess.value_to_color_dict[turn])
+                                    print 'Please enter the letter of the piece: QRNB.'
+                                    while True:
+                                        promo = raw_input("> ")
+                                        promo = str(promo.upper())
+                                        if len(promo) == 1:
+                                            if any(var in promo for var in ("Q", "R", "N", "B")):
+                                                break
+                                            print 'Please enter the letter of the piece: QRNB.'
+                                        print 'Please enter the letter of the piece: QRNB.'
+                                    chess.setPromotion(promo)
+                                    result = chess.addTextMove(move)
+                                    if result:
+                                        print chess.getLastTextMove(chess.SAN)
+                                        board = chess.getBoard()
+                                        turn = chess.getTurn()
+                                        chess.updateRoyalLocations()
+                                    else:
+                                        print "%s" % chess.move_reason_list[chess.getReason()]
+                                else:
+                                    print "%s" % chess.move_reason_list[chess.getReason()]
                                 break
             else:
                 break

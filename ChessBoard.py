@@ -135,6 +135,12 @@ class ChessBoard:
     KNIGHT = 3
     BISHOP = 4
 
+    promotion_dict = {
+        "Q": 1,
+        "R": 2,
+        "N": 3,
+        "B": 4}
+
     # Reason values
     INVALID_MOVE = 1
     INVALID_COLOR = 2
@@ -1270,7 +1276,7 @@ class ChessBoard:
             p = pc[pv - 1]
             self._cur_move[6] = p
             self._cur_move[8] = self.PROMOTION_MOVE
-            #self._promotion_value = 0
+            self._promotion_value = 0
         elif self._turn == self.BLACK and toPos[1] == 7:
             if pv == 0:
                 self._reason = self.MUST_SET_PROMOTION
@@ -1279,7 +1285,7 @@ class ChessBoard:
             p = pc[pv - 1]
             self._cur_move[6] = p
             self._cur_move[8] = self.PROMOTION_MOVE
-            #self._promotion_value = 0
+            self._promotion_value = 0
         else:
             p = self._board[fromPos[1]][fromPos[0]]
 
@@ -1323,7 +1329,7 @@ class ChessBoard:
             p = pc[pv - 1]
             self._cur_move[6] = p
             self._cur_move[8] = self.PROMOTION_MOVE
-            #self._promotion_value = 0
+            self._promotion_value = 0
         elif self._turn == self.BLACK and toPos[1] == 7:
             if pv == 0:
                 self._reason = self.MUST_SET_PROMOTION
@@ -1332,7 +1338,7 @@ class ChessBoard:
             p = pc[pv - 1]
             self._cur_move[6] = p
             self._cur_move[8] = self.PROMOTION_MOVE
-            #self._promotion_value = 0
+            self._promotion_value = 0
         else:
             p = self._board[fromPos[1]][fromPos[0]]
 
@@ -1381,7 +1387,7 @@ class ChessBoard:
             p = pc[pv - 1]
             self._cur_move[6] = p
             self._cur_move[8] = self.PROMOTION_MOVE
-            #self._promotion_value = 0
+            self._promotion_value = 0
         elif self._turn == self.BLACK and toPos[1] == 7:
             if pv == 0:
                 self._reason = self.MUST_SET_PROMOTION
@@ -1395,7 +1401,7 @@ class ChessBoard:
             p = pc[pv - 1]
             self._cur_move[6] = p
             self._cur_move[8] = self.PROMOTION_MOVE
-            #self._promotion_value = 0
+            self._promotion_value = 0
         else:
             p = self._board[fromPos[1]][fromPos[0]]
 
@@ -2338,7 +2344,7 @@ class ChessBoard:
         1 = QUEEN, 2 = ROOK, 3 = KNIGHT, 4 = BISHOP
         You can also set promotion to 0 (zero) to reset the promotion value.
         """
-        self._promotion_value = promotion
+        self._promotion_value = self.promotion_dict[promotion]
 
     def getPromotion(self):
         """

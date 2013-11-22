@@ -16,9 +16,11 @@ Input
 
 * Whirlwind with: ww, whirlwind
 
-* Skip Two Kings second turn with: decline, d, skip, s
+* Skip Two Kings second turn with: decline, skip, s
 
-* Bluffing gain or loss with: gain, g; lose, l
+* Initiate or decline duels with: yes, y, no, no
+
+* Bluffing gain or loss with: gain, g, lose, l
 
 * List moves so far with: an, san, lan
 
@@ -28,8 +30,8 @@ Issues
 ======
 * Elephants can't check through units.
 
-* Pawns can't choose what they promote to, they just promote to a Queen of their army type (which sucks for Empowered and creates a third Warrior King. :-P) 
+* ~~Pawns can't choose what they promote to, they just promote to a Queen of their army type (which sucks for Empowered and creates a third Warrior King.)~~
 
 * Move tracking is out of whack with the addition of duels and stones.
 
-* Listing moves doesn't correctly note Two Kings second moves.
+* ~~Listing moves doesn't correctly note Two Kings second moves.~~
