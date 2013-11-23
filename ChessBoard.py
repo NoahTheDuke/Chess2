@@ -227,6 +227,8 @@ class ChessBoard:
     #["KQRNBPLMOGAUXTHEJDC", (fx, fy), (tx, ty), True/False, [0-6, 0-6]/None, "+-"/None, "QRNB"/None, "+#*"/None, 0-7]
     _cur_move = [None, None, None, False, None, None, None, None, 0]
     _moves = []
+    _bluff_move = None
+    _duel_move = None
 
     _promotion_value = 0
 
@@ -704,10 +706,12 @@ class ChessBoard:
 
     def calledBluff(self, amount):
         if amount > 0:
-            self._cur_move[5] = "+"
+            # self._cur_move[5] = "+"
+            self._bluff_move = "+"
             self.addStones(self._turn, 1)
         else:
-            self._cur_move[5] = "-"
+            # self._cur_move[5] = "-"
+            self._bluff_move = "-"
             self.addStones(self._unturn, -1)
 
     def payDuelCost(self, cost):
@@ -729,14 +733,15 @@ class ChessBoard:
                 return None
 
         self.resolveDuel(attacking_bid, defending_bid)
+        self._duel_move = (attacking_bid, defending_bid)
         if attacking_bid == 0 and defending_bid == 0:
-            self._cur_move[4] = (attacking_bid, defending_bid)
+            # self._cur_move[4] = (attacking_bid, defending_bid)
             return 0
         elif attacking_bid >= defending_bid:
-            self._cur_move[4] = (attacking_bid, defending_bid)
+            # self._cur_move[4] = (attacking_bid, defending_bid)
             return 1
         else:
-            self._cur_move[4] = (attacking_bid, defending_bid)
+            # self._cur_move[4] = (attacking_bid, defending_bid)
             return 2
 
     def resolveDuel(self, attacking_bid, defending_bid):
@@ -2582,6 +2587,11 @@ class ChessBoard:
             if not self._reason:
                 self._reason = self.INVALID_MOVE
             return False
+        
+        if self._duel_move:
+          self._cur_move[4] = self._duel_move
+        if self._bluff_move:
+          self._cur_move[5] = self._bluff_move
 
         if any(var in stone_check for var in ('P', 'D', 'L')):
             if self._turn == self.BLACK:
