@@ -217,7 +217,7 @@ class ChessClient:
                                                 print "%s" % chess.move_reason_list[chess.getReason()]
                                                 break
                                         else:
-                                            print 'Please only bid a number of stones between 0 and 2.'
+                                            print 'Please choose between gaining a stone and forcing a lose of a stone.'
                                 elif duel_results == 1:
                                     print "Attacker wins!"
                                     att_result = chess.addTextMove(move)
@@ -242,7 +242,7 @@ class ChessClient:
                                 result = chess.addTextMove(move)
                                 if result:
                                     print chess.getLastTextMove(chess.SAN)
-                                        turn = chess.getTurn()
+                                    turn = chess.getTurn()
                                     chess.updateRoyalLocations()
                                 elif chess.getReason() == chess.MUST_SET_PROMOTION:
                                     print "{}, what do you want to promote to?".format(chess.value_to_color_dict[turn])

@@ -2032,6 +2032,11 @@ class ChessBoard:
         ranks = "87654321"
         if format == self.AN:
             res = "%s%s%s%s" % (files[fpos[0]], ranks[fpos[1]], files[tpos[0]], ranks[tpos[1]])
+            if duel:
+                if bluff:
+                    res = res + " {}".format("[" + str(duel[0]) + "-" + str(duel[1]) + bluff + "]")
+                else:
+                    res = res + " {}".format("[" + str(duel[0]) + "-" + str(duel[1]) + "]")
         elif format == self.LAN:
             if special == self.KING_CASTLE_MOVE:
                 return "O-O"
@@ -2048,11 +2053,12 @@ class ChessBoard:
                 piece = ""
             if not check:
                 check = ""
-            if duel:
-                pass  # filler for now
-            if bluff:
-               pass  # filler for now
             res = "%s%s%s%s%s%s%s%s" % (piece, files[fpos[0]], ranks[fpos[1]], tc, files[tpos[0]], ranks[tpos[1]], pt, check)
+            if duel:
+                if bluff:
+                    res = res + " {}".format("[" + str(duel[0]) + "-" + str(duel[1]) + bluff + "]")
+                else:
+                    res = res + " {}".format("[" + str(duel[0]) + "-" + str(duel[1]) + "]")
         elif format == self.SAN:
             if special == self.KING_CASTLE_MOVE:
                 return "O-O"
@@ -2089,6 +2095,11 @@ class ChessBoard:
             if piece == "" and take:
                     hint_f = files[fx]
             res = "%s%s%s%s%s%s%s%s" % (piece, hint_f, hint_r, tc, files[tpos[0]], ranks[tpos[1]], pt, check)
+            if duel:
+                if bluff:
+                    res = res + " {}".format("[" + str(duel[0]) + "-" + str(duel[1]) + bluff + "]")
+                else:
+                    res = res + " {}".format("[" + str(duel[0]) + "-" + str(duel[1]) + "]")
         return res
 
     #------------------------- -
