@@ -13,7 +13,6 @@
 #####################################################################
 
 from copy import deepcopy
-from pprint import pprint
 from itertools import izip_longest
 
 
@@ -313,6 +312,8 @@ class ChessBoard:
 
     def pushMove(self):
         self._moves.append(deepcopy(self._cur_move))
+        self._duel_move = None
+        self._bluff_move = None
 
     def threeRepetitions(self):
         ts = self._three_rep_stack[:self._state_stack_pointer]
@@ -653,7 +654,6 @@ class ChessBoard:
         return results
 
     def isPieceInvulnerable(self, fromPos, toPos):
-        results = []
         fx, fy = fromPos
         tx, ty = toPos
         if any(var in self._board[fy][fx] for var in ('K', 'k', 'W', 'w', 'U', 'u', 'C', 'c')):
@@ -735,13 +735,10 @@ class ChessBoard:
         self.resolveDuel(attacking_bid, defending_bid)
         self._duel_move = (attacking_bid, defending_bid)
         if attacking_bid == 0 and defending_bid == 0:
-            # self._cur_move[4] = (attacking_bid, defending_bid)
             return 0
         elif attacking_bid >= defending_bid:
-            # self._cur_move[4] = (attacking_bid, defending_bid)
             return 1
         else:
-            # self._cur_move[4] = (attacking_bid, defending_bid)
             return 2
 
     def resolveDuel(self, attacking_bid, defending_bid):
@@ -807,14 +804,12 @@ class ChessBoard:
             startrow = 6
             ocol = self.BLACK
             eprow = 3
-            mycolor = "white"
             enemycolor = "black"
         else:
             movedir = 1
             startrow = 1
             ocol = self.WHITE
             eprow = 4
-            mycolor = "black"
             enemycolor = "white"
 
         kx, ky = getattr(self, "_" + enemycolor + "_king_location")
@@ -1847,10 +1842,6 @@ class ChessBoard:
         dead_list = {}
         if not any(var in self._board[fromPos[1]][fromPos[0]] for var in ('w', 'W', 'U', 'u')):
             return False
-        if self._turn == self.BLACK:
-            curArmy = self._black_army
-        else:
-            curArmy = self._white_army
         pieces = self.SurroundedBy(fromPos, 0)
         for blank in pieces:
             if any(var in self._board[blank[1]][blank[0]] for var in ('g', 'G')):
@@ -2024,7 +2015,7 @@ class ChessBoard:
         return (dest_x, dest_y)
 
     def _formatTextMove(self, move, format):
-        #piece, from, to, take, promotion, check, special
+        #piece, from, to, take,, duel, bluff, promotion, check, special
 
         piece = move[0]
         piece = self._formatPieceNames(piece)
@@ -2057,6 +2048,10 @@ class ChessBoard:
                 piece = ""
             if not check:
                 check = ""
+            if duel:
+                pass  # filler for now
+            if bluff:
+               pass  # filler for now
             res = "%s%s%s%s%s%s%s%s" % (piece, files[fpos[0]], ranks[fpos[1]], tc, files[tpos[0]], ranks[tpos[1]], pt, check)
         elif format == self.SAN:
             if special == self.KING_CASTLE_MOVE:
@@ -2223,7 +2218,6 @@ class ChessBoard:
         b = s[:64]
         v = s[64:72]
         a = s[72:76]
-        print str(a)
         fifty = s[77:]
         b = [self._formatPieceNames(var) for var in b]
 
@@ -2587,7 +2581,7 @@ class ChessBoard:
             if not self._reason:
                 self._reason = self.INVALID_MOVE
             return False
-        
+
         if self._duel_move:
           self._cur_move[4] = self._duel_move
         if self._bluff_move:
@@ -2716,11 +2710,6 @@ class ChessBoard:
                 self._reason = self.INVALID_MOVE
             return False
         self._stack_second_turns += 1
-
-        if self._turn == self.BLACK:
-            curArmy = self._black_army
-        else:
-            curArmy = self._white_army
 
         if self._turn == self.WHITE:
             self._turn = self.BLACK

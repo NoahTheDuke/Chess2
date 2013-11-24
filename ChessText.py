@@ -3,14 +3,10 @@
 from ChessBoard import ChessBoard
 import sys
 import getpass
-import math
 import string
 
 
 class ChessClient:
-    def grouped(self, iterable, n):
-        "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
-        return izip_longest(*[iter(iterable)] * n)
 
     def mainLoop(self):
         print "White Player, choose an army:"
@@ -43,9 +39,8 @@ class ChessClient:
                 print 'Please enter only one of the above.'
         bArmy = userInput
 
-        pieces = {}
+        turn = 0
         chess = ChessBoard(int(wArmy), int(bArmy))
-        board = chess.getBoard()
         turn = chess.getTurn()
 
         while True:
@@ -98,7 +93,6 @@ class ChessClient:
                                 res = chess.moveTwoKingsWhirlwind(location)
                                 if not res:
                                     print "Can't whirlwind there."
-                                board = chess.getBoard()
                                 turn = chess.getTurn()
                                 break
                     else:
@@ -112,7 +106,6 @@ class ChessClient:
                                 chess._turn = chess.WHITE
                             else:
                                 chess._turn = chess.BLACK
-                            board = chess.getBoard()
                             turn = chess.getTurn()
                     else:
                         print "You're not playing Two Kings!"
@@ -122,7 +115,6 @@ class ChessClient:
                         result = chess.addTextMove(move)
                         if result:
                             print chess.getLastTextMove(chess.SAN)
-                            board = chess.getBoard()
                             turn = chess.getTurn()
                             chess.updateRoyalLocations()
                         elif chess.getReason() == chess.MUST_SET_PROMOTION:
@@ -142,7 +134,6 @@ class ChessClient:
                             result = chess.addTextMove(move)
                             if result:
                                 print chess.getLastTextMove(chess.SAN)
-                                board = chess.getBoard()
                                 turn = chess.getTurn()
                                 chess.updateRoyalLocations()
                             else:
@@ -205,10 +196,26 @@ class ChessClient:
                                             sys.exit(0)
                                         elif any(var in bluff_choice for var in ("g", "gain", "G", "Gain")):
                                             chess.calledBluff(1)
-                                            break
+                                            att_result = chess.addTextMove(move)
+                                            if att_result:
+                                                print chess.getLastTextMove(chess.SAN)
+                                                turn = chess.getTurn()
+                                                chess.updateRoyalLocations()
+                                                break
+                                            else:
+                                                print "%s" % chess.move_reason_list[chess.getReason()]
+                                                break
                                         elif any(var in bluff_choice for var in ("l", "lose", "L", "Lose")):
                                             chess.calledBluff(-1)
-                                            break
+                                            att_result = chess.addTextMove(move)
+                                            if att_result:
+                                                print chess.getLastTextMove(chess.SAN)
+                                                turn = chess.getTurn()
+                                                chess.updateRoyalLocations()
+                                                break
+                                            else:
+                                                print "%s" % chess.move_reason_list[chess.getReason()]
+                                                break
                                         else:
                                             print 'Please only bid a number of stones between 0 and 2.'
                                 elif duel_results == 1:
@@ -216,7 +223,6 @@ class ChessClient:
                                     att_result = chess.addTextMove(move)
                                     if att_result:
                                         print chess.getLastTextMove(chess.SAN)
-                                        board = chess.getBoard()
                                         turn = chess.getTurn()
                                         chess.updateRoyalLocations()
                                     else:
@@ -226,20 +232,17 @@ class ChessClient:
                                     att_result = chess.addTextMove(move, True)
                                     if att_result:
                                         print chess.getLastTextMove(chess.SAN)
-                                        board = chess.getBoard()
                                         turn = chess.getTurn()
                                         chess.updateRoyalLocations()
                                     else:
                                         print "%s" % chess.move_reason_list[chess.getReason()]
-                                board = chess.getBoard()
                                 turn = chess.getTurn()
                                 break
                             else:
                                 result = chess.addTextMove(move)
                                 if result:
                                     print chess.getLastTextMove(chess.SAN)
-                                    board = chess.getBoard()
-                                    turn = chess.getTurn()
+                                        turn = chess.getTurn()
                                     chess.updateRoyalLocations()
                                 elif chess.getReason() == chess.MUST_SET_PROMOTION:
                                     print "{}, what do you want to promote to?".format(chess.value_to_color_dict[turn])
@@ -256,7 +259,6 @@ class ChessClient:
                                     result = chess.addTextMove(move)
                                     if result:
                                         print chess.getLastTextMove(chess.SAN)
-                                        board = chess.getBoard()
                                         turn = chess.getTurn()
                                         chess.updateRoyalLocations()
                                     else:
@@ -264,6 +266,7 @@ class ChessClient:
                                 else:
                                     print "%s" % chess.move_reason_list[chess.getReason()]
                                 break
+                            break
             else:
                 break
         chess.printBoard()
