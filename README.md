@@ -32,6 +32,6 @@ Issues
 
 * ~~Pawns can't choose what they promote to, they just promote to a Queen of their army type (which sucks for Empowered and creates a third Warrior King.)~~
 
-* Move tracking is out of whack with the addition of duels and stones.
+* ~~Move tracking is out of whack with the addition of duels and stones.~~
 
 * ~~Listing moves doesn't correctly note Two Kings second moves.~~

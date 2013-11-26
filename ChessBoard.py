@@ -83,7 +83,7 @@ class ChessBoard:
     # and the reverse
     army_royal_to_royal_dict = {
         'K': ['K'], 'C': ['K'],
-        'W': ['K'], 'U': ['K'],
+        'W': ['K'],
         'Q': ['Q'], 'M': ['Q'],
         'A': ['Q'], 'O': ['Q'],
         'U': ['Q'], 'J': ['Q']}
@@ -1121,15 +1121,15 @@ class ChessBoard:
 
     def getValidReaperReaperMoves(self, fromPos):
         moves = []
-        fromPiece = self._board[fromPos[1]][fromPos[0]].istitle()
+        fromPiece = self._board[fromPos[1]][fromPos[0]].isupper()
 
         for y in range(0, 8):
             for x in range(0, 8):
                 if fromPiece:
-                    if y != 0 and not self._board[y][x].istitle():
+                    if y != 0 and not self._board[y][x].isupper():
                         moves.append((x, y))
                 else:
-                    if y != 7 and self._board[y][x].istitle():
+                    if y != 7 and self._board[y][x].isupper():
                         moves.append((x, y))
 
         moves = self.isInvulnerable(fromPos, moves)
@@ -2943,7 +2943,7 @@ class ChessBoard:
             if self._state_stack_pointer > len(self._state_stack) - 1:
                 break
             move = self._moves[self._state_stack_pointer - 1]
-            if move[0].istitle():
+            if move[0].isupper():
                 if move[8] == self.SECOND_WARRIOR_KING_MOVE:
                     res.append(".....")
                     res.append("2" + str(self._formatTextMove(move, format)))
