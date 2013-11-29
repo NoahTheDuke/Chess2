@@ -3006,5 +3006,4 @@ class ChessBoard:
         board.append("")
         board.append("White stones: %d" % self.getStones(self.WHITE))
         board.append("Black stones: %d" % self.getStones(self.BLACK))
-        for line in board:
-            print line
+        return board

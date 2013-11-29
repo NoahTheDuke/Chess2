@@ -44,7 +44,9 @@ class ChessClient:
         turn = chess.getTurn()
 
         while True:
-            chess.printBoard()
+            board = chess.printBoard()
+            for row in board:
+                print row
             if not chess.isGameOver():
                 if chess._turn == chess.BLACK:
                     curArmy = chess._black_army
@@ -270,6 +272,8 @@ class ChessClient:
             else:
                 break
         chess.printBoard()
+        for row in chess.printBoard():
+            print row
         print "Game over! %s" % chess.game_result_list[chess.getGameResult()]
 
 
