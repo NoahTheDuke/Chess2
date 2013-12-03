@@ -8,6 +8,8 @@ Fork and additions written by Noah Bogart, 2013+.
 
 Running
 =======
+As of 2013/12/03, the program is now Python 3-based, not Python 2.7. 819b287 is the last commit to be Python 2.7-compatible. I am sorry for any problems this causes anyone, but Python 3 is just too cool.
+
 To run: clone, cd into Chess2, "python ChessText.py".
 
 Input
