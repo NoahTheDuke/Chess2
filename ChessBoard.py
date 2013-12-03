@@ -13,7 +13,7 @@
 #####################################################################
 
 from copy import deepcopy
-from itertools import izip_longest
+from itertools import zip_longest
 
 
 class ChessBoard:
@@ -2972,7 +2972,7 @@ class ChessBoard:
 
     def grouped(self, iterable, n):
         "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
-        return izip_longest(*[iter(iterable)] * n)
+        return zip_longest(*[iter(iterable)] * n)
 
     def getLastTextMove(self, format=1):
         """
