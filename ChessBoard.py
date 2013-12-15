@@ -192,6 +192,10 @@ class ChessBoard:
     _game_result = 0
     _reason = 0
 
+    BLUFF = 0
+    ATT_WIN = 1
+    DEF_WIN = 2
+
     # States
     _turn = WHITE
     _unturn = BLACK
@@ -327,19 +331,15 @@ class ChessBoard:
         return False
 
     def updateRoyalLocations(self):
-        wkings = self.royal_to_army_royal_dict['K']
-        wqueens = self.royal_to_army_royal_dict['Q']
-        bkings = self.royal_to_army_royal_dict['k']
-        bqueens = self.royal_to_army_royal_dict['q']
         for y in range(0, 8):
             for x in range(0, 8):
-                if any(var in self._board[y][x] for var in wkings):
+                if any(var in self._board[y][x] for var in self.royal_to_army_royal_dict['K']):
                     self._white_king_location = (x, y)
-                elif any(var in self._board[y][x] for var in bkings):
+                elif any(var in self._board[y][x] for var in self.royal_to_army_royal_dict['k']):
                     self._black_king_location = (x, y)
-                if any(var in self._board[y][x] for var in wqueens):
+                if any(var in self._board[y][x] for var in self.royal_to_army_royal_dict['Q']):
                     self._white_queen_location = (x, y)
-                elif any(var in self._board[y][x] for var in bqueens):
+                elif any(var in self._board[y][x] for var in self.royal_to_army_royal_dict['q']):
                     self._black_queen_location = (x, y)
 
     def SurroundedBy(self, fromPos, direction):
@@ -715,10 +715,10 @@ class ChessBoard:
             self.addStones(self._unturn, -1)
 
     def payDuelCost(self, cost):
-        if self.getTurn == self.WHITE:
-            self._black_stones = self._black_stones - cost
+        if self.getTurn() == self.WHITE:
+            self.addStones(self.BLACK, cost)
         else:
-            self._white_stones = self._white_stones - cost
+            self.addStones(self.WHITE, cost)
 
     def initiateDuel(self, attacking_bid, defending_bid):
         if self.getTurn() == self.WHITE:
@@ -733,21 +733,24 @@ class ChessBoard:
                 return None
 
         self.resolveDuel(attacking_bid, defending_bid)
-        self._duel_move = (attacking_bid, defending_bid)
-        if attacking_bid == 0 and defending_bid == 0:
-            return 0
-        elif attacking_bid >= defending_bid:
-            return 1
+        if self.getTurn() == self.WHITE:
+            self._duel_move = (attacking_bid, defending_bid)
         else:
-            return 2
+            self._duel_move = (defending_bid, attacking_bid)
+        if attacking_bid == 0 and defending_bid == 0:
+            return self.BLUFF
+        elif attacking_bid >= defending_bid:
+            return self.ATT_WIN
+        else:
+            return self.DEF_WIN
 
     def resolveDuel(self, attacking_bid, defending_bid):
-        if self.getTurn == self.WHITE:
-            self._white_stones = self._white_stones - attacking_bid
-            self._black_stones = self._black_stones - defending_bid
+        if self.getTurn() == self.WHITE:
+            self.addStones(self.WHITE, 0 - attacking_bid)
+            self.addStones(self.BLACK, 0 - defending_bid)
         else:
-            self._black_stones = self._black_stones - attacking_bid
-            self._white_stones = self._white_stones - defending_bid
+            self.addStones(self.WHITE, 0 - defending_bid)
+            self.addStones(self.BLACK, 0 - attacking_bid)
 
 ###############################
 # getValid[Army][Piece]Moves! #
@@ -906,7 +909,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves, specialMoves)
-        moves = set(moves)
+        moves = list(set(moves))
         return (moves, specialMoves)
 
     def getValidClassicBishopMoves(self, fromPos):
@@ -917,7 +920,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidEmpoweredBishopMoves(self, fromPos):
@@ -948,7 +951,7 @@ class ChessBoard:
                     if len(m) > 0:
                         for n in m:
                             moves.append(n)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidAnimalsTigerMoves(self, fromPos):
@@ -959,7 +962,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidClassicKnightMoves(self, fromPos):
@@ -974,7 +977,7 @@ class ChessBoard:
                     moves.append(p)
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidEmpoweredKnightMoves(self, fromPos):
@@ -1005,7 +1008,7 @@ class ChessBoard:
                     if len(m) > 0:
                         for n in m:
                             moves.append(n)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidAnimalsWildHorseMoves(self, fromPos):
@@ -1024,7 +1027,7 @@ class ChessBoard:
                     moves.append(p)
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidClassicRookMoves(self, fromPos):
@@ -1035,7 +1038,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidReaperGhostMoves(self, fromPos):
@@ -1048,7 +1051,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidEmpoweredRookMoves(self, fromPos):
@@ -1079,7 +1082,7 @@ class ChessBoard:
                     if len(m) > 0:
                         for n in m:
                             moves.append(m)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidAnimalsElephantMoves(self, fromPos):
@@ -1090,7 +1093,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidClassicQueenMoves(self, fromPos):
@@ -1103,7 +1106,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidNemesisNemesisMoves(self, fromPos):
@@ -1116,7 +1119,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidReaperReaperMoves(self, fromPos):
@@ -1134,7 +1137,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidEmpoweredQueenMoves(self, fromPos):
@@ -1147,7 +1150,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidAnimalsJungleQueenMoves(self, fromPos):
@@ -1167,7 +1170,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves
 
     def getValidClassicKingMoves(self, fromPos):
@@ -1212,7 +1215,7 @@ class ChessBoard:
         self.updateRoyalLocations()
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return (moves, specialMoves)
 
     def getValidTwoKingsWarriorKingMoves(self, fromPos):
@@ -1228,7 +1231,7 @@ class ChessBoard:
         self.updateRoyalLocations()
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves, specialMoves
 
     def getValidGenericKingMoves(self, fromPos):
@@ -1244,7 +1247,7 @@ class ChessBoard:
         self.updateRoyalLocations()
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
-        moves = set(moves)
+        moves = list(set(moves))
         return moves, specialMoves
 
     ########################
@@ -1600,6 +1603,7 @@ class ChessBoard:
 
         fx, fy = fromPos
         fromPiece = self._board[fromPos[1]][fromPos[0]]
+        validMove = False
 
         self.clearEP()
 
@@ -1620,7 +1624,8 @@ class ChessBoard:
                     if toPos[1] < fromPos[1]:
                         # check invulnerability of coming spaces: if inv, stop and exit loop. if not, continue.
                         if self.isPieceInvulnerable(fromPos, (toPos[0], max(fromPos[1] - distance_y, 0))):
-                            self._board[max(fromPos[1] - distance_y + 1, 0)][toPos[0]] = fromPiece
+                            #self._board[max(fromPos[1] - distance_y + 1, 0)][toPos[0]] = fromPiece
+                            validMove = False
                             break
                         else:
                             self._board[max(fromPos[1] - distance_y, 0)][toPos[0]] = fromPiece
@@ -1961,25 +1966,33 @@ class ChessBoard:
             curArmy = self._white_army
 
         if piece == "P":
-            if curArmy == self.CLASSIC:
-                piece = "P"
-            elif curArmy == self.NEMESIS:
+            #if curArmy == self.CLASSIC:
+                #piece = "P"
+            if curArmy == self.NEMESIS:
                 piece = "L"
             else:
-                piece = "D"
+                piece = "P"
+            #else:
+                #piece = "D"
         elif piece == "B":
-            if curArmy == self.ANIMALS:
+            if curArmy == self.EMPOWERED:
+                piece = "X"
+            elif curArmy == self.ANIMALS:
                 piece = "T"
             else:
                 piece = "B"
         elif piece == "N":
-            if curArmy == self.ANIMALS:
+            if curArmy == self.EMPOWERED:
+                piece = "Y"
+            elif curArmy == self.ANIMALS:
                 piece = "H"
             else:
                 piece = "N"
         elif piece == "R":
             if curArmy == self.REAPER:
                 piece = "G"
+            elif curArmy == self.EMPOWERED:
+                piece = "Z"
             elif curArmy == self.ANIMALS:
                 piece = "E"
             else:
@@ -2015,10 +2028,9 @@ class ChessBoard:
         return (dest_x, dest_y)
 
     def _formatTextMove(self, move, format):
-        #piece, from, to, take,, duel, bluff, promotion, check, special
+        #piece, from, to, takes, duel, bluff, promotion, check, special
 
-        piece = move[0]
-        piece = self._formatPieceNames(piece)
+        piece = self._formatPieceNames(move[0])
         fpos = tuple(move[1])
         tpos = tuple(move[2])
         take = move[3]
@@ -2113,19 +2125,23 @@ class ChessBoard:
         blackPieces = self.army_name_dict[bArmy] + 'BlackSetUp'
         whitePieces = self.army_name_dict[wArmy] + 'WhiteSetUp'
 
-        if bArmy == 1:
-            blackPawns = 'ClassicBlackPawns'
-        elif bArmy == 2:
+        #if bArmy == self.CLASSIC:
+            #blackPawns = 'ClassicBlackPawns'
+        if bArmy == self.NEMESIS:
             blackPawns = 'NemesisBlackPawns'
         else:
-            blackPawns = 'GenericBlackPawns'
+            blackPawns = 'ClassicBlackPawns'
+        #else:
+            #blackPawns = 'GenericBlackPawns'
 
-        if wArmy == 1:
-            whitePawns = 'ClassicWhitePawns'
-        elif wArmy == 2:
+        #if wArmy == self.CLASSIC:
+            #whitePawns = 'ClassicWhitePawns'
+        if wArmy == self.NEMESIS:
             whitePawns = 'NemesisWhitePawns'
         else:
-            whitePawns = 'GenericWhitePawns'
+            whitePawns = 'ClassicWhitePawns'
+        #else:
+            #whitePawns = 'GenericWhitePawns'
 
         self._board = [self.army_set_up_dict[blackPieces],
                        self.army_set_up_dict[blackPawns],
@@ -2160,8 +2176,8 @@ class ChessBoard:
         self._moves = []
         self._reason = 0
         self._game_result = 0
-        self._white_army = 1
-        self._black_army = 1
+        self._white_army = self.CLASSIC
+        self._black_army = self.CLASSIC
         self._white_stones = 3
         self._black_stones = 3
 
@@ -2339,7 +2355,7 @@ class ChessBoard:
 
     def redo(self):
         """
-        If you used the undo method to step backwards you can use this method to step forward until the last move i reached.
+        If you used the undo method to step backwards you can use this method to step forward until the last move is reached.
         Returns True or False if no more moves can be redone.
         """
         if self._state_stack_pointer == len(self._state_stack):
@@ -2536,9 +2552,9 @@ class ChessBoard:
         else:
             return []
 
-    def addMove(self, fromPos, toPos):
+    def addMove(self, fromPos, toPos, clearLocation):
         """
-        Tries to move the piece located om fromPos to toPos. Returns True if that was a valid move.
+        Tries to move the piece located on fromPos to toPos. Returns True if that was a valid move.
         The position arguments must be tuples containing x, y value Ex. (4, 6).
         This method also detects game over.
 
@@ -2592,6 +2608,14 @@ class ChessBoard:
             if not self._reason:
                 self._reason = self.INVALID_MOVE
             return False
+
+        if clearLocation:
+            self._board[ty][tx] = '.'
+            if any(var in p for var in ('P', 'D', 'L')):
+                if self._turn == self.BLACK:
+                    self.addStones(self.WHITE, 1)
+                else:
+                    self.addStones(self.BLACK, 1)
 
         if self._duel_move:
           self._cur_move[4] = self._duel_move
@@ -2884,7 +2908,7 @@ class ChessBoard:
             self.setPromotion(promo)
 
         if not piece:
-            return self.addMove((fx, fy), (tx, ty))
+            return self.addMove((fx, fy), (tx, ty), clearLocation)
 
         piece = self._reversePieceNames(piece)
         if self._secondTurn:
@@ -2918,9 +2942,7 @@ class ChessBoard:
             if self._secondTurn:
                 return self.addSecondKingMove(move_from, move_to)
             else:
-                movement = self.addMove(move_from, move_to)
-                if clearLocation:
-                    self._board[ty][tx] = '.'
+                movement = self.addMove(move_from, move_to, clearLocation)
                 return movement
 
         self._reason = self.INVALID_MOVE
@@ -2964,7 +2986,10 @@ class ChessBoard:
                 moves.append((length, x[1:], y))
             else:
                 if "." in x:
-                    moves.append((length, x, y))
+                    if x[0] == "2":
+                        moves.append((length, x[1:], y))
+                    else:
+                        moves.append((length, x, y))
                 else:
                     length += 1
                     moves.append((length, x, y))

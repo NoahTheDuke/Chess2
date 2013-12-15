@@ -64,19 +64,19 @@ class ChessClient:
                     if san:
                         for moves in san:
                             length, x, y = moves
-                            print("{}. {} {}".format((length, x, y)))
+                            print("{}. {} {}".format(length, x, y))
                 elif any(var in move for var in ("LAN", "lan")):
                     lan = chess.getAllTextMoves(chess.LAN)
                     if lan:
                         for moves in lan:
                             length, x, y = moves
-                            print("{}. {} {}".format((length, x, y)))
+                            print("{}. {} {}".format(length, x, y))
                 elif any(var in move for var in ("AN", "an")):
                     an = chess.getAllTextMoves(chess.AN)
                     if an:
                         for moves in an:
                             length, x, y = moves
-                            print("{}. {} {}".format((length, x, y)))
+                            print("{}. {} {}".format(length, x, y))
                 elif any(var in move for var in ("FEN", "fen")):
                     print(chess.getFEN())
                 elif len(move) < 2:
@@ -147,7 +147,7 @@ class ChessClient:
                             unturn = 1
                         else:
                             unturn = 0
-                        print("{}, would you like to initiate a duel? It will cost {}.".format((str(chess.value_to_color_dict[unturn]), res)))
+                        print("{}, would you like to initiate a duel? It will cost {}.".format(str(chess.value_to_color_dict[unturn]), res))
                         while True:
                             answer = input("> ")
                             if answer == "exit":
@@ -184,14 +184,14 @@ class ChessClient:
                                         print('Please only bid a number of stones between 0 and 2.')
                                 duel_results = chess.initiateDuel(int(attacking_bid), int(defending_bid))
                                 # duel_results will now be either None, 1, or 2
-                                print("{} bid: {}".format((chess.value_to_color_dict[chess._turn], int(attacking_bid))))
-                                print("{} bid: {}".format((chess.value_to_color_dict[chess._unturn], int(defending_bid))))
+                                print("{} bid: {}".format(chess.value_to_color_dict[chess._turn], int(attacking_bid)))
+                                print("{} bid: {}".format(chess.value_to_color_dict[chess._unturn], int(defending_bid)))
                                 if duel_results is None:
                                     print("Someone tried to bid too much!")
                                     break
-                                elif duel_results == 0:
-                                    print("{} called the bluff! Do you want to gain a stone or force {} to lose a stone?".format((
-                                        chess.value_to_color_dict[chess._turn], chess.value_to_color_dict[chess._unturn])))
+                                elif duel_results == chess.BLUFF:
+                                    print("{} called the bluff! Do you want to gain a stone or force {} to lose a stone?".format(
+                                        chess.value_to_color_dict[chess._turn], chess.value_to_color_dict[chess._unturn]))
                                     while True:
                                         bluff_choice = input("> ")
                                         if bluff_choice == "exit":
@@ -220,7 +220,7 @@ class ChessClient:
                                                 break
                                         else:
                                             print('Please choose between gaining a stone and forcing a lose of a stone.')
-                                elif duel_results == 1:
+                                elif duel_results == chess.ATT_WIN:
                                     print("Attacker wins!")
                                     att_result = chess.addTextMove(move)
                                     if att_result:
@@ -231,7 +231,7 @@ class ChessClient:
                                         print("{}".format(chess.move_reason_list[chess.getReason()]))
                                 else:
                                     print("Defender wins!")
-                                    att_result = chess.addTextMove(move, True)
+                                    att_result = chess.addTextMove(move, clearLocation=True)
                                     if att_result:
                                         print(chess.getLastTextMove(chess.SAN))
                                         turn = chess.getTurn()
