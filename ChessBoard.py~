@@ -168,15 +168,11 @@ class ChessBoard:
     WHITE_MIDLINE_INVASION = 6
     BLACK_MIDLINE_INVASION = 7
 
-    game_result_list = ["Result unavailable", "White wins", "Black wins",
+    game_result_list = ["", "White wins!", "Black wins!",
                         "Stalemate", "Draw by the fifthy moves rule",
                         "Draw by the three repetition rule",
-                        "Midline invasion by white",
-                        "Midline invasion by black"]
-
-    pgn_result_list = ["*", "1-0", "0-1",
-                        "1/2-1/2", "1/2-1/2",
-                        "1/2-1/2", "1-0", "0-1"]
+                        "Midline invasion by white!",
+                        "Midline invasion by black!"]
 
     # Special moves
     NORMAL_MOVE = 0
@@ -185,6 +181,7 @@ class ChessBoard:
     PROMOTION_MOVE = 3
     KING_CASTLE_MOVE = 4
     QUEEN_CASTLE_MOVE = 5
+    #WARRIOR_KING_WHIRLWIND = 6
     SECOND_WARRIOR_KING_MOVE = 6
 
     # Text move output type
@@ -271,6 +268,7 @@ class ChessBoard:
 
         # board, turn, wkc, wqc, bkc, bqc, epx, epy, game_result, warm, wsts, barm, bsts : fifty
         s = "%s%d%d%d%d%d%d%d%d%d%d%d%d:%d" % d
+        print(s)
         return s
 
     def loadCurState(self):
@@ -1237,7 +1235,7 @@ class ChessBoard:
         return moves, specialMoves
 
     ########################
-    ## Movement Functions ##
+    ##Movement Functions ##
     ########################
 
     def moveClassicPawn(self, fromPos, toPos):
@@ -1862,8 +1860,17 @@ class ChessBoard:
         self.clearEP()
         self._fifty = 0
         self._cur_move[3] = True
+        #self._cur_move[8] = self.WARRIOR_KING_WHIRLWIND
         if addStone:
             self.addStones(self._turn, addStone)
+        #if self._secondTurn:
+            #self._secondTurn = False
+            #if self._turn == self.WHITE:
+                #self._turn = self.BLACK
+                #self._unturn = self.WHITE
+            #else:
+                #self._turn = self.WHITE
+                #self._unturn = self.BLACK
         return True
 
 ######################################################
@@ -1949,10 +1956,14 @@ class ChessBoard:
             curArmy = self._white_army
 
         if piece == "P":
+            # if curArmy == self.CLASSIC:
+                # piece = "P"
             if curArmy == self.NEMESIS:
                 piece = "L"
             else:
                 piece = "P"
+            # else:
+                # piece = "D"
         elif piece == "B":
             if curArmy == self.EMPOWERED:
                 piece = "X"
@@ -2786,6 +2797,7 @@ class ChessBoard:
         3 = PROMOTION_MOVE (A pawn has been promoted. Use getPromotion() to see the promotion piece.)
         4 = KING_CASTLE_MOVE (Castling on the king side.)
         5 = QUEEN_CASTLE_MOVE (Castling on the queen side.)
+        #6 = WARRIOR_KING_WHIRLWIND (Two Kings uses whirlwind)
         6 = SECOND_WARRIOR_KING_MOVE (Two Kings uses it's second move.)
         """
         if self._state_stack_pointer <= 1:  # No move has been done at thos pointer

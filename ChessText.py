@@ -3,6 +3,7 @@
 from ChessBoard import ChessBoard
 import sys
 import getpass
+import time
 import string
 
 
@@ -43,6 +44,16 @@ class ChessClient:
         chess = ChessBoard(int(wArmy), int(bArmy))
         turn = chess.getTurn()
 
+        pgn_details = []
+        pgn_details.append('[Event "Noahs Python Chess 2 Game"]')
+        pgn_details.append('[Site "' + 'Here and now' '\"]')
+        pgn_details.append('[Date "' + ".".join((time.strftime("%Y"), time.strftime("%m"), time.strftime("%d"))) + '"]')
+        pgn_details.append('[Round "' + '-' + '"]')
+        pgn_details.append('[White "' + chess.army_name_dict[int(wArmy)] + '"]')
+        pgn_details.append('[Black "' + chess.army_name_dict[int(bArmy)] + '"]')
+        pgn_details.append('[Result "' + chess.pgn_result_list[chess.getGameResult()] + '"]')
+        pgn_details.append('')
+
         while True:
             board = chess.printBoard()
             for row in board:
@@ -57,8 +68,24 @@ class ChessClient:
                 else:
                     print("{}'s turn. Type your move.".format(str(chess.value_to_color_dict[turn])))
                 move = input("> ")
+                # Fully quit the program, regardless.
                 if move == "exit":
                     sys.exit(0)
+                # Save the current game as a pgn file.
+                elif move == "save":
+                    f = open('san.pgn', 'w')
+                    #pgn_details.append(' '.join(map(str, chess.getAllTextMoves(chess.SAN))))
+                    acc = ""
+                    save = chess.getAllTextMoves(chess.SAN)
+                    for moves in save:
+                        length, w, b = moves
+                        if b is None:
+                            b = ""
+                        acc = acc + "{}. {} {} ".format(length, w, b)
+                    pgn_details.append(acc)
+                    for x in pgn_details:
+                        f.write(str(x) + '\n')
+                    f.close()
                 elif any(var in move for var in ("SAN", "san")):
                     san = chess.getAllTextMoves(chess.SAN)
                     if san:
@@ -91,8 +118,7 @@ class ChessClient:
                             elif len(location) != 2:
                                 print("Please only enter the square.")
                             else:
-                                location = chess.locationToTuple(location)
-                                res = chess.moveTwoKingsWhirlwind(location)
+                                res = chess.addTextMove("K" + location, whirlwind=True)
                                 if not res:
                                     print("Can't whirlwind there.")
                                 turn = chess.getTurn()
@@ -271,9 +297,6 @@ class ChessClient:
                             break
             else:
                 break
-        chess.printBoard()
-        for row in chess.printBoard():
-            print(row)
         print("Game over! {}".format(chess.game_result_list[chess.getGameResult()]))
 
 
