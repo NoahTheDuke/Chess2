@@ -45,14 +45,12 @@ class ChessClient:
         turn = chess.getTurn()
 
         pgn_details = []
-        pgn_details.append('[Event "Noahs Python Chess 2 Game"]')
-        pgn_details.append('[Site "' + 'Here and now' '\"]')
+        pgn_details.append('[Event "Sample Games"]')
+        pgn_details.append('[Site "' + 'Fantasy Strike Website' '\"]')
         pgn_details.append('[Date "' + ".".join((time.strftime("%Y"), time.strftime("%m"), time.strftime("%d"))) + '"]')
         pgn_details.append('[Round "' + '-' + '"]')
         pgn_details.append('[White "' + chess.army_name_dict[int(wArmy)] + '"]')
         pgn_details.append('[Black "' + chess.army_name_dict[int(bArmy)] + '"]')
-        pgn_details.append('[Result "' + chess.pgn_result_list[chess.getGameResult()] + '"]')
-        pgn_details.append('')
 
         while True:
             board = chess.printBoard()
@@ -81,7 +79,9 @@ class ChessClient:
                         if b is None:
                             b = ""
                         acc = acc + "{}. {} {} ".format(length, w, b)
-                    pgn_details.append(acc)
+                    pgn_details.append('[Result "' + chess.pgn_result_list[chess.getGameResult()] + '"]')
+                    pgn_details.append('')
+                    pgn_details.append(acc.rstrip)
                     for x in pgn_details:
                         f.write(str(x) + '\n')
                     f.close()
@@ -304,7 +304,9 @@ class ChessClient:
             if b is None:
                 b = ""
             acc = acc + "{}. {} {} ".format(length, w, b)
-        pgn_details.append(acc)
+        pgn_details.append('[Result "' + chess.pgn_result_list[chess.getGameResult()] + '"]')
+        pgn_details.append('')
+        pgn_details.append(acc.rstrip())
         for x in pgn_details:
             f.write(str(x) + '\n')
         f.close()
