@@ -2,8 +2,8 @@
 [Site "Here and now"]
 [Date "2013.12.15"]
 [Round "-"]
-[White "Classic"]
-[Black "Nemesis"]
+[White "Empowered"]
+[Black "TwoKings"]
 [Result "*"]
 
-1. e4 e6 
+1. e4 e5 2. Rg3 f5 2. ... Kf7 3. Bc4+ d5 3. ... Kf6 4. exd5 [1-2] Be6 4. ... Qe7 5. Bxe6 Qxe6 5. ... Qe7 6. Re3 f4 6. ... Kg5 7. Rxe5#  

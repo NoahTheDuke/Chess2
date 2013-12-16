@@ -678,15 +678,19 @@ class ChessBoard:
 # Functions for handling Duels! #
 #################################
 
-    def checkDuel(self, attacking_piece, defending_piece):
-        attacker = self._board[attacking_piece[1]][attacking_piece[0]]
-        defender = self._board[defending_piece[1]][defending_piece[0]]
-        attacker = attacker.upper()
-        defender = defender.upper()
-        if self.dueling_rank_dict[attacker] > self.dueling_rank_dict[defender]:
-            cost = 1
+    def checkDuel(self, fromPos, toPos):
+        attacker = self._board[fromPos[1]][fromPos[0]].upper()
+        defender = self._board[toPos[1]][toPos[0]].upper()
+        validity = True
+        if any(var in (attacker, defender) for var in ('K', 'C', 'W', 'Q', 'M', 'A', 'O', 'U', 'J')):
+            validity = False
+        if validity:
+            if self.dueling_rank_dict[attacker] > self.dueling_rank_dict[defender]:
+                cost = 1
+            else:
+                cost = 0
         else:
-            cost = 0
+            cost = -1
         return cost
 
     def getStones(self, player):

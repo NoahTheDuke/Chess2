@@ -74,7 +74,6 @@ class ChessClient:
                 # Save the current game as a pgn file.
                 elif move == "save":
                     f = open('san.pgn', 'w')
-                    #pgn_details.append(' '.join(map(str, chess.getAllTextMoves(chess.SAN))))
                     acc = ""
                     save = chess.getAllTextMoves(chess.SAN)
                     for moves in save:
@@ -297,6 +296,18 @@ class ChessClient:
                             break
             else:
                 break
+        f = open('san.pgn', 'w')
+        acc = ""
+        save = chess.getAllTextMoves(chess.SAN)
+        for moves in save:
+            length, w, b = moves
+            if b is None:
+                b = ""
+            acc = acc + "{}. {} {} ".format(length, w, b)
+        pgn_details.append(acc)
+        for x in pgn_details:
+            f.write(str(x) + '\n')
+        f.close()
         print("Game over! {}".format(chess.game_result_list[chess.getGameResult()]))
 
 
