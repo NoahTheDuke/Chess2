@@ -234,8 +234,8 @@ class ChessBoard:
     _stack_second_turns = 0
 
     # all moves, stored to make it easier to build textmoves
-    # [piece, from, to, takes, duel, bluff, promotion, check/checkmate, specialmove]
-    # ["KQRNBPLMOGAUXTHEJDC", (fx, fy), (tx, ty), True/False, [0-6, 0-6]/None, "+-"/None, "QRNB"/None, "+#*"/None, 0-7]
+    # [piece, from, to, takes, duel, bluff, promotion, check/checkmate/midline invasion, special move]
+    # ["KQRNBPLMOGAUXTHEJDC", (fx, fy), (tx, ty), True/False, [0-6, 0-6], "+-", "QRNB", "+#%", 0-7]
     _cur_move = [None, None, None, False, None, None, None, None, 0]
     _moves = []
     _bluff_move = None
@@ -1596,6 +1596,7 @@ class ChessBoard:
         validMove = False
 
         self.clearEP()
+        validMove = False
 
         if self._board[toPos[1]][toPos[0]] == ".":
             self._fifty += 1
@@ -2011,8 +2012,10 @@ class ChessBoard:
         return (dest_x, dest_y)
 
     def _formatTextMove(self, move, notation):
-        # piece, from, to, takes, duel, bluff, promotion, check, special
-        piece = self._formatPieceNames(move[0])
+        # all moves, stored to make it easier to build textmoves
+        # [piece, from, to, takes, duel, bluff, promotion, check/checkmate/midline invasion, special move]
+        # ["KQRNBPLMOGAUXTHEJDC", (fx, fy), (tx, ty), True/False, [0-6, 0-6], "+-", "QRNB", "+#%", 0-7]
+        piece = move[0]
         fpos = tuple(move[1])
         tpos = tuple(move[2])
         take = move[3]
@@ -2046,6 +2049,7 @@ class ChessBoard:
                 pt = "={}".format(promo)
             if not check:
                 check = ""
+            piece = self._formatPieceNames(piece)
             res = "{}{}{}{}{}{}{}{}".format(piece, files[fpos[0]], ranks[fpos[1]], tc, files[tpos[0]], ranks[tpos[1]], pt, check)
             if duel:
                 res = res + " {}".format("[" + str(duel[0]) + "-" + str(duel[1]) + bluff + "]")
@@ -2066,7 +2070,7 @@ class ChessBoard:
             p = piece
             if self._turn == self.BLACK:
                 p = p.lower()
-            if piece == "P":
+            if any(var in piece for var in ("P", "p")):
                 piece = ""
             if not check:
                 check = ""
@@ -2084,6 +2088,8 @@ class ChessBoard:
                                 hint_r = ranks[fy]
                             else:
                                 hint_f = files[fx]
+            if piece is not "":
+                piece = self._formatPieceNames(piece)
             if piece == "" and take:
                     hint_f = files[fx]
             res = "{}{}{}{}{}{}{}{}".format(piece, hint_f, hint_r, tc, files[tpos[0]], ranks[tpos[1]], pt, check)
@@ -2529,7 +2535,7 @@ class ChessBoard:
         else:
             return []
 
-    def addMove(self, fromPos, toPos, clearLocation=False, whirlwind=False):
+    def addMove(self, fromPos, toPos, clearLocation=False, secondTurn=False, whirlwind=False):
         """
         Tries to move the piece located on fromPos to toPos. Returns True if that was a valid move.
         The position arguments must be tuples containing x, y value Ex. (4, 6).
@@ -2538,8 +2544,13 @@ class ChessBoard:
         If this method returns False you can use the getReason method to determin why.
         """
         self._reason = 0
-        #                piece, from, to, take, duel, bluff, promotion, check, specialmove
-        self._cur_move = [None, None, None, False, None, None, None, None, self.NORMAL_MOVE]
+        # all moves, stored to make it easier to build textmoves
+        # [piece, from, to, takes, duel, bluff, promotion, check/checkmate/midline invasion, special move]
+        # ["KQRNBPLMOGAUXTHEJDC", (fx, fy), (tx, ty), True/False, [0-6, 0-6], "+-", "QRNB", "+#%", 0-7]
+        if secondTurn:
+            self._cur_move = [None, None, None, False, None, None, None, None, self.SECOND_WARRIOR_KING_MOVE]
+        else:
+            self._cur_move = [None, None, None, False, None, None, None, None, self.NORMAL_MOVE]
 
         if self._game_result:
             self._reason = self.GAME_IS_OVER
@@ -2555,7 +2566,10 @@ class ChessBoard:
 
         # if it's a whirlwind, return that before any other elements are checked.
         if whirlwind:
-            self.moveTwoKingsWhirlwind(toPos)
+            if not self.moveTwoKingsWhirlwind(toPos):
+                if not self._reason:
+                    self._reason = self.INVALID_MOVE
+                return False
         # check invalid coordinates
         elif fx < 0 or fx > 7 or fy < 0 or fy > 7:
             self._reason = self.INVALID_FROM_LOCATION
@@ -2581,10 +2595,19 @@ class ChessBoard:
         stone_check = self._board[ty][tx].upper()
         if not whirlwind:
             self._cur_move[0] = p
-            if not getattr(self, 'move%s%s' % (self.piece_to_army_dict[p], self.piece_to_name_dict[p]))((fx, fy), (tx, ty)):
-                if not self._reason:
-                    self._reason = self.INVALID_MOVE
-                return False
+            if secondTurn:
+                if not self.moveTwoKingsWarriorKing((fx, fy), (tx, ty)):
+                    if not self._reason:
+                        self._reason = self.INVALID_MOVE
+                    return False
+            else:
+                if not getattr(self, 'move%s%s' % (self.piece_to_army_dict[p], self.piece_to_name_dict[p]))((fx, fy), (tx, ty)):
+                    if not self._reason:
+                        self._reason = self.INVALID_MOVE
+                    return False
+        else:
+            self._cur_move[0] = self._board[ty][tx]
+        self._stack_second_turns += 1
 
         if clearLocation:
             self._board[ty][tx] = '.'
@@ -2611,7 +2634,15 @@ class ChessBoard:
             curArmy = self._white_army
 
         if curArmy == self.TWOKINGS:
-            self._secondTurn = True
+            if not secondTurn:
+                self._secondTurn = True
+            else:
+                if self._turn == self.WHITE:
+                    self._turn = self.BLACK
+                    self._unturn = self.WHITE
+                else:
+                    self._turn = self.WHITE
+                    self._unturn = self.BLACK
         else:
             if self._turn == self.WHITE:
                 self._turn = self.BLACK
@@ -2656,7 +2687,7 @@ class ChessBoard:
             elif self.threeRepetitions():
                 self.endGame(self.THREE_REPETITION_RULE)
             elif self.isMidlineInvasion():
-                self._cur_move[7] = "*"
+                self._cur_move[7] = "%"
                 if self._turn == self.BLACK:
                     self.endGame(self.WHITE_MIDLINE_INVASION)
                 else:
@@ -2664,119 +2695,8 @@ class ChessBoard:
 
         self.pushState()
         self.pushMove()
-        return True
-
-    def addSecondKingMove(self, fromPos, toPos, whirlwind=False):
-        """
-        Tries to move the piece located om fromPos to toPos. Returns True if that was a valid move.
-        The position arguments must be tuples containing x, y value Ex. (4, 6).
-        This method also detects game over.
-
-        If this method returns False you can use the getReason method to determin why.
-        """
-        self._reason = 0
-        #                piece, from, to, take, duel, bluff, promotion, check, specialmove
-        self._cur_move = [None, None, None, False, None, None, None, None, self.SECOND_WARRIOR_KING_MOVE]
-
-        if self._game_result:
-            self._reason = self.GAME_IS_OVER
-            return False
-
-        self.updateRoyalLocations()
-
-        fx, fy = fromPos
-        tx, ty = toPos
-
-        self._cur_move[1] = fromPos
-        self._cur_move[2] = toPos
-
-        # if it's a whirlwind, return that before any other elements are checked.
-        if whirlwind:
-            self.moveTwoKingsWhirlwind(toPos)
-        # check invalid coordinates
-        elif fx < 0 or fx > 7 or fy < 0 or fy > 7:
-            self._reason = self.INVALID_FROM_LOCATION
-            return False
-        # check invalid coordinates
-        elif tx < 0 or tx > 7 or ty < 0 or ty > 7:
-            self._reason = self.INVALID_TO_LOCATION
-            return False
-        # check if any move at all
-        elif fx == tx and fy == ty:
-            self._reason = self.INVALID_TO_LOCATION
-            return False
-        # check if piece on location
-        elif self.isFree(fx, fy):
-            self._reason = self.INVALID_FROM_LOCATION
-            return False
-        # check color of piece
-        elif self.getColor(fx, fy) != self._turn:
-            self._reason = self.INVALID_COLOR
-            return False
-
-        p = self._board[fy][fx].upper()
-        if not whirlwind:
-            self._cur_move[0] = p
-            if not self.moveTwoKingsWarriorKing((fx, fy), (tx, ty)):
-                if not self._reason:
-                    self._reason = self.INVALID_MOVE
-                return False
-        else:
-            self._cur_move[0] = self._board[ty][tx]
-        self._stack_second_turns += 1
-
-        if self._turn == self.WHITE:
-            self._turn = self.BLACK
-            self._unturn = self.WHITE
-        else:
-            self._turn = self.WHITE
-            self._unturn = self.BLACK
-
-        if self._turn == self.WHITE:
-            if "TwoKings" in self.army_name_dict[self._white_army]:
-                k, q = self.isCheck()
-                if k != q:
-                    self._cur_move[7] = "+"
-                elif k and q:
-                    self._cur_move[7] = "++"
-            else:
-                if self.isCheck():
-                    self._cur_move[7] = "+"
-        else:
-            if "TwoKings" in self.army_name_dict[self._black_army]:
-                k, q = self.isCheck()
-                if k != q:
-                    self._cur_move[7] = "+"
-                elif k and q:
-                    self._cur_move[7] = "++"
-            else:
-                if self.isCheck():
-                    self._cur_move[7] = "+"
-
-        if not self.hasAnyValidMoves():
-            if self.isCheck():
-                self._cur_move[7] = "#"
-                if self._turn == self.WHITE:
-                    self.endGame(self.BLACK_MATE)
-                else:
-                    self.endGame(self.WHITE_MATE)
-            else:
-                self.endGame(self.STALEMATE)
-        else:
-            if self._fifty == 100:
-                self.endGame(self.FIFTY_MOVES_RULE)
-            elif self.threeRepetitions():
-                self.endGame(self.THREE_REPETITION_RULE)
-            elif self.isMidlineInvasion():
-                self._cur_move[7] = "*"
-                if self._turn == self.BLACK:
-                    self.endGame(self.WHITE_MIDLINE_INVASION)
-                else:
-                    self.endGame(self.BLACK_MIDLINE_INVASION)
-
-        self.pushState()
-        self.pushMove()
-        self._secondTurn = False
+        if secondTurn:
+            self._secondTurn = False
         return True
 
     def getLastMoveType(self):
@@ -2874,7 +2794,7 @@ class ChessBoard:
         self._reason = self.INVALID_MOVE
         return False
 
-    def addTextMove(self, txt, clearLocation=False, whirlwind=False):
+    def addTextMove(self, txt, clearLocation=False, secondTurn=False, whirlwind=False):
         res = self._parseTextMove(txt)
         if not res:
             self._reason = self.INVALID_MOVE
@@ -2917,15 +2837,9 @@ class ChessBoard:
                             move_from = (x, y)
                             move_to = (tx, ty)
         if whirlwind:
-            if self._secondTurn:
-                return self.addSecondKingMove((fx, fy), (tx, ty), whirlwind=True)
-            else:
-                return self.addMove((fx, fy), (tx, ty), whirlwind=True)
+            return self.addMove((fx, fy), (tx, ty), secondTurn=secondTurn, whirlwind=whirlwind)
         elif found_move:
-            if self._secondTurn:
-                return self.addSecondKingMove(move_from, move_to)
-            else:
-                return self.addMove(move_from, move_to, clearLocation)
+            return self.addMove(move_from, move_to, clearLocation=clearLocation, secondTurn=secondTurn)
 
         self._reason = self.INVALID_MOVE
         return False
@@ -2968,10 +2882,7 @@ class ChessBoard:
                 moves.append((length, x[1:], y))
             else:
                 if "." in x:
-                    # if y[0] == "2":
                     moves.append((length, x, y[1:]))
-                    # else:
-                        # moves.append((length, x, y))
                 else:
                     length += 1
                     moves.append((length, x, y))

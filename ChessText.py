@@ -44,13 +44,13 @@ class ChessClient:
         chess = ChessBoard(int(wArmy), int(bArmy))
         turn = chess.getTurn()
 
-        pgn_details = []
-        pgn_details.append('[Event "Sample Games"]')
-        pgn_details.append('[Site "' + 'Fantasy Strike Website' '\"]')
-        pgn_details.append('[Date "' + ".".join((time.strftime("%Y"), time.strftime("%m"), time.strftime("%d"))) + '"]')
-        pgn_details.append('[Round "' + '-' + '"]')
-        pgn_details.append('[White "' + chess.army_name_dict[int(wArmy)] + '"]')
-        pgn_details.append('[Black "' + chess.army_name_dict[int(bArmy)] + '"]')
+        prototype = []
+        prototype.append('[Event "Sample Games"]')
+        prototype.append('[Site "' + 'Fantasy Strike Website' '\"]')
+        prototype.append('[Date "' + ".".join((time.strftime("%Y"), time.strftime("%m"), time.strftime("%d"))) + '"]')
+        prototype.append('[Round "' + '-' + '"]')
+        prototype.append('[White "' + chess.army_name_dict[int(wArmy)] + '"]')
+        prototype.append('[Black "' + chess.army_name_dict[int(bArmy)] + '"]')
 
         while True:
             board = chess.printBoard()
@@ -79,9 +79,10 @@ class ChessClient:
                         if b is None:
                             b = ""
                         acc = acc + "{}. {} {} ".format(length, w, b)
+                    pgn_details = prototype
                     pgn_details.append('[Result "' + chess.pgn_result_list[chess.getGameResult()] + '"]')
                     pgn_details.append('')
-                    pgn_details.append(acc.rstrip)
+                    pgn_details.append(acc.rstrip())
                     for x in pgn_details:
                         f.write(str(x) + '\n')
                     f.close()
@@ -117,7 +118,7 @@ class ChessClient:
                             elif len(location) != 2:
                                 print("Please only enter the square.")
                             else:
-                                res = chess.addTextMove("K" + location, whirlwind=True)
+                                res = chess.addTextMove("K" + location, secondTurn=chess._secondTurn, whirlwind=True)
                                 if not res:
                                     print("Can't whirlwind there.")
                                 turn = chess.getTurn()
@@ -139,7 +140,7 @@ class ChessClient:
                 else:
                     res = chess.checkTextMove(move)
                     if res == -1 or (res is False):
-                        result = chess.addTextMove(move)
+                        result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                         if result:
                             print(chess.getLastTextMove(chess.SAN))
                             turn = chess.getTurn()
@@ -158,7 +159,7 @@ class ChessClient:
                                 else:
                                     print('Please enter the letter of the piece: QRNB.')
                             chess.setPromotion(promo)
-                            result = chess.addTextMove(move)
+                            result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                             if result:
                                 print(chess.getLastTextMove(chess.SAN))
                                 turn = chess.getTurn()
@@ -223,7 +224,7 @@ class ChessClient:
                                             sys.exit(0)
                                         elif any(var in bluff_choice for var in ("g", "gain", "G", "Gain")):
                                             chess.calledBluff(1)
-                                            att_result = chess.addTextMove(move)
+                                            att_result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                             if att_result:
                                                 print(chess.getLastTextMove(chess.SAN))
                                                 turn = chess.getTurn()
@@ -234,7 +235,7 @@ class ChessClient:
                                                 break
                                         elif any(var in bluff_choice for var in ("l", "lose", "L", "Lose")):
                                             chess.calledBluff(-1)
-                                            att_result = chess.addTextMove(move)
+                                            att_result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                             if att_result:
                                                 print(chess.getLastTextMove(chess.SAN))
                                                 turn = chess.getTurn()
@@ -247,7 +248,7 @@ class ChessClient:
                                             print('Please choose between gaining a stone and forcing a lose of a stone.')
                                 elif duel_results == chess.ATT_WIN:
                                     print("Attacker wins!")
-                                    att_result = chess.addTextMove(move)
+                                    att_result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                     if att_result:
                                         print(chess.getLastTextMove(chess.SAN))
                                         turn = chess.getTurn()
@@ -256,7 +257,7 @@ class ChessClient:
                                         print("{}".format(chess.move_reason_list[chess.getReason()]))
                                 else:
                                     print("Defender wins!")
-                                    att_result = chess.addTextMove(move, clearLocation=True)
+                                    att_result = chess.addTextMove(move, secondTurn=chess._secondTurn, clearLocation=True)
                                     if att_result:
                                         print(chess.getLastTextMove(chess.SAN))
                                         turn = chess.getTurn()
@@ -266,7 +267,7 @@ class ChessClient:
                                 turn = chess.getTurn()
                                 break
                             else:
-                                result = chess.addTextMove(move)
+                                result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                 if result:
                                     print(chess.getLastTextMove(chess.SAN))
                                     turn = chess.getTurn()
@@ -283,7 +284,7 @@ class ChessClient:
                                             print('Please enter the letter of the piece: QRNB.')
                                         print('Please enter the letter of the piece: QRNB.')
                                     chess.setPromotion(promo)
-                                    result = chess.addTextMove(move)
+                                    result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                     if result:
                                         print(chess.getLastTextMove(chess.SAN))
                                         turn = chess.getTurn()
@@ -304,6 +305,8 @@ class ChessClient:
             if b is None:
                 b = ""
             acc = acc + "{}. {} {} ".format(length, w, b)
+        acc = acc + chess.pgn_result_list[chess.getGameResult()]
+        pgn_details = prototype
         pgn_details.append('[Result "' + chess.pgn_result_list[chess.getGameResult()] + '"]')
         pgn_details.append('')
         pgn_details.append(acc.rstrip())
