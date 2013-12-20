@@ -1,9 +1,9 @@
 [Event "Sample Games"]
 [Site "Fantasy Strike Website"]
-[Date "2013.12.17"]
+[Date "2013.12.20"]
 [Round "-"]
-[White "Empowered"]
-[Black "TwoKings"]
+[White "TwoKings"]
+[Black "Nemesis"]
 [Result "*"]
 
-1. e4 e5
+1. d4 Pc6 2. e4 Pd6 3. c4 Pb6 4. Nc3 Nf6 5. b3 Pe6 6. g3 Na6 7. Bg2 Nc7 8. Bf4 ... 8. Qc2 Pbc5 9. dxc5

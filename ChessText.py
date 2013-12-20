@@ -139,7 +139,7 @@ class ChessClient:
                         print("You're not playing Two Kings!")
                 else:
                     res = chess.checkTextMove(move)
-                    if res == -1 or (res is False):
+                    if res == -1:
                         result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                         if result:
                             print(chess.getLastTextMove(chess.SAN))
@@ -168,6 +168,8 @@ class ChessClient:
                                 print("{}".format(chess.move_reason_list[chess.getReason()]))
                         else:
                             print("{}".format(chess.move_reason_list[chess.getReason()]))
+                    elif res is False:
+                        print("{}".format(chess.move_reason_list[chess.getReason()]))
                     else:
                         if turn == 0:
                             unturn = 1
