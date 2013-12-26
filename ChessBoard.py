@@ -64,8 +64,8 @@ class ChessBoard:
         'EmpoweredBlackSetUp': ['z', 'y', 'x', 'o', 'c', 'x', 'y', 'z'],
         'TwoKingsWhiteSetUp': ['R', 'N', 'B', 'U', 'W', 'B', 'N', 'R'],
         'TwoKingsBlackSetUp': ['r', 'n', 'b', 'u', 'w', 'b', 'n', 'r'],
-        'AnimalsWhiteSetUp': ['E', 'H', 'T', 'Q', 'C', 'T', 'H', 'E'],
-        'AnimalsBlackSetUp': ['e', 'h', 't', 'q', 'c', 't', 'h', 'e'],
+        'AnimalsWhiteSetUp': ['E', 'H', 'T', 'J', 'C', 'T', 'H', 'E'],
+        'AnimalsBlackSetUp': ['e', 'h', 't', 'j', 'c', 't', 'h', 'e'],
         'ClassicWhitePawns': ['P'] * 8,
         'ClassicBlackPawns': ['p'] * 8,
         'NemesisWhitePawns': ['L'] * 8,
@@ -682,7 +682,8 @@ class ChessBoard:
         attacker = self._board[fromPos[1]][fromPos[0]].upper()
         defender = self._board[toPos[1]][toPos[0]].upper()
         validity = True
-        if any(var in (attacker, defender) for var in ('K', 'C', 'W', 'Q', 'M', 'A', 'O', 'U', 'J')):
+        # can't duel if any King or invincible queen is involved
+        if any(var in (attacker, defender) for var in ('K', 'C', 'W', 'M', 'U')):
             validity = False
         if validity:
             if self.dueling_rank_dict[attacker] > self.dueling_rank_dict[defender]:
@@ -2015,7 +2016,6 @@ class ChessBoard:
         # all moves, stored to make it easier to build textmoves
         # [piece, from, to, takes, duel, bluff, promotion, check/checkmate/midline invasion, special move]
         # ["KQRNBPLMOGAUXTHEJDC", (fx, fy), (tx, ty), True/False, [0-6, 0-6], "+-", "QRNB", "+#%", 0-7]
-        print(str(move))
         piece = move[0]
         fpos = tuple(move[1])
         tpos = tuple(move[2])
@@ -2071,7 +2071,7 @@ class ChessBoard:
             p = piece
             if self._turn == self.BLACK:
                 p = p.lower()
-            if any(var in piece for var in ("P", "p")):
+            if any(var in piece for var in ("P", "p", "L", "l", "C", "c")):
                 piece = ""
             if not check:
                 check = ""
@@ -2597,7 +2597,7 @@ class ChessBoard:
             return False
 
         p = self._board[fy][fx].upper()
-        stone_check = self._board[ty][tx].upper()
+        stone_check = self._board[ty][tx]
         if not whirlwind:
             self._cur_move[0] = p
             if secondTurn:
@@ -2630,7 +2630,8 @@ class ChessBoard:
         if any(var in stone_check for var in ('P', 'D', 'L')):
             if self._turn == self.BLACK:
                 self.addStones(self.BLACK, 1)
-            else:
+        elif any(var in stone_check for var in ('p', 'd', 'l')):
+            if self._turn == self.WHITE:
                 self.addStones(self.WHITE, 1)
 
         if self._turn == self.BLACK:
@@ -2777,7 +2778,31 @@ class ChessBoard:
         move_to = None
         move_from = None
         found_move = False
-        if fx > -1 and fy > -1:
+        if fx > -1 and fy == -1:
+            for y in range(8):
+                if self._board[y][fx] == piece:
+                    vm = self.getValidMoves((fx, y))
+                    for m in vm:
+                        if m[0] == tx and m[1] == ty:
+                            if found_move:
+                                self._reason = self.AMBIGUOUS_MOVE
+                                return False
+                            found_move = True
+                            move_from = (fx, y)
+                            move_to = (tx, ty)
+        elif fy > -1 and fx == -1:
+            for x in range(8):
+                if self._board[fy][x] == piece:
+                    vm = self.getValidMoves((x, fy))
+                    for m in vm:
+                        if m[0] == tx and m[1] == ty:
+                            if found_move:
+                                self._reason = self.AMBIGUOUS_MOVE
+                                return False
+                            found_move = True
+                            move_from = (x, fy)
+                            move_to = (tx, ty)
+        elif fx > -1 and fy > -1:
             vm = self.getValidMoves((fx, fy))
             for m in vm:
                 if m[0] == tx and m[1] == ty:
@@ -2804,7 +2829,9 @@ class ChessBoard:
         if found_move:
             if self._board[ty][tx] == ".":
                 return -1
-            elif any(var in self._board[fy][fx] for var in ('E', 'e')):
+            elif any(var in self._board[move_from[1]][move_from[0]] for var in ("H", "E")) and self._board[ty][tx].isupper():
+                return -1
+            elif any(var in self._board[move_from[1]][move_from[0]] for var in ("h", "e")) and self._board[ty][tx].islower():
                 return -1
             else:
                 return self.checkDuel(move_from, move_to)
@@ -2882,7 +2909,7 @@ class ChessBoard:
             if move[0].isupper():
                 if move[8] == self.SECOND_WARRIOR_KING_MOVE:
                     res.append(self.notation_dict[notation])
-                    res.append("2" + str(self._formatTextMove(move, notation)))
+                    res.append("$" + str(self._formatTextMove(move, notation)))
                 else:
                     res.append(self._formatTextMove(move, notation))
             else:
@@ -2896,7 +2923,7 @@ class ChessBoard:
         moves = []
         length = 0
         for x, y in self.grouped(res, 2):
-            if x[0] == "2":
+            if x[0] == "$":
                 moves.append((length, x[1:], y))
             else:
                 if "." in x:
@@ -2904,7 +2931,7 @@ class ChessBoard:
                 else:
                     length += 1
                     moves.append((length, x, y))
-        return list(set(moves))
+        return moves
 
     def grouped(self, iterable, n):
         "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
