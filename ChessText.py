@@ -185,8 +185,8 @@ class ChessClient:
                             #Duel initiation
                             elif any(var in answer for var in ('y', 'Y', 'Yes', 'yes')):
                                 chess.payDuelCost(res)
-                                print("White stones: {}".format(chess.getStones(chess.WHITE)))
-                                print("Black stones: {}".format(chess.getStones(chess.BLACK)))
+                                print("White stones: {}".format(chess._white_stones))
+                                print("Black stones: {}".format(chess._black_stones))
                                 print("{}, how much would you like to bid?".format(str(chess.value_to_color_dict[unturn])))
                                 while True:
                                     defending_bid = getpass.getpass("> ")

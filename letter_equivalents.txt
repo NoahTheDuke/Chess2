@@ -1,7 +1,7 @@
 a reaper reaper
 b classic bishop
-c
-d other pawn
+c generic king
+d
 e animals elephant
 f
 g reaper ghost
