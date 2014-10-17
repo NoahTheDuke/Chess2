@@ -1594,10 +1594,8 @@ class ChessBoard:
 
         fx, fy = fromPos
         fromPiece = self._board[fromPos[1]][fromPos[0]]
-        validMove = False
 
         self.clearEP()
-        validMove = False
 
         if self._board[toPos[1]][toPos[0]] == ".":
             self._fifty += 1
@@ -1617,7 +1615,6 @@ class ChessBoard:
                         # check invulnerability of coming spaces: if inv, stop and exit loop. if not, continue.
                         if self.isPieceInvulnerable(fromPos, (toPos[0], max(fromPos[1] - distance_y, 0))):
                             self._board[max(fromPos[1] - distance_y + 1, 0)][toPos[0]] = fromPiece
-                            validMove = False
                             break
                         else:
                             self._board[max(fromPos[1] - distance_y, 0)][toPos[0]] = fromPiece
@@ -2773,7 +2770,7 @@ class ChessBoard:
             if self._turn == self.BLACK:
                 piece = piece.lower()
         if not piece:
-            return self.addMove((fx, fy), (tx, ty), clearLocation=clearLocation)
+            return self.addMove((fx, fy), (tx, ty))
 
         move_to = None
         move_from = None
@@ -2913,9 +2910,11 @@ class ChessBoard:
                 else:
                     res.append(self._formatTextMove(move, notation))
             else:
-                res.append(self._formatTextMove(move, notation))
                 if move[8] == self.SECOND_WARRIOR_KING_MOVE:
+                    res.append("$" + str(self._formatTextMove(move, notation)))
                     res.append(self.notation_dict[notation])
+                else:
+                    res.append(self._formatTextMove(move, notation))
             self.redo()
 
         self._state_stack_pointer = point

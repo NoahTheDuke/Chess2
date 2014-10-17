@@ -61,10 +61,12 @@ class ChessClient:
                     curArmy = chess._black_army
                 else:
                     curArmy = chess._white_army
+
                 if chess._secondTurn:
                     print("{}'s Warrior King turn. Type your move, or type \"decline\" to skip.".format(str(chess.value_to_color_dict[turn])))
                 else:
                     print("{}'s turn. Type your move.".format(str(chess.value_to_color_dict[turn])))
+
                 move = input("> ")
                 # Fully quit the program, regardless.
                 if move == "exit":
@@ -180,6 +182,7 @@ class ChessClient:
                             answer = input("> ")
                             if answer == "exit":
                                 sys.exit(0)
+                            #Duel initiation
                             elif any(var in answer for var in ('y', 'Y', 'Yes', 'yes')):
                                 chess.payDuelCost(res)
                                 print("White stones: {}".format(chess.getStones(chess.WHITE)))
@@ -268,6 +271,7 @@ class ChessClient:
                                         print("{}".format(chess.move_reason_list[chess.getReason()]))
                                 turn = chess.getTurn()
                                 break
+                            #Non-Duel initiation
                             else:
                                 result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                 if result:
