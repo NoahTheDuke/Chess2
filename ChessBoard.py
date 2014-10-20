@@ -37,7 +37,6 @@ class ChessBoard:
         5: "TwoKings",
         6: "Animals"}
 
-    # Army values
     army_abr_dict = {
         1: "C",
         2: "N",
@@ -120,7 +119,7 @@ class ChessBoard:
         "G": 3, "A": 4,
         "X": 2, "Y": 2, "Z": 3, "O": 4,
         "U": 4,
-        "T": 2, "H": 2, "E": 3, "J": "Q"}
+        "T": 2, "H": 2, "E": 3, "J": 4}
 
     color_dict = {
         0: "w",
@@ -689,7 +688,14 @@ class ChessBoard:
             else:
                 cost = 0
         else:
-            cost = -1
+            cost = True
+
+        if self._turn == self.WHITE:
+            if self._white_stones < 1:
+                cost = False
+        else:
+            if self._black_stones < 1:
+                cost = False
         return cost
 
     def addStones(self, player, amount):
@@ -2704,11 +2710,11 @@ class ChessBoard:
 
         if found_move:
             if self._board[ty][tx] == ".":
-                return -1
+                return True
             elif any(var in self._board[move_from[1]][move_from[0]] for var in ("H", "E")) and self._board[ty][tx].isupper():
-                return -1
+                return True
             elif any(var in self._board[move_from[1]][move_from[0]] for var in ("h", "e")) and self._board[ty][tx].islower():
-                return -1
+                return True
             else:
                 return self.checkDuel(move_from, move_to)
 

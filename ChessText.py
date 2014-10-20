@@ -141,7 +141,8 @@ class ChessClient:
                         print("You're not playing Two Kings!")
                 else:
                     res = chess.checkTextMove(move)
-                    if res == -1:
+                    # True: a correctly entered move
+                    if res is True:
                         result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                         if result:
                             print(chess.getLastTextMove(chess.SAN))
@@ -170,24 +171,23 @@ class ChessClient:
                                 print("{}".format(chess.move_reason_list[chess.getReason()]))
                         else:
                             print("{}".format(chess.move_reason_list[chess.getReason()]))
+                    # False: The move couldn't be parsed or is ambiguous or wrong
                     elif res is False:
                         print("{}".format(chess.move_reason_list[chess.getReason()]))
+                    # Other: TIME TO DU-DU-DU-DUEL
                     else:
-                        if turn == 0:
-                            unturn = 1
-                        else:
-                            unturn = 0
-                        print("{}, would you like to initiate a duel? It will cost {}.".format(str(chess.value_to_color_dict[unturn]), res))
+                        print("{}, would you like to initiate a duel? It will cost {}.".format(str(chess.value_to_color_dict[not turn]), res))
                         while True:
                             answer = input("> ")
                             if answer == "exit":
                                 sys.exit(0)
-                            #Duel initiation
+                            # Duel initiation
                             elif any(var in answer for var in ('y', 'Y', 'Yes', 'yes')):
                                 chess.payDuelCost(res)
                                 print("White stones: {}".format(chess._white_stones))
                                 print("Black stones: {}".format(chess._black_stones))
-                                print("{}, how much would you like to bid?".format(str(chess.value_to_color_dict[unturn])))
+                                print("{}, how much would you like to bid?".format(str(chess.value_to_color_dict[not turn])))
+                                # Defender Bid
                                 while True:
                                     defending_bid = getpass.getpass("> ")
                                     if defending_bid == "exit":
@@ -201,6 +201,7 @@ class ChessClient:
                                     else:
                                         print('Please only bid a number of stones between 0 and 2.')
                                 print("{}, how much would you like to bid?".format(str(chess.value_to_color_dict[turn])))
+                                # Attacker Bid
                                 while True:
                                     attacking_bid = getpass.getpass("> ")
                                     if attacking_bid == "exit":
@@ -271,7 +272,7 @@ class ChessClient:
                                         print("{}".format(chess.move_reason_list[chess.getReason()]))
                                 turn = chess.getTurn()
                                 break
-                            #Non-Duel initiation
+                            # Non-Duel initiation
                             else:
                                 result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                 if result:
@@ -326,6 +327,6 @@ def main():
     g = ChessClient()
     g.mainLoop()
 
-#this calls the 'main' function when this script is executed
+# this calls the 'main' function when this script is executed
 if __name__ == '__main__':
     main()
