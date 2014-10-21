@@ -145,7 +145,6 @@ class ChessClient:
                     if res is True:
                         result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                         if result:
-                            print(chess.getLastTextMove(chess.SAN))
                             turn = chess.getTurn()
                             chess.updateRoyalLocations()
                         elif chess.getReason() == chess.MUST_SET_PROMOTION:
@@ -153,18 +152,14 @@ class ChessClient:
                             print('Please enter the letter of the piece: QRNB.')
                             while True:
                                 promo = input("> ")
-                                if promo in string.letters:
-                                    if len(promo) < 2:
-                                        if int(promo) > 0:
-                                            break
-                                        print('Please enter the letter of the piece: QRNB.')
+                                promo = str(promo.upper())
+                                if len(promo) == 1:
+                                    if any(var in promo for var in ("Q", "R", "N", "B")):
+                                        break
                                     print('Please enter the letter of the piece: QRNB.')
-                                else:
-                                    print('Please enter the letter of the piece: QRNB.')
-                            chess.setPromotion(promo)
-                            result = chess.addTextMove(move, secondTurn=chess._secondTurn)
+                                print('Please enter the letter of the piece: QRNB.')
+                            result = chess.addTextMove(move+promo, secondTurn=chess._secondTurn)
                             if result:
-                                print(chess.getLastTextMove(chess.SAN))
                                 turn = chess.getTurn()
                                 chess.updateRoyalLocations()
                             else:
@@ -232,7 +227,6 @@ class ChessClient:
                                             chess.calledBluff(1)
                                             att_result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                             if att_result:
-                                                print(chess.getLastTextMove(chess.SAN))
                                                 turn = chess.getTurn()
                                                 chess.updateRoyalLocations()
                                                 break
@@ -243,7 +237,6 @@ class ChessClient:
                                             chess.calledBluff(-1)
                                             att_result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                             if att_result:
-                                                print(chess.getLastTextMove(chess.SAN))
                                                 turn = chess.getTurn()
                                                 chess.updateRoyalLocations()
                                                 break
@@ -256,7 +249,6 @@ class ChessClient:
                                     print("Attacker wins!")
                                     att_result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                     if att_result:
-                                        print(chess.getLastTextMove(chess.SAN))
                                         turn = chess.getTurn()
                                         chess.updateRoyalLocations()
                                     else:
@@ -265,7 +257,6 @@ class ChessClient:
                                     print("Defender wins!")
                                     att_result = chess.addTextMove(move, secondTurn=chess._secondTurn, clearLocation=True)
                                     if att_result:
-                                        print(chess.getLastTextMove(chess.SAN))
                                         turn = chess.getTurn()
                                         chess.updateRoyalLocations()
                                     else:
@@ -276,7 +267,6 @@ class ChessClient:
                             else:
                                 result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                 if result:
-                                    print(chess.getLastTextMove(chess.SAN))
                                     turn = chess.getTurn()
                                     chess.updateRoyalLocations()
                                 elif chess.getReason() == chess.MUST_SET_PROMOTION:
@@ -290,10 +280,8 @@ class ChessClient:
                                                 break
                                             print('Please enter the letter of the piece: QRNB.')
                                         print('Please enter the letter of the piece: QRNB.')
-                                    chess.setPromotion(promo)
-                                    result = chess.addTextMove(move, secondTurn=chess._secondTurn)
+                                    result = chess.addTextMove(move+promo, secondTurn=chess._secondTurn)
                                     if result:
-                                        print(chess.getLastTextMove(chess.SAN))
                                         turn = chess.getTurn()
                                         chess.updateRoyalLocations()
                                     else:

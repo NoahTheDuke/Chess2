@@ -121,10 +121,6 @@ class ChessBoard:
         "U": 4,
         "T": 2, "H": 2, "E": 3, "J": 4}
 
-    color_dict = {
-        0: "w",
-        1: "b"}
-
     # Promotion values
     QUEEN = 1
     ROOK = 2
@@ -1804,7 +1800,7 @@ class ChessBoard:
 
         # Get promotion if any
         if t[-1] in ('Q', 'R', 'N', 'B'):
-            promotion = {'Q': 1, 'R': 2, 'N': 3, 'B': 4}[t.pop()]
+            promotion = t.pop()
 
         if len(t) < 2:
             return None
