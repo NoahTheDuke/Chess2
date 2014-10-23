@@ -172,15 +172,26 @@ class ChessClient:
                     # Other: TIME TO DU-DU-DU-DUEL
                     else:
                         print("{}, would you like to initiate a duel? It will cost {}.".format(str(chess.value_to_color_dict[not turn]), res))
+                        tmp_white = chess._white_stones
+                        tmp_black = chess._black_stones
+                        duel_cost = None
                         while True:
                             answer = input("> ")
                             if answer == "exit":
                                 sys.exit(0)
                             # Duel initiation
                             elif any(var in answer for var in ('y', 'Y', 'Yes', 'yes')):
-                                chess.payDuelCost(res)
-                                print("White stones: {}".format(chess._white_stones))
-                                print("Black stones: {}".format(chess._black_stones))
+                                duel_cost = res
+                                if turn == chess.WHITE:
+                                    tmp_white = tmp_white + res
+                                    tmp_att = tmp_white
+                                    tmp_def = tmp_black
+                                else:
+                                    tmp_black = tmp_black + res
+                                    tmp_att = tmp_black
+                                    tmp_def = tmp_white
+                                print("White stones: {}".format(tmp_white))
+                                print("Black stones: {}".format(tmp_black))
                                 print("{}, how much would you like to bid?".format(str(chess.value_to_color_dict[not turn])))
                                 # Defender Bid
                                 while True:
@@ -188,13 +199,14 @@ class ChessClient:
                                     if defending_bid == "exit":
                                         sys.exit(0)
                                     elif defending_bid in string.digits:
-                                        if int(defending_bid) < 3:
+                                        if int(defending_bid) <= min(2, tmp_def):
                                             if int(defending_bid) > -1:
+                                                defending_bid = int(defending_bid)
                                                 break
-                                            print('Please only bid a number of stones between 0 and 2.')
-                                        print('Please only bid a number of stones between 0 and 2.')
+                                            print("Please only bid a number of stones between 0 and {}.".format(min(2, tmp_def)))
+                                        print("Please only bid a number of stones between 0 and {}.".format(min(2, tmp_def)))
                                     else:
-                                        print('Please only bid a number of stones between 0 and 2.')
+                                        print("Please only bid a number of stones between 0 and {}.".format(min(2, tmp_def)))
                                 print("{}, how much would you like to bid?".format(str(chess.value_to_color_dict[turn])))
                                 # Attacker Bid
                                 while True:
@@ -202,44 +214,81 @@ class ChessClient:
                                     if attacking_bid == "exit":
                                         sys.exit(0)
                                     elif attacking_bid in string.digits:
-                                        if int(attacking_bid) < 3:
+                                        if int(attacking_bid) <= min(2, tmp_att):
                                             if int(attacking_bid) > -1:
+                                                attacking_bid = int(attacking_bid)
                                                 break
-                                            print('Please only bid a number of stones between 0 and 2.')
-                                        print('Please only bid a number of stones between 0 and 2.')
+                                            print("Please only bid a number of stones between 0 and {}.".format(min(2, tmp_att)))
+                                        print("Please only bid a number of stones between 0 and {}.".format(min(2, tmp_att)))
                                     else:
-                                        print('Please only bid a number of stones between 0 and 2.')
-                                duel_results = chess.initiateDuel(int(attacking_bid), int(defending_bid))
-                                # duel_results will now be either None, 1, or 2
-                                print("{} bid: {}".format(chess.value_to_color_dict[chess._turn], int(attacking_bid)))
-                                print("{} bid: {}".format(chess.value_to_color_dict[chess._unturn], int(defending_bid)))
-                                if duel_results is None:
-                                    print("Someone tried to bid too much!")
-                                    break
-                                elif duel_results == chess.BLUFF:
+                                        print("Please only bid a number of stones between 0 and {}.".format(min(2, tmp_att)))
+                                if attacking_bid == 0 and defending_bid == 0:
+                                    duel_results = chess.BLUFF
+                                elif attacking_bid >= defending_bid:
+                                    duel_results = chess.ATT_WIN
+                                else:
+                                    duel_results = chess.DEF_WIN
+                                # duel_results will now be either 0, 1, or 2
+                                print("{} bid: {}".format(chess.value_to_color_dict[turn], attacking_bid))
+                                print("{} bid: {}".format(chess.value_to_color_dict[not turn], defending_bid))
+                                if duel_results == chess.BLUFF:
                                     print("{} called the bluff! Do you want to gain a stone or force {} to lose a stone?".format(
-                                        chess.value_to_color_dict[chess._turn], chess.value_to_color_dict[chess._unturn]))
+                                        chess.value_to_color_dict[turn], chess.value_to_color_dict[not turn]))
                                     while True:
                                         bluff_choice = input("> ")
                                         if bluff_choice == "exit":
                                             sys.exit(0)
                                         elif any(var in bluff_choice for var in ("g", "gain", "G", "Gain")):
-                                            chess.calledBluff(1)
-                                            att_result = chess.addTextMove(move, secondTurn=chess._secondTurn)
+                                            att_result = chess.addTextMove(move, secondTurn=chess._secondTurn, duel=str(duel_cost) + str(attacking_bid) + str(defending_bid) + "g")
                                             if att_result:
                                                 turn = chess.getTurn()
                                                 chess.updateRoyalLocations()
                                                 break
+                                            elif chess.getReason() == chess.MUST_SET_PROMOTION:
+                                                print("{}, what do you want to promote to?".format(chess.value_to_color_dict[turn]))
+                                                print('Please enter the letter of the piece: QRNB.')
+                                                while True:
+                                                    promo = input("> ")
+                                                    promo = str(promo.upper())
+                                                    if len(promo) == 1:
+                                                        if any(var in promo for var in ("Q", "R", "N", "B")):
+                                                            break
+                                                        print('Please enter the letter of the piece: QRNB.')
+                                                    print('Please enter the letter of the piece: QRNB.')
+                                                att_result = chess.addTextMove(move+promo, secondTurn=chess._secondTurn, duel=str(duel_cost) + str(attacking_bid) + str(defending_bid) + "g")
+                                                if att_result:
+                                                    turn = chess.getTurn()
+                                                    chess.updateRoyalLocations()
+                                                else:
+                                                    print("{}".format(chess.move_reason_list[chess.getReason()]))
+                                                    break
                                             else:
                                                 print("{}".format(chess.move_reason_list[chess.getReason()]))
                                                 break
                                         elif any(var in bluff_choice for var in ("l", "lose", "L", "Lose")):
-                                            chess.calledBluff(-1)
-                                            att_result = chess.addTextMove(move, secondTurn=chess._secondTurn)
+                                            att_result = chess.addTextMove(move, secondTurn=chess._secondTurn, duel=str(duel_cost) + str(attacking_bid) + str(defending_bid) + "l")
                                             if att_result:
                                                 turn = chess.getTurn()
                                                 chess.updateRoyalLocations()
                                                 break
+                                            elif chess.getReason() == chess.MUST_SET_PROMOTION:
+                                                print("{}, what do you want to promote to?".format(chess.value_to_color_dict[turn]))
+                                                print('Please enter the letter of the piece: QRNB.')
+                                                while True:
+                                                    promo = input("> ")
+                                                    promo = str(promo.upper())
+                                                    if len(promo) == 1:
+                                                        if any(var in promo for var in ("Q", "R", "N", "B")):
+                                                            break
+                                                        print('Please enter the letter of the piece: QRNB.')
+                                                    print('Please enter the letter of the piece: QRNB.')
+                                                att_result = chess.addTextMove(move+promo, secondTurn=chess._secondTurn, duel=str(duel_cost) + str(attacking_bid) + str(defending_bid) + "l")
+                                                if att_result:
+                                                    turn = chess.getTurn()
+                                                    chess.updateRoyalLocations()
+                                                else:
+                                                    print("{}".format(chess.move_reason_list[chess.getReason()]))
+                                                    break
                                             else:
                                                 print("{}".format(chess.move_reason_list[chess.getReason()]))
                                                 break
@@ -247,24 +296,58 @@ class ChessClient:
                                             print('Please choose between gaining a stone and forcing a lose of a stone.')
                                 elif duel_results == chess.ATT_WIN:
                                     print("Attacker wins!")
-                                    att_result = chess.addTextMove(move, secondTurn=chess._secondTurn)
+                                    att_result = chess.addTextMove(move, secondTurn=chess._secondTurn, duel=str(duel_cost) + str(attacking_bid) + str(defending_bid) + "n")
                                     if att_result:
                                         turn = chess.getTurn()
                                         chess.updateRoyalLocations()
+                                    elif chess.getReason() == chess.MUST_SET_PROMOTION:
+                                        print("{}, what do you want to promote to?".format(chess.value_to_color_dict[turn]))
+                                        print('Please enter the letter of the piece: QRNB.')
+                                        while True:
+                                            promo = input("> ")
+                                            promo = str(promo.upper())
+                                            if len(promo) == 1:
+                                                if any(var in promo for var in ("Q", "R", "N", "B")):
+                                                    break
+                                                print('Please enter the letter of the piece: QRNB.')
+                                            print('Please enter the letter of the piece: QRNB.')
+                                        att_result = chess.addTextMove(move+promo, secondTurn=chess._secondTurn, duel=str(duel_cost) + str(attacking_bid) + str(defending_bid) + "n")
+                                        if att_result:
+                                            turn = chess.getTurn()
+                                            chess.updateRoyalLocations()
+                                        else:
+                                            print("{}".format(chess.move_reason_list[chess.getReason()]))
                                     else:
                                         print("{}".format(chess.move_reason_list[chess.getReason()]))
                                 else:
                                     print("Defender wins!")
-                                    att_result = chess.addTextMove(move, secondTurn=chess._secondTurn, clearLocation=True)
+                                    att_result = chess.addTextMove(move, secondTurn=chess._secondTurn, clearLocation=True, duel=str(duel_cost) + str(attacking_bid) + str(defending_bid) + "n")
                                     if att_result:
                                         turn = chess.getTurn()
                                         chess.updateRoyalLocations()
+                                    elif chess.getReason() == chess.MUST_SET_PROMOTION:
+                                        print("{}, what do you want to promote to?".format(chess.value_to_color_dict[turn]))
+                                        print('Please enter the letter of the piece: QRNB.')
+                                        while True:
+                                            promo = input("> ")
+                                            promo = str(promo.upper())
+                                            if len(promo) == 1:
+                                                if any(var in promo for var in ("Q", "R", "N", "B")):
+                                                    break
+                                                print('Please enter the letter of the piece: QRNB.')
+                                            print('Please enter the letter of the piece: QRNB.')
+                                        att_result = chess.addTextMove(move+promo, secondTurn=chess._secondTurn, duel=str(duel_cost) + str(attacking_bid) + str(defending_bid) + "n")
+                                        if att_result:
+                                            turn = chess.getTurn()
+                                            chess.updateRoyalLocations()
+                                        else:
+                                            print("{}".format(chess.move_reason_list[chess.getReason()]))
                                     else:
                                         print("{}".format(chess.move_reason_list[chess.getReason()]))
                                 turn = chess.getTurn()
                                 break
                             # Non-Duel initiation
-                            else:
+                            elif any(var in answer for var in ('n', 'N', 'No', 'no')):
                                 result = chess.addTextMove(move, secondTurn=chess._secondTurn)
                                 if result:
                                     turn = chess.getTurn()
@@ -289,7 +372,10 @@ class ChessClient:
                                 else:
                                     print("{}".format(chess.move_reason_list[chess.getReason()]))
                                 break
+                            else:
+                                print('Please enter \'yes\' or \'no\'.')
                             break
+ ##################################################################################################################################################
             else:
                 break
         f = open('san.pgn', 'w')

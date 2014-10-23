@@ -135,15 +135,17 @@ class ChessBoard:
 
     # Reason values
     INVALID_MOVE = 1
-    INVALID_COLOR = 2
-    INVALID_FROM_LOCATION = 3
-    INVALID_TO_LOCATION = 4
-    MUST_SET_PROMOTION = 5
-    GAME_IS_OVER = 6
-    AMBIGUOUS_MOVE = 7
+    INVALID_DUEL = 2
+    INVALID_COLOR = 3
+    INVALID_FROM_LOCATION = 4
+    INVALID_TO_LOCATION = 5
+    MUST_SET_PROMOTION = 6
+    GAME_IS_OVER = 7
+    AMBIGUOUS_MOVE = 8
 
     move_reason_list = ["",
                         "Invalid move.",
+                        "Invalid duel.",
                         "Invalid color.",
                         "Invalid move from that square.",
                         "Invalid move to that square.",
@@ -199,7 +201,6 @@ class ChessBoard:
 
     # States
     _turn = WHITE
-    _unturn = BLACK
     _secondTurn = False
     _white_king_castle = True
     _white_queen_castle = True
@@ -231,8 +232,6 @@ class ChessBoard:
     # ["KQRNBPLMOGAUXTHEJC", (fx, fy), (tx, ty), True/False, [0-6, 0-6], "+-", "QRNB", "+#%", 0-7]
     _cur_move = [None, None, None, False, None, None, None, None, 0]
     _moves = []
-    _bluff_move = None
-    _duel_move = None
 
     _promotion_value = 0
 
@@ -317,8 +316,6 @@ class ChessBoard:
 
     def pushMove(self):
         self._moves.append(deepcopy(self._cur_move))
-        self._duel_move = None
-        self._bluff_move = None
 
     def threeRepetitions(self):
         ts = self._three_rep_stack[:self._state_stack_pointer]
@@ -667,9 +664,9 @@ class ChessBoard:
                 return True
         return False
 
-#################################
-# Functions for handling Duels! #
-#################################
+############################################
+# Functions for handling Duels and stones! #
+############################################
 
     def checkDuel(self, fromPos, toPos):
         attacker = self._board[fromPos[1]][fromPos[0]].upper()
@@ -696,65 +693,33 @@ class ChessBoard:
 
     def addStones(self, player, amount):
         if player == self.WHITE:
-            if self._white_stones + amount > 6:
-                self._white_stones = 6
-            elif self._white_stones + amount < 0:
-                self._white_stones = 0
-            else:
-                self._white_stones = self._white_stones + amount
+            self._white_stones = max(0, min(self._white_stones + amount, 6))
         else:
-            if self._black_stones + amount > 6:
-                self._black_stones = 6
-            elif self._black_stones + amount < 0:
-                self._black_stones = 0
-            else:
-                self._black_stones = self._black_stones + amount
+            self._black_stones = max(0, min(self._black_stones + amount, 6))
 
-    def calledBluff(self, amount):
-        if amount > 0:
+    def calledBluff(self, option):
+        if option == "g" or "+":
             self._bluff_move = "+"
             self.addStones(self._turn, 1)
         else:
             self._bluff_move = "-"
-            self.addStones(self._unturn, -1)
+            self.addStones(not self._turn, -1)
 
     def payDuelCost(self, cost):
-        if self.getTurn() == self.WHITE:
+        if self._turn == self.WHITE:
             self.addStones(self.BLACK, cost)
         else:
             self.addStones(self.WHITE, cost)
 
     def initiateDuel(self, attacking_bid, defending_bid):
-        if self.getTurn() == self.WHITE:
-            if self._white_stones < attacking_bid:
-                return None
-            elif self._black_stones < defending_bid:
-                return None
-        else:
-            if self._black_stones < attacking_bid:
-                return None
-            elif self._white_stones < defending_bid:
-                return None
-
-        self.resolveDuel(attacking_bid, defending_bid)
-        if self.getTurn() == self.WHITE:
-            self._duel_move = (attacking_bid, defending_bid)
-        else:
-            self._duel_move = (defending_bid, attacking_bid)
-        if attacking_bid == 0 and defending_bid == 0:
-            return self.BLUFF
-        elif attacking_bid >= defending_bid:
-            return self.ATT_WIN
-        else:
-            return self.DEF_WIN
-
-    def resolveDuel(self, attacking_bid, defending_bid):
-        if self.getTurn() == self.WHITE:
+        if self._turn == self.WHITE:
             self.addStones(self.WHITE, 0 - attacking_bid)
             self.addStones(self.BLACK, 0 - defending_bid)
+            return (attacking_bid, defending_bid)
         else:
             self.addStones(self.WHITE, 0 - defending_bid)
             self.addStones(self.BLACK, 0 - attacking_bid)
+            return (defending_bid, attacking_bid)
 
 ###############################
 # getValid[Army][Piece]Moves! #
@@ -1763,7 +1728,7 @@ class ChessBoard:
 
 ######################################################
 
-    def _parseTextMove(self, txt):
+    def parseTextMove(self, txt):
         txt = txt.strip()
         promotion = None
         dest_x = 0
@@ -1828,7 +1793,31 @@ class ChessBoard:
             h_piece = None
         return (h_piece, h_file, h_rank, dest_x, dest_y, promotion)
 
-    def _formatPieceNames(self, piece):
+    def parseDuel(self, txt):
+        txt = txt.strip()
+
+        t = []
+        for ch in txt:
+            if ch not in "gln012":
+                continue
+            t.append(ch)
+
+        if len(t) < 4:
+            return None
+
+        cost = int(t[0])
+        att_bid = int(t[1])
+        def_bid = int(t[2])
+        if t[3] == "g":
+            bluff = "+"
+        elif t[3] == "l":
+            bluff = "-"
+        else:
+            bluff = None
+
+        return (cost, att_bid, def_bid, bluff)
+
+    def formatPieceNames(self, piece):
         if piece != ".":
             if all(word.isupper() for word in piece):
                 piece = self.army_piece_to_classic_piece_dict[piece]
@@ -1837,7 +1826,7 @@ class ChessBoard:
                 piece = piece.lower()
         return piece
 
-    def _reversePieceNames(self, piece):
+    def reversePieceNames(self, piece):
         if self._turn == self.BLACK:
             curArmy = self._black_army
         else:
@@ -1901,7 +1890,7 @@ class ChessBoard:
         dest_y = ranks[fromPos[1]]
         return (dest_x, dest_y)
 
-    def _formatTextMove(self, move, notation):
+    def formatTextMove(self, move, notation):
         # all moves, stored to make it easier to build textmoves
         # [piece, from, to, takes, duel, bluff, promotion, check/checkmate/midline invasion, special move]
         # ["KQRNBPLMOGAUXTHEJDC", (fx, fy), (tx, ty), True/False, [0-6, 0-6], "+-", "QRNB", "+#%", 0-7]
@@ -1939,7 +1928,7 @@ class ChessBoard:
                 pt = "={}".format(promo)
             if not check:
                 check = ""
-            piece = self._formatPieceNames(piece)
+            piece = self.formatPieceNames(piece)
             res = "{}{}{}{}{}{}{}{}".format(piece, files[fpos[0]], ranks[fpos[1]], tc, files[tpos[0]], ranks[tpos[1]], pt, check)
             if duel:
                 res = res + " {}".format("[" + str(duel[0]) + "-" + str(duel[1]) + bluff + "]")
@@ -1979,7 +1968,7 @@ class ChessBoard:
                             else:
                                 hint_f = files[fx]
             if piece is not "":
-                piece = self._formatPieceNames(piece)
+                piece = self.formatPieceNames(piece)
             if piece == "" and take:
                     hint_f = files[fx]
             res = "{}{}{}{}{}{}{}{}".format(piece, hint_f, hint_r, tc, files[tpos[0]], ranks[tpos[1]], pt, check)
@@ -2111,7 +2100,7 @@ class ChessBoard:
         v = s[64:72]
         a = s[72:76]
         fifty = s[77:]
-        b = [self._formatPieceNames(var) for var in b]
+        b = [self.formatPieceNames(var) for var in b]
 
         rows = []
         for i in range(8):
@@ -2414,7 +2403,7 @@ class ChessBoard:
         else:
             return []
 
-    def addMove(self, fromPos, toPos, clearLocation=False, secondTurn=False, whirlwind=False):
+    def addMove(self, fromPos, toPos, clearLocation=False, secondTurn=False, whirlwind=False, duel=False):
         """
         Tries to move the piece located on fromPos to toPos. Returns True if that was a valid move.
         The position arguments must be tuples containing x, y value Ex. (4, 6).
@@ -2453,11 +2442,11 @@ class ChessBoard:
                 if not self._reason:
                     self._reason = self.INVALID_MOVE
                 return False
-        # check invalid coordinates
+        # check invalid from coordinates
         elif fx < 0 or fx > 7 or fy < 0 or fy > 7:
             self._reason = self.INVALID_FROM_LOCATION
             return False
-        # check invalid coordinates
+        # check invalid to coordinates
         elif tx < 0 or tx > 7 or ty < 0 or ty > 7:
             self._reason = self.INVALID_TO_LOCATION
             return False
@@ -2500,11 +2489,20 @@ class ChessBoard:
                 else:
                     self.addStones(self.BLACK, 1)
 
-        if self._duel_move:
-          self._cur_move[4] = self._duel_move
-        if self._bluff_move:
-          self._cur_move[5] = self._bluff_move
+        if duel:
+            cost, att_bid, def_bid, bluff = duel
 
+            # Pay costs
+            self.addStones(not self._turn, cost)
+            # Run duel
+            duelres = self.initiateDuel(att_bid, def_bid)
+            # Discharge bluff
+            self.calledBluff(bluff)
+
+            self._cur_move[4] = duelres
+            self._cur_move[5] = bluff
+
+        # Don't touch this. Hardcoded sides for pawn reasons.
         if any(var in stone_check for var in ('P', 'L')):
             if self._turn == self.BLACK:
                 self.addStones(self.BLACK, 1)
@@ -2523,17 +2521,13 @@ class ChessBoard:
             else:
                 if self._turn == self.WHITE:
                     self._turn = self.BLACK
-                    self._unturn = self.WHITE
                 else:
                     self._turn = self.WHITE
-                    self._unturn = self.BLACK
         else:
             if self._turn == self.WHITE:
                 self._turn = self.BLACK
-                self._unturn = self.WHITE
             else:
                 self._turn = self.WHITE
-                self._unturn = self.BLACK
 
         if self._turn == self.WHITE:
             if "TwoKings" in self.army_name_dict[self._white_army]:
@@ -2628,7 +2622,7 @@ class ChessBoard:
         SAN Examples: 'e4' 'Rfxd1' 'd8=Q' 'Nxf3+'
         LAN Examples: 'Pe2e4' 'Rf1xd1' 'Pd7d8=Q' 'Ng1xf3+'
         """
-        res = self._parseTextMove(txt)
+        res = self.parseTextMove(txt)
         if not res:
             self._reason = self.INVALID_MOVE
             return False
@@ -2638,7 +2632,7 @@ class ChessBoard:
         if promo:
             self.setPromotion(promo)
 
-        piece = self._reversePieceNames(piece)
+        piece = self.reversePieceNames(piece)
         if self._secondTurn:
             if piece == None:
                 self._reason = self.INVALID_MOVE
@@ -2650,37 +2644,35 @@ class ChessBoard:
         if piece is not None:
             if self._turn == self.BLACK:
                 piece = piece.lower()
-        if not piece:
-            return self.addMove((fx, fy), (tx, ty))
 
         move_to = None
         move_from = None
         found_move = False
-        if fx > -1 and fy == -1:
-            for y in range(8):
-                if self._board[y][fx] == piece:
-                    vm = self.getValidMoves((fx, y))
-                    for m in vm:
-                        if m[0] == tx and m[1] == ty:
-                            if found_move:
-                                self._reason = self.AMBIGUOUS_MOVE
-                                return False
-                            found_move = True
-                            move_from = (fx, y)
-                            move_to = (tx, ty)
-        elif fx == -1 and fy > -1:
-            for x in range(8):
-                if self._board[fy][x] == piece:
-                    vm = self.getValidMoves((x, fy))
-                    for m in vm:
-                        if m[0] == tx and m[1] == ty:
-                            if found_move:
-                                self._reason = self.AMBIGUOUS_MOVE
-                                return False
-                            found_move = True
-                            move_from = (x, fy)
-                            move_to = (tx, ty)
-        elif fx > -1 and fy > -1:
+        #if fx > -1 and fy == -1:
+            #for y in range(8):
+                #if self._board[y][fx] == piece:
+                    #vm = self.getValidMoves((fx, y))
+                    #for m in vm:
+                        #if m[0] == tx and m[1] == ty:
+                            #if found_move:
+                                #self._reason = self.AMBIGUOUS_MOVE
+                                #return False
+                            #found_move = True
+                            #move_from = (fx, y)
+                            #move_to = (tx, ty)
+        #elif fx == -1 and fy > -1:
+            #for x in range(8):
+                #if self._board[fy][x] == piece:
+                    #vm = self.getValidMoves((x, fy))
+                    #for m in vm:
+                        #if m[0] == tx and m[1] == ty:
+                            #if found_move:
+                                #self._reason = self.AMBIGUOUS_MOVE
+                                #return False
+                            #found_move = True
+                            #move_from = (x, fy)
+                            #move_to = (tx, ty)
+        if fx > -1 and fy > -1:
             vm = self.getValidMoves((fx, fy))
             for m in vm:
                 if m[0] == tx and m[1] == ty:
@@ -2717,13 +2709,19 @@ class ChessBoard:
         self._reason = self.INVALID_MOVE
         return False
 
-    def addTextMove(self, txt, clearLocation=False, secondTurn=False, whirlwind=False):
-        res = self._parseTextMove(txt)
+    def addTextMove(self, txt, clearLocation=False, secondTurn=False, whirlwind=False, duel=None):
+        res = self.parseTextMove(txt)
         if not res:
             self._reason = self.INVALID_MOVE
             return False
         else:
             piece, fx, fy, tx, ty, promo = res
+
+        if duel:
+            duel = self.parseDuel(duel)
+            if not duel:
+                self._reason = self.INVALID_DUEL
+                return False
 
         if promo:
             self.setPromotion(promo)
@@ -2731,7 +2729,7 @@ class ChessBoard:
         if not piece:
             return self.addMove((fx, fy), (tx, ty), clearLocation=clearLocation)
 
-        piece = self._reversePieceNames(piece)
+        piece = self.reversePieceNames(piece)
         if self._secondTurn:
             if not any(var in piece for var in ('W', 'w', 'U', 'u')):
                 self._reason = self.INVALID_MOVE
@@ -2762,7 +2760,7 @@ class ChessBoard:
         if whirlwind:
             return self.addMove((fx, fy), (tx, ty), secondTurn=secondTurn, whirlwind=whirlwind)
         elif found_move:
-            return self.addMove(move_from, move_to, clearLocation=clearLocation, secondTurn=secondTurn)
+            return self.addMove(move_from, move_to, clearLocation=clearLocation, secondTurn=secondTurn, duel=duel)
 
         self._reason = self.INVALID_MOVE
         return False
@@ -2787,15 +2785,15 @@ class ChessBoard:
             if move[0].isupper():
                 if move[8] == self.SECOND_WARRIOR_KING_MOVE:
                     res.append(self.notation_dict[notation])
-                    res.append("$" + str(self._formatTextMove(move, notation)))
+                    res.append("$" + str(self.formatTextMove(move, notation)))
                 else:
-                    res.append(self._formatTextMove(move, notation))
+                    res.append(self.formatTextMove(move, notation))
             else:
                 if move[8] == self.SECOND_WARRIOR_KING_MOVE:
-                    res.append("$" + str(self._formatTextMove(move, notation)))
+                    res.append("$" + str(self.formatTextMove(move, notation)))
                     res.append(self.notation_dict[notation])
                 else:
-                    res.append(self._formatTextMove(move, notation))
+                    res.append(self.formatTextMove(move, notation))
             self.redo()
 
         self._state_stack_pointer = point
@@ -2827,7 +2825,7 @@ class ChessBoard:
 
         self.undo()
         move = self._moves[self._state_stack_pointer - 1]
-        res = self._formatTextMove(move, notation)
+        res = self.formatTextMove(move, notation)
         self.redo()
         return res
 
@@ -2841,7 +2839,7 @@ class ChessBoard:
         board.append("  +-----------------+")
         rank = 8
         for l in self._board:
-            l = [self._formatPieceNames(var) for var in l]
+            l = [self.formatPieceNames(var) for var in l]
             board.append("%d | %s %s %s %s %s %s %s %s |" % (rank, l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7]))
             rank -= 1
         board.append("  +-----------------+")
