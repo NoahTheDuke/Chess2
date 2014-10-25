@@ -15,6 +15,7 @@
 from copy import deepcopy
 from collections import OrderedDict
 from itertools import zip_longest
+import numpy as np
 
 
 class ChessBoard:
@@ -34,16 +35,16 @@ class ChessBoard:
         2: "Nemesis",
         3: "Reaper",
         4: "Empowered",
-        5: "TwoKings",
+        5: "Two Kings",
         6: "Animals"}
 
     army_abr_dict = {
-        1: "C",
-        2: "N",
-        3: "R",
-        4: "E",
-        5: "T",
-        6: "A"}
+        1: "C", "C": 1,
+        2: "N", "N": 2,
+        3: "R", "R": 3,
+        4: "E", "E": 4,
+        5: "T", "T": 5,
+        6: "A", "A": 6}
 
     CLASSIC = 1
     NEMESIS = 2
@@ -91,7 +92,7 @@ class ChessBoard:
         "L": "Nemesis", "M": "Nemesis",
         "G": "Reaper", "A": "Reaper",
         "X": "Empowered", "Y": "Empowered", "Z": "Empowered", "O": "Empowered",
-        "U": "TwoKings", "W": "TwoKings",
+        "U": "Two Kings", "W": "Two Kings",
         "T": "Animals", "H": "Animals", "E": "Animals", "J": "Animals",
         "C": "Generic"}
 
@@ -100,8 +101,8 @@ class ChessBoard:
         "L": "Pawn", "M": "Nemesis",
         "G": "Ghost", "A": "Reaper",
         "X": "Bishop", "Y": "Knight", "Z": "Rook", "O": "Queen",
-        "U": "WarriorKing", "W": "WarriorKing",
-        "T": "Tiger", "H": "WildHorse", "E": "Elephant", "J": "JungleQueen",
+        "U": "Warrior King", "W": "Warrior King",
+        "T": "Tiger", "H": "Wild Horse", "E": "Elephant", "J": "Jungle Queen",
         "C": "King"}
 
     army_piece_to_classic_piece_dict = {
@@ -243,8 +244,7 @@ class ChessBoard:
     def state2str(self):
         b = ""
         for l in self._board:
-            b += "%s%s%s%s%s%s%s%s" % (l[0], l[1], l[2], l[3],
-                                       l[4], l[5], l[6], l[7])
+            b += "{}{}{}{}{}{}{}{}".format(*l)
 
         d = (b,
              self._turn,
@@ -262,14 +262,18 @@ class ChessBoard:
              self._fifty)
 
         # board, turn, wkc, wqc, bkc, bqc, epx, epy, game_result, warm, wsts, barm, bsts : fifty
-        s = "%s%d%d%d%d%d%d%d%d%d%d%d%d:%d" % d
+        s = "{}{}{}{}{}{}{}{}{}{}{}{}{}:{}".format(*d)
         return s
 
     def loadCurState(self):
         s = self._state_stack[self._state_stack_pointer - 1]
+        # BOARD
         b = s[:64]
+        # TURN, CASTLING, EP, RESULT
         v = s[64:72]
+        # ARMIES, STONES
         a = s[72:76]
+        # FIFTY RULE
         f = int(s[77:])
 
         idx = 0
@@ -404,7 +408,7 @@ class ChessBoard:
         done = False
         from_p = self._board[from_y][from_x]
         self._board[from_y][from_x] = "."
-        if "TwoKings" in self.army_name_dict[army]:
+        if "Two Kings" in self.army_name_dict[army]:
             if not self.isThreatened(kingPos, self._turn) and not self.isThreatened(queenPos, self._turn):
                 done = True
         else:
@@ -437,7 +441,7 @@ class ChessBoard:
                 kingPos = self._black_king_location
                 queenPos = self._black_queen_location
                 army = self._black_army
-            if "TwoKings" in self.army_name_dict[army]:
+            if "Two Kings" in self.army_name_dict[army]:
                 if not self.isThreatened(kingPos, self._turn) and not self.isThreatened(queenPos, self._turn):
                     result.append(m)
             else:
@@ -711,7 +715,7 @@ class ChessBoard:
         else:
             self.addStones(self.WHITE, cost)
 
-    def initiateDuel(self, attacking_bid, defending_bid):
+    def resolveDuel(self, attacking_bid, defending_bid):
         if self._turn == self.WHITE:
             self.addStones(self.WHITE, 0 - attacking_bid)
             self.addStones(self.BLACK, 0 - defending_bid)
@@ -1984,8 +1988,8 @@ class ChessBoard:
         """
         Resets the chess board and all states.
         """
-        blackPieces = self.army_name_dict[bArmy] + 'BlackSetUp'
-        whitePieces = self.army_name_dict[wArmy] + 'WhiteSetUp'
+        blackPieces = self.army_name_dict[bArmy].replace(" ","") + 'BlackSetUp'
+        whitePieces = self.army_name_dict[wArmy].replace(" ","") + 'WhiteSetUp'
 
         if bArmy == self.NEMESIS:
             blackPawns = 'NemesisBlackPawns'
@@ -2037,43 +2041,56 @@ class ChessBoard:
 
         fparts = fen.split()
         newstate = ""
+        if len(fparts) == 8:
+            counter = 2
+        else:
+            counter = 0
 
         # BOARD
-        for c in fparts[2]:
+        for c in fparts[counter]:
             if c in "kqrnbpKQRNBP":
                 newstate += c
             elif c in "12345678":
                 newstate += '.' * int(c)
+        counter += 1
+
         # TURN
-        newstate += str("wb".index(fparts[3]))
+        newstate += str("wb".index(fparts[counter]))
+        counter += 1
 
         # CASTLING
         kq = "KQkq"
         for p in kq:
-            if p in fparts[4]:
+            if p in fparts[counter]:
                 newstate += "1"
             else:
                 newstate += "0"
+        counter += 1
 
         # EN PASSANT
-        if len(fparts[5]) == 2:
-            newstate += str("abcdefgh".index(fparts[5][0].lower()))
-            newstate += str("87654321".index(fparts[5][1]))
+        if len(fparts[counter]) == 2:
+            newstate += str("abcdefgh".index(fparts[counter][0].lower()))
+            newstate += str("87654321".index(fparts[counter][1]))
         else:
             newstate += "00"
+        counter += 1
 
         # GAME RESULT
         newstate += "0"
 
         # ARMIES + STONES
-        for a in fparts[0]:
-            if a in "cnretaCNRETA":
-                newstate += c
-            elif a in "0123456":
-                newstate += c
+        if len(fparts) == 8:
+            for a in fparts[0]:
+                if a in "cnretaCNRETA":
+                    newstate += str(self.army_abr_dict[a.upper()])
+            for s in fparts [1]:
+                if s in "0123456":
+                    newstate += s
+        else:
+            newstate += "1133"
 
         # HALF COUNT
-        newstate += ":%s" % fparts[6]
+        newstate += ":{}".format(fparts[counter])
 
         self._state_stack.append(newstate)
         self._state_stack_pointer = 1
@@ -2148,12 +2165,12 @@ class ChessBoard:
         ep = "-"
         if not (x == 0 and y == 0):
             if turn == "b" and (self._board[y][x - 1] == 'p' or self._board[y][x + 1] == 'p'):
-                ep = "%s%s" % (("abcdefgh")[x], ("87654321")[y + 1])
+                ep = "{}{}".format(("abcdefgh")[x], ("87654321")[y + 1])
             elif turn == "w" and (self._board[y][x - 1] == 'P' or self._board[y][x + 1] == 'P'):
-                ep = "%s%s" % (("abcdefgh")[x], ("87654321")[y - 1])
+                ep = "{}{}".format(("abcdefgh")[x], ("87654321")[y - 1])
 
         move = (self._state_stack_pointer - self._stack_second_turns + 1) / 2
-        return "%s %s %s %s %s %s %d" % (armystones, board, turn, kq, ep, fifty, move)
+        return "{} {} {} {} {} {} {}".format(armystones, board, turn, kq, ep, fifty, move)
 
     def getMoveCount(self):
         """
@@ -2238,14 +2255,14 @@ class ChessBoard:
         Returns True if the current players king is checked.
         """
         if self._turn == self.WHITE:
-            if "TwoKings" in self.army_name_dict[self._white_army]:
+            if "Two Kings" in self.army_name_dict[self._white_army]:
                 kingPos = self._white_king_location
                 queenPos = self._white_queen_location
                 return (self.isThreatened(kingPos, self._turn), self.isThreatened(queenPos, self._turn))
             else:
                 kingPos = self._white_king_location
         else:
-            if "TwoKings" in self.army_name_dict[self._black_army]:
+            if "Two Kings" in self.army_name_dict[self._black_army]:
                 kingPos = self._black_king_location
                 queenPos = self._black_queen_location
                 return (self.isThreatened(kingPos, self._turn), self.isThreatened(queenPos, self._turn))
@@ -2260,7 +2277,7 @@ class ChessBoard:
         if self._turn == self.BLACK:
             kingPos = self._white_king_location
             queenPos = self._white_queen_location
-            if "TwoKings" in self.army_name_dict[self._white_army]:
+            if "Two Kings" in self.army_name_dict[self._white_army]:
                 if kingPos[1] < 4 and queenPos[1] < 4:
                     return True
             else:
@@ -2269,7 +2286,7 @@ class ChessBoard:
         else:
             kingPos = self._black_king_location
             queenPos = self._black_queen_location
-            if "TwoKings" in self.army_name_dict[self._black_army]:
+            if "Two Kings" in self.army_name_dict[self._black_army]:
                 if kingPos[1] > 3 and queenPos[1] > 3:
                     return True
             else:
@@ -2473,7 +2490,7 @@ class ChessBoard:
                         self._reason = self.INVALID_MOVE
                     return False
             else:
-                if not getattr(self, 'move%s%s' % (self.piece_to_army_dict[p], self.piece_to_name_dict[p]))((fx, fy), (tx, ty)):
+                if not getattr(self, 'move{}{}'.format(self.piece_to_army_dict[p].replace(" ",""), self.piece_to_name_dict[p].replace(" ","")))((fx, fy), (tx, ty)):
                     if not self._reason:
                         self._reason = self.INVALID_MOVE
                     return False
@@ -2493,9 +2510,9 @@ class ChessBoard:
             cost, att_bid, def_bid, bluff = duel
 
             # Pay costs
-            self.addStones(not self._turn, cost)
+            self.payDuelCost(cost)
             # Run duel
-            duelres = self.initiateDuel(att_bid, def_bid)
+            duelres = self.resolveDuel(att_bid, def_bid)
             # Discharge bluff
             self.calledBluff(bluff)
 
@@ -2530,7 +2547,7 @@ class ChessBoard:
                 self._turn = self.WHITE
 
         if self._turn == self.WHITE:
-            if "TwoKings" in self.army_name_dict[self._white_army]:
+            if "Two Kings" in self.army_name_dict[self._white_army]:
                 k, q = self.isCheck()
                 if k != q:
                     self._cur_move[7] = "+"
@@ -2540,7 +2557,7 @@ class ChessBoard:
                 if self.isCheck():
                     self._cur_move[7] = "+"
         else:
-            if "TwoKings" in self.army_name_dict[self._black_army]:
+            if "Two Kings" in self.army_name_dict[self._black_army]:
                 k, q = self.isCheck()
                 if k != q:
                     self._cur_move[7] = "+"
@@ -2648,30 +2665,6 @@ class ChessBoard:
         move_to = None
         move_from = None
         found_move = False
-        #if fx > -1 and fy == -1:
-            #for y in range(8):
-                #if self._board[y][fx] == piece:
-                    #vm = self.getValidMoves((fx, y))
-                    #for m in vm:
-                        #if m[0] == tx and m[1] == ty:
-                            #if found_move:
-                                #self._reason = self.AMBIGUOUS_MOVE
-                                #return False
-                            #found_move = True
-                            #move_from = (fx, y)
-                            #move_to = (tx, ty)
-        #elif fx == -1 and fy > -1:
-            #for x in range(8):
-                #if self._board[fy][x] == piece:
-                    #vm = self.getValidMoves((x, fy))
-                    #for m in vm:
-                        #if m[0] == tx and m[1] == ty:
-                            #if found_move:
-                                #self._reason = self.AMBIGUOUS_MOVE
-                                #return False
-                            #found_move = True
-                            #move_from = (x, fy)
-                            #move_to = (tx, ty)
         if fx > -1 and fy > -1:
             vm = self.getValidMoves((fx, fy))
             for m in vm:
@@ -2835,16 +2828,16 @@ class ChessBoard:
         """
         board = []
         board.append("")
-        board.append("White %s vs Black %s" % (self.army_name_dict[self._white_army], self.army_name_dict[self._black_army]))
+        board.append("White {} vs Black {}".format(self.army_name_dict[self._white_army], self.army_name_dict[self._black_army]))
         board.append("  +-----------------+")
         rank = 8
         for l in self._board:
             l = [self.formatPieceNames(var) for var in l]
-            board.append("%d | %s %s %s %s %s %s %s %s |" % (rank, l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7]))
+            board.append("{} | {} {} {} {} {} {} {} {} |".format(rank, *l))
             rank -= 1
         board.append("  +-----------------+")
         board.append("    a b c d e f g h")
         board.append("")
-        board.append("White stones: %d" % self._white_stones)
-        board.append("Black stones: %d" % self._black_stones)
+        board.append("White stones: {}".format(self._white_stones))
+        board.append("Black stones: {}".format(self._black_stones))
         return board

@@ -10,7 +10,7 @@ i
 j animals jungle queen
 k classic king
 l nemesis pawn
-m nemesis queen
+m nemesis nemesis
 n classic knight
 o empowered queen
 p classic pawn
@@ -24,3 +24,30 @@ w two kings warrior king
 x empowered bishop
 y empowered knight
 z empowered rook
+
+p classic pawn
+l nemesis pawn
+
+b classic bishop
+x empowered bishop
+t animals tiger
+
+n classic knight
+y empowered knight
+h animals wild horse
+
+r classic rook
+g reaper ghost
+z empowered rook
+e animals elephant
+
+q classic queen
+m nemesis nemesis
+a reaper reaper
+o empowered queen
+u two kings warrior queen
+j animals jungle queen
+
+k classic king
+w two kings warrior king
+c generic king

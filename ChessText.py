@@ -42,7 +42,6 @@ class ChessClient:
 
         turn = 0
         chess = ChessBoard(int(wArmy), int(bArmy))
-        turn = chess.getTurn()
 
         prototype = []
         prototype.append('[Event "Sample Games"]')
@@ -53,6 +52,7 @@ class ChessClient:
         prototype.append('[Black "' + chess.army_name_dict[int(bArmy)] + '"]')
 
         while True:
+            turn = chess.getTurn()
             board = chess.printBoard()
             for row in board:
                 print(row)
@@ -108,6 +108,13 @@ class ChessClient:
                             print("{}. {} {}".format(length, x, y))
                 elif any(var in move for var in ("FEN", "fen")):
                     print(chess.getFEN())
+                elif move == "set":
+                    chess.setFEN(input("Paste FEN: "))
+                elif move == "get": # Displaying available moves for a given space.
+                    getter = input("> ")
+                    print(str(getter))
+                    getter = chess.parseTextMove(getter)[3:5]
+                    print(chess.getValidMoves(getter))
                 elif len(move) < 2:
                     print("Type a real move.")
                 elif any(var in move for var in ("whirlwind", "ww", "Whirlwind", "WW")):
@@ -375,7 +382,6 @@ class ChessClient:
                             else:
                                 print('Please enter \'yes\' or \'no\'.')
                             break
- ##################################################################################################################################################
             else:
                 break
         f = open('san.pgn', 'w')
