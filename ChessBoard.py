@@ -33,23 +33,23 @@ class ChessBoard:
     army_name_dict = {
         1: "Classic",
         2: "Nemesis",
-        3: "Reaper",
-        4: "Empowered",
+        3: "Empowered",
+        4: "Reaper",
         5: "Two Kings",
         6: "Animals"}
 
     army_abr_dict = {
         1: "C", "C": 1,
         2: "N", "N": 2,
-        3: "R", "R": 3,
-        4: "E", "E": 4,
+        3: "E", "E": 3,
+        4: "R", "R": 4,
         5: "T", "T": 5,
         6: "A", "A": 6}
 
     CLASSIC = 1
     NEMESIS = 2
-    REAPER = 3
-    EMPOWERED = 4
+    EMPOWERED = 3
+    REAPER = 4
     TWOKINGS = 5
     ANIMALS = 6
 
@@ -59,10 +59,10 @@ class ChessBoard:
         'ClassicBlackSetUp': ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
         'NemesisWhiteSetUp': ['R', 'N', 'B', 'M', 'C', 'B', 'N', 'R'],
         'NemesisBlackSetUp': ['r', 'n', 'b', 'm', 'c', 'b', 'n', 'r'],
-        'ReaperWhiteSetUp': ['G', 'N', 'B', 'A', 'C', 'B', 'N', 'G'],
-        'ReaperBlackSetUp': ['g', 'n', 'b', 'a', 'c', 'b', 'n', 'g'],
         'EmpoweredWhiteSetUp': ['Z', 'Y', 'X', 'O', 'C', 'X', 'Y', 'Z'],
         'EmpoweredBlackSetUp': ['z', 'y', 'x', 'o', 'c', 'x', 'y', 'z'],
+        'ReaperWhiteSetUp': ['G', 'N', 'B', 'A', 'C', 'B', 'N', 'G'],
+        'ReaperBlackSetUp': ['g', 'n', 'b', 'a', 'c', 'b', 'n', 'g'],
         'TwoKingsWhiteSetUp': ['R', 'N', 'B', 'U', 'W', 'B', 'N', 'R'],
         'TwoKingsBlackSetUp': ['r', 'n', 'b', 'u', 'w', 'b', 'n', 'r'],
         'AnimalsWhiteSetUp': ['E', 'H', 'T', 'J', 'C', 'T', 'H', 'E'],
@@ -90,8 +90,8 @@ class ChessBoard:
     piece_to_army_dict = {
         "P": "Classic", "B": "Classic", "N": "Classic", "R": "Classic", "Q": "Classic", "K": "Classic",
         "L": "Nemesis", "M": "Nemesis",
-        "G": "Reaper", "A": "Reaper",
         "X": "Empowered", "Y": "Empowered", "Z": "Empowered", "O": "Empowered",
+        "G": "Reaper", "A": "Reaper",
         "U": "Two Kings", "W": "Two Kings",
         "T": "Animals", "H": "Animals", "E": "Animals", "J": "Animals",
         "C": "Generic"}
@@ -99,8 +99,8 @@ class ChessBoard:
     piece_to_name_dict = {
         "P": "Pawn", "B": "Bishop", "N": "Knight", "R": "Rook", "Q": "Queen", "K": "King",
         "L": "Pawn", "M": "Nemesis",
-        "G": "Ghost", "A": "Reaper",
         "X": "Bishop", "Y": "Knight", "Z": "Rook", "O": "Queen",
+        "G": "Ghost", "A": "Reaper",
         "U": "Warrior King", "W": "Warrior King",
         "T": "Tiger", "H": "Wild Horse", "E": "Elephant", "J": "Jungle Queen",
         "C": "King"}
@@ -108,8 +108,8 @@ class ChessBoard:
     army_piece_to_classic_piece_dict = {
         "P": "P", "B": "B", "N": "N", "R": "R", "Q": "Q", "K": "K",
         "L": "P", "M": "Q",
-        "G": "R", "A": "Q",
         "X": "B", "Y": "N", "Z": "R", "O": "Q",
+        "G": "R", "A": "Q",
         "U": "Q", "W": "K",
         "T": "B", "H": "N", "E": "R", "J": "Q",
         "C": "K"}
@@ -117,8 +117,8 @@ class ChessBoard:
     dueling_rank_dict = {
         "P": 1, "B": 2, "N": 2, "R": 3, "Q": 4,
         "L": 1, "M": 4,
-        "G": 3, "A": 4,
         "X": 2, "Y": 2, "Z": 3, "O": 4,
+        "G": 3, "A": 4,
         "U": 4,
         "T": 2, "H": 2, "E": 3, "J": 4}
 
@@ -375,11 +375,8 @@ class ChessBoard:
                         pieces.append((x, y))
         return pieces
 
-    def DistanceTo(self, fromPos, toPos):
-        distance_x = abs(fromPos[0] - toPos[0])
-        distance_y = abs(fromPos[1] - toPos[1])
-        distance = int(distance_x + distance_y)
-        return distance
+    def distanceTo(self, fromPos, toPos):
+        return int(math.sqrt((toPos[0] - fromPos[0])**2 + (toPos[1] - fromPos[1])**2))
 
     def setEP(self, epPos):
         self._ep[0], self._ep[1] = epPos
@@ -649,7 +646,7 @@ class ChessBoard:
                 if any(var in self._board[my][mx] for var in ('M', 'm', 'G', 'g')):
                     continue
             if any(var in self._board[my][mx] for var in ('E', 'e')):
-                if self.DistanceTo(fromPos, m) >= 3:
+                if self.distanceTo(fromPos, m) >= 3:
                     continue
             results.append(m)
         return results
@@ -664,7 +661,7 @@ class ChessBoard:
             if any(var in self._board[ty][tx] for var in ('M', 'm', 'G', 'g')):
                 return True
         if any(var in self._board[ty][tx] for var in ('E', 'e')):
-            if self.DistanceTo(fromPos, toPos) >= 3:
+            if self.distanceTo(fromPos, toPos) >= 3:
                 return True
         return False
 
@@ -967,18 +964,6 @@ class ChessBoard:
         moves = self.checkKingGuard(fromPos, moves)
         return list(OrderedDict.fromkeys(moves))
 
-    def getValidReaperGhostMoves(self, fromPos):
-        moves = []
-
-        for y in range(0, 8):
-            for x in range(0, 8):
-                if self._board[y][x] == ".":
-                    moves.append((x, y))
-
-        moves = self.isInvulnerable(fromPos, moves)
-        moves = self.checkKingGuard(fromPos, moves)
-        return list(OrderedDict.fromkeys(moves))
-
     def getValidEmpoweredRookMoves(self, fromPos):
         moves = []
         fx, fy = fromPos
@@ -1007,6 +992,18 @@ class ChessBoard:
                     if len(m) > 0:
                         for n in m:
                             moves.append(n)
+        return list(OrderedDict.fromkeys(moves))
+
+    def getValidReaperGhostMoves(self, fromPos):
+        moves = []
+
+        for y in range(0, 8):
+            for x in range(0, 8):
+                if self._board[y][x] == ".":
+                    moves.append((x, y))
+
+        moves = self.isInvulnerable(fromPos, moves)
+        moves = self.checkKingGuard(fromPos, moves)
         return list(OrderedDict.fromkeys(moves))
 
     def getValidAnimalsElephantMoves(self, fromPos):
@@ -1043,6 +1040,18 @@ class ChessBoard:
         moves = self.checkKingGuard(fromPos, moves)
         return list(OrderedDict.fromkeys(moves))
 
+    def getValidEmpoweredQueenMoves(self, fromPos):
+        moves = []
+        dirs = [(-1, -1), (0, -1), (1, -1),
+                (-1, 0), (1, 0),
+                (-1, 1), (0, 1), (1, 1)]
+
+        moves = self.traceValidMoves(fromPos, dirs, 1)
+
+        moves = self.isInvulnerable(fromPos, moves)
+        moves = self.checkKingGuard(fromPos, moves)
+        return list(OrderedDict.fromkeys(moves))
+
     def getValidReaperReaperMoves(self, fromPos):
         moves = []
         fromPiece = self._board[fromPos[1]][fromPos[0]].isupper()
@@ -1055,18 +1064,6 @@ class ChessBoard:
                 else:
                     if y != 7 and self._board[y][x].isupper():
                         moves.append((x, y))
-
-        moves = self.isInvulnerable(fromPos, moves)
-        moves = self.checkKingGuard(fromPos, moves)
-        return list(OrderedDict.fromkeys(moves))
-
-    def getValidEmpoweredQueenMoves(self, fromPos):
-        moves = []
-        dirs = [(-1, -1), (0, -1), (1, -1),
-                (-1, 0), (1, 0),
-                (-1, 1), (0, 1), (1, 1)]
-
-        moves = self.traceValidMoves(fromPos, dirs, 1)
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves)
@@ -1416,19 +1413,6 @@ class ChessBoard:
         self._board[fromPos[1]][fromPos[0]] = "."
         return True
 
-    def moveReaperGhost(self, fromPos, toPos):
-        moves = self.getValidReaperGhostMoves(fromPos)
-
-        if not toPos in moves:
-            return False
-
-        self.clearEP()
-        self._fifty += 1
-
-        self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
-        self._board[fromPos[1]][fromPos[0]] = "."
-        return True
-
     def moveEmpoweredRook(self, fromPos, toPos):
         moves = self.getValidEmpoweredRookMoves(fromPos)
 
@@ -1442,6 +1426,19 @@ class ChessBoard:
         else:
             self._fifty = 0
             self._cur_move[3] = True
+
+        self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
+        self._board[fromPos[1]][fromPos[0]] = "."
+        return True
+
+    def moveReaperGhost(self, fromPos, toPos):
+        moves = self.getValidReaperGhostMoves(fromPos)
+
+        if not toPos in moves:
+            return False
+
+        self.clearEP()
+        self._fifty += 1
 
         self._board[toPos[1]][toPos[0]] = self._board[fromPos[1]][fromPos[0]]
         self._board[fromPos[1]][fromPos[0]] = "."
@@ -1544,13 +1541,14 @@ class ChessBoard:
         self._board[fromPos[1]][fromPos[0]] = "."
         return True
 
-    def moveReaperReaper(self, fromPos, toPos):
-        moves = self.getValidReaperReaperMoves(fromPos)
+    def moveEmpoweredQueen(self, fromPos, toPos):
+        moves = self.getValidEmpoweredQueenMoves(fromPos)
 
         if not toPos in moves:
             return False
 
         self.clearEP()
+
         if self._board[toPos[1]][toPos[0]] == ".":
             self._fifty += 1
         else:
@@ -1561,14 +1559,13 @@ class ChessBoard:
         self._board[fromPos[1]][fromPos[0]] = "."
         return True
 
-    def moveEmpoweredQueen(self, fromPos, toPos):
-        moves = self.getValidEmpoweredQueenMoves(fromPos)
+    def moveReaperReaper(self, fromPos, toPos):
+        moves = self.getValidReaperReaperMoves(fromPos)
 
         if not toPos in moves:
             return False
 
         self.clearEP()
-
         if self._board[toPos[1]][toPos[0]] == ".":
             self._fifty += 1
         else:
@@ -2383,11 +2380,6 @@ class ChessBoard:
             return m
         elif p == 'M':
             return self.getValidNemesisNemesisMoves(location)
-        ### Reaper Army
-        elif p == 'G':
-            return self.getValidReaperGhostMoves(location)
-        elif p == 'A':
-            return self.getValidReaperReaperMoves(location)
         ### Empowered Army
         elif p == 'X':
             return self.getValidEmpoweredBishopMoves(location)
@@ -2397,6 +2389,11 @@ class ChessBoard:
             return self.getValidEmpoweredRookMoves(location)
         elif p == 'O':
             return self.getValidEmpoweredQueenMoves(location)
+        ### Reaper Army
+        elif p == 'G':
+            return self.getValidReaperGhostMoves(location)
+        elif p == 'A':
+            return self.getValidReaperReaperMoves(location)
         ### Two Kings Army
         elif p == 'U':
             m, s = self.getValidTwoKingsWarriorKingMoves(location)

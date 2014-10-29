@@ -1,53 +1,53 @@
-a reaper reaper
-b classic bishop
-c generic king
-d
-e animals elephant
-f
-g reaper ghost
-h animals wild horse
-i
-j animals jungle queen
-k classic king
-l nemesis pawn
-m nemesis nemesis
-n classic knight
-o empowered queen
-p classic pawn
-q classic queen
-r classic rook
-s
-t animals tiger
-v
-u two kings warrior queen
-w two kings warrior king
-x empowered bishop
-y empowered knight
-z empowered rook
+A reaper reaper
+B classic bishop
+C generic king
+D
+E animals elephant
+F
+G reaper ghost
+H animals wild horse
+I
+J animals jungle queen
+K classic king
+L nemesis pawn
+M nemesis nemesis
+N classic knight
+O empowered queen
+P classic pawn
+Q classic queen
+R classic rook
+S
+T animals tiger
+V
+U two kings warrior queen
+W two kings warrior king
+X empowered bishop
+Y empowered knight
+Z empowered rook
 
-p classic pawn
-l nemesis pawn
+P classic pawn
+L nemesis pawn
 
-b classic bishop
-x empowered bishop
-t animals tiger
+B classic bishop
+X empowered bishop
+T animals tiger
 
-n classic knight
-y empowered knight
-h animals wild horse
+N classic knight
+Y empowered knight
+H animals wild horse
 
-r classic rook
-g reaper ghost
-z empowered rook
-e animals elephant
+R classic rook
+Z empowered rook
+G reaper ghost
+E animals elephant
 
-q classic queen
-m nemesis nemesis
-a reaper reaper
-o empowered queen
-u two kings warrior queen
-j animals jungle queen
+Q classic queen
+M nemesis nemesis
+O empowered queen
+A reaper reaper
+U two kings warrior queen
+J animals jungle queen
 
-k classic king
-w two kings warrior king
-c generic king
+K classic king
+W two kings warrior king
+C generic king

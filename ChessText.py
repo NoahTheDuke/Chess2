@@ -11,8 +11,8 @@ class ChessClient:
 
     def mainLoop(self):
         print("White Player, choose an army:")
-        print("1. Classic   2. Nemesis   3. Reaper")
-        print("4. Empowered 5. Two Kings 6. Animals")
+        print("1. Classic   2. Nemesis   3. Empowered")
+        print("4. Reaper 5. Two Kings 6. Animals")
         while True:
             print('Type the number, not the name.')
             userInput = getpass.getpass('> ')
@@ -26,8 +26,8 @@ class ChessClient:
         wArmy = userInput
 
         print("Black Player, choose an army:")
-        print("1. Classic   2. Nemesis   3. Reaper")
-        print("4. Empowered 5. Two Kings 6. Animals")
+        print("1. Classic   2. Nemesis   3. Empowered")
+        print("4. Reaper 5. Two Kings 6. Animals")
         while True:
             print('Type the number, not the name.')
             userInput = getpass.getpass('> ')
