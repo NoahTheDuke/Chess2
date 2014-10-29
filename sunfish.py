@@ -460,8 +460,7 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                         if q.islower(): break
 
     def isPieceInvulnerable(self, fromPos, toPos):
-        # TO DO: Fix this damned thing.
-        distance = lambda fromPos, toPos: int(math.ceil(abs(fromPos - toPos) / 9))
+        distance = lambda fromPos, toPos: int(math.sqrt((toPos // 10 - fromPos // 10)**2 + (toPos % 10 - fromPos % 10)**2))
         if any(var in self.board[fromPos] for var in ('K', 'W', 'U', 'C')):
             if any(var in self.board[toPos] for var in ('g')):
                 return True
@@ -469,9 +468,7 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
             if any(var in self.board[toPos] for var in ('m', 'g')):
                 return True
         if any(var in self.board[toPos] for var in ('e')):
-            print("distance({}, {}) = {}".format(str(fromPos),str(toPos),str(distance(fromPos, toPos))))
             if distance(fromPos, toPos) >= 3:
-                print('true')
                 return True
         return False
 
