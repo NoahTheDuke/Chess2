@@ -5,6 +5,7 @@ from __future__ import print_function
 import sys
 from itertools import count
 from collections import Counter, OrderedDict, namedtuple
+import math
 
 # The table size is the maximum number of elements in the transposition table.
 TABLE_SIZE = 1e6
@@ -21,27 +22,19 @@ MATE_VALUE = 30000
 # fast detection of moves that don't stay within the board.
 A1, H1, A8, H8 = 91, 98, 21, 28
 
-ClassicWhiteSetUp = 'RNBQKBNR'
-ClassicBlackSetUp = 'rnbqkbnr'
-NemesisWhiteSetUp = 'RNBMCBNR'
-NemesisBlackSetUp = 'rnbmcbnr'
-ReaperWhiteSetUp = 'GNBACBNG'
-ReaperBlackSetUp = 'gnbacbng'
-EmpoweredWhiteSetUp = 'ZYXOCXYZ'
-EmpoweredBlackSetUp = 'zyxocxyz'
-TwoKingsWhiteSetUp = 'RNBUWBNR'
-TwoKingsBlackSetUp = 'rnbuwbnr'
-AnimalsWhiteSetUp = 'EHTJCTHE'
-AnimalsBlackSetUp = 'ehtjcthe'
-ClassicWhitePawns = 'P' * 8
-ClassicBlackPawns = 'p' * 8
-NemesisWhitePawns = 'L' * 8
-NemesisBlackPawns = 'l' * 8
+ClassicSetUp = 'RNBQKBNR'
+NemesisSetUp = 'RNBMCBNR'
+ReaperSetUp = 'GNBACBNG'
+EmpoweredSetUp = 'ZYXOCXYZ'
+TwoKingsSetUp = 'RNBUWBNR'
+AnimalsSetUp = 'EHTJCTHE'
+ClassicPawns = 'P' * 8
+NemesisPawns = 'L' * 8
 
-blackPieces = ClassicBlackSetUp
-blackPawns = ClassicBlackPawns
-whitePieces = ReaperWhiteSetUp
-whitePawns = ClassicWhitePawns
+blackPieces = ReaperSetUp.lower()
+blackPawns = ClassicPawns.lower()
+whitePieces = AnimalsSetUp
+whitePawns = ClassicPawns
 
 initial = (
     '         \n'  #   0 -  9
@@ -71,7 +64,7 @@ directions = {
     # bishops
     'B': (N+E, S+E, S+W, N+W),
     'X': (N+E, S+E, S+W, N+W),
-    'T': (N+E, S+E, S+W, N+W),
+    'T': (N+E, S+E, S+W, N+W, (N+E)*2, (S+E)*2, (S+W)*2, (N+W)*2),
     # knights
     'N': (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W),
     'Y': (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W),
@@ -97,7 +90,8 @@ directions = {
         41, 42, 43, 44, 45, 46, 47, 48,
         51, 52, 53, 54, 55, 56, 57, 58,
         61, 62, 63, 64, 65, 66, 67, 68,
-        71, 72, 73, 74, 75, 76, 77, 78),
+        71, 72, 73, 74, 75, 76, 77, 78,
+        81, 82, 83, 84, 85, 86, 87, 88),
     'U': (N, E, S, W, N+E, S+E, S+W, N+W),
     'J': (N, E, S, W, 2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W),
     # kings
@@ -107,6 +101,7 @@ directions = {
 }
 
 pst = {
+    # Classic Pawn
     'P': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -120,6 +115,7 @@ pst = {
         0, 198, 198, 198, 198, 198, 198, 198, 198, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Nemesis Pawn
     'L': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -133,6 +129,7 @@ pst = {
         0, 198, 198, 198, 198, 198, 198, 198, 198, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Classic Bishop
     'B': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -146,6 +143,7 @@ pst = {
         0, 792, 819, 812, 803, 803, 812, 819, 792, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Empowered Bishop
     'X': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -159,6 +157,7 @@ pst = {
         0, 792, 819, 812, 803, 803, 812, 819, 792, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Animals Tiger
     'T': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -172,6 +171,7 @@ pst = {
         0, 792, 819, 812, 803, 803, 812, 819, 792, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Classic Knight
     'N': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -185,6 +185,7 @@ pst = {
         0, 683, 718, 742, 754, 754, 742, 718, 683, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Empowered Knight
     'Y': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -198,6 +199,7 @@ pst = {
         0, 683, 718, 742, 754, 754, 742, 718, 683, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Animals Wild Horses
     'H': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -211,6 +213,7 @@ pst = {
         0, 683, 718, 742, 754, 754, 742, 718, 683, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Classic Rooks
     'R': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -224,6 +227,7 @@ pst = {
         0, 1258, 1263, 1268, 1272, 1272, 1268, 1263, 1258, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Empowered Rooks
     'Z': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -237,6 +241,7 @@ pst = {
         0, 1258, 1263, 1268, 1272, 1272, 1268, 1263, 1258, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Reaper Ghosts
     'G': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -250,6 +255,7 @@ pst = {
         0, 1258, 1263, 1268, 1272, 1272, 1268, 1263, 1258, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Animals Elephants
     'E': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -263,6 +269,7 @@ pst = {
         0, 1258, 1263, 1268, 1272, 1272, 1268, 1263, 1258, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Classic Queens
     'Q': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -276,6 +283,7 @@ pst = {
         0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Nemesis Nemesis
     'M': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -289,6 +297,7 @@ pst = {
         0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Empowered Queen
     'O': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -302,6 +311,7 @@ pst = {
         0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Reaper Reaper
     'A': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -315,6 +325,7 @@ pst = {
         0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Two Kings Warrior Queen
     'U': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -328,6 +339,7 @@ pst = {
         0, 60298, 60332, 60273, 60225, 60225, 60273, 60332, 60298, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Animals Jungle Queen
     'J': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -341,6 +353,7 @@ pst = {
         0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Classic King
     'K': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -354,6 +367,7 @@ pst = {
         0, 60298, 60332, 60273, 60225, 60225, 60273, 60332, 60298, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Two Kings Warrior King
     'W': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -367,6 +381,7 @@ pst = {
         0, 60298, 60332, 60273, 60225, 60225, 60273, 60332, 60298, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    # Generic King
     'C': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -415,41 +430,38 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                             yield (i, d)
                     else:
                         if not self.isPieceInvulnerable(i, d):
+                            if q.isupper(): break
                             yield (i, d)
                 else:
                     for j in count(i+d, d):
                         q = self.board[j]
                         # Stay inside the board
                         if q.isspace(): break
-                        if i == A1 and q == 'K' and self.wc[0]: yield (j, j-2)
                         # Castling
+                        if i == A1 and q == 'K' and self.wc[0]: yield (j, j-2)
                         if i == H1 and q == 'K' and self.wc[1]: yield (j, j+2)
-                        # No friendly captures
+                        # No friendly captures, except for Wild Horses and Elephants
                         if p != 'H':
                             if p != 'E':
                                 if q.isupper(): break
-                            else:
-                                if q == 'K': break
-                        else:
-                            if q == 'K': break
                         # Classic pawn stuff
                         if p == 'P' and d in (N+W, N+E) and q == '.' and j not in (self.ep, self.kp): break
                         if p == 'P' and d in (N, 2*N) and q != '.': break
                         if p == 'P' and d == 2*N and (i < A1+N or self.board[i+N] != '.'): break
                         # Nemesis pawn stuff
                         if p == 'L' and d in (N+W, N+E) and q == '.' and j not in (self.ep, self.kp): break
-                        if p == 'L' and d in (N, 2*N) and q != '.': break
-                        if p == 'L' and d == 2*N and (i < A1+N or self.board[i+N] != '.'): break
                         # Move it
                         if not self.isPieceInvulnerable(i, j):
                             yield (i, j)
                         else: break
                         # Stop crawlers from sliding
-                        if p in ('P', 'L', 'N', 'Y', 'H', 'O', 'U', 'K', 'W', 'C'): break
+                        if p in ('P', 'L', 'T', 'N', 'Y', 'H', 'O', 'U', 'K', 'W', 'C'): break
                         # No sliding after captures
                         if q.islower(): break
 
     def isPieceInvulnerable(self, fromPos, toPos):
+        # TO DO: Fix this damned thing.
+        distance = lambda fromPos, toPos: int(math.ceil(abs(fromPos - toPos) / 9))
         if any(var in self.board[fromPos] for var in ('K', 'W', 'U', 'C')):
             if any(var in self.board[toPos] for var in ('g')):
                 return True
@@ -457,7 +469,9 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
             if any(var in self.board[toPos] for var in ('m', 'g')):
                 return True
         if any(var in self.board[toPos] for var in ('e')):
-            if self.DistanceTo(fromPos, toPos) >= 3:
+            print("distance({}, {}) = {}".format(str(fromPos),str(toPos),str(distance(fromPos, toPos))))
+            if distance(fromPos, toPos) >= 3:
+                print('true')
                 return True
         return False
 
@@ -477,8 +491,11 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
         wc, bc, ep, kp = self.wc, self.bc, 0, 0
         score = self.score + self.value(move)
         # Actual move
-        board = put(board, j, board[i])
-        board = put(board, i, '.')
+        if p == 'T' and q != '.':
+            board = put(board, j, '.')
+        else:
+            board = put(board, j, board[i])
+            board = put(board, i, '.')
         # Castling rights
         if i == A1: wc = (False, wc[1])
         if i == H1: wc = (wc[0], False)
@@ -495,7 +512,7 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
         if p == 'P':
             if A8 <= j <= H8:
                 board = put(board, j, 'Q')
-            if j - i == 2*N:
+            if j - i == N * 2:
                 ep = i + N
             if j - i in (N+W, N+E) and q == '.':
                 board = put(board, j+S, '.')
@@ -511,11 +528,11 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
         if q.islower():
             score += pst[q.upper()][j]
         # Castling check detection
-        if abs(j-self.kp) < 2:
+        if abs(j - self.kp) < 2:
             score += pst['K'][j]
         # Castling
-        if p == 'K' and abs(i-j) == 2:
-            score += pst['R'][(i+j)//2]
+        if p == 'K' and abs(i - j) == 2:
+            score += pst['R'][(i + j)//2]
             score -= pst['R'][A1 if j < i else H1]
         # Special pawn stuff
         if p == 'P':
@@ -638,12 +655,7 @@ if sys.version_info[0] == 2:
 
 
 def parse(c):
-    print(str(c))
     fil, rank = ord(c[0]) - ord('a'), int(c[1]) - 1
-    print(str(fil))
-    print(str(rank))
-    print(str(A1) + str(fil) + str(10*rank))
-    print(str(A1 + fil - 10*rank))
     return A1 + fil - 10*rank
 
 
@@ -663,30 +675,45 @@ def main():
         move = None
         while move not in pos.genMoves():
             crdn = input("Your move: ")
+            if crdn == 'exit': sys.exit(0)
             try:
               move = parse(crdn[0:2]), parse(crdn[2:4])
-            except ValueError:
               # Inform the user when invalid input (e.g. "help") is entered
+            except ValueError:
+              print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
+            except IndexError:
               print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
         pos = pos.move(move)
 
         # After our move we rotate the board and print it again.
         # This allows us to see the effect of our move.
-        print(' '.join(pos.rotate().board))
+        print(' '.join(pos.board))
 
         # Fire up the engine to look for a move.
-        move, score = search(pos)
-        if score <= -MATE_VALUE:
-            print("You won")
-            break
-        if score >= MATE_VALUE:
-            print("You lost")
-            break
+        #move, score = search(pos)
+        #if score <= -MATE_VALUE:
+            #print("You won")
+            #break
+        #if score >= MATE_VALUE:
+            #print("You lost")
+            #break
 
+        move = None
+        while move not in pos.genMoves():
+            crdn = input("Your move: ")
+            if crdn == 'exit': sys.exit(0)
+            try:
+              move = parse(crdn[0:2]), parse(crdn[2:4])
+              # Inform the user when invalid input (e.g. "help") is entered
+            except ValueError:
+              print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
+            except IndexError:
+              print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
+        pos = pos.move(move)
         # The black player moves from a rotated position, so we have to
         # 'back rotate' the move before printing it.
-        print("My move:", render(119-move[0]) + render(119-move[1]))
-        pos = pos.move(move)
+        #print("My move:", render(119-move[0]) + render(119-move[1]))
+        #pos = pos.move(move)
 
 
 if __name__ == '__main__':
