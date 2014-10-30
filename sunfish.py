@@ -332,7 +332,7 @@ pst = {
         0, 60098, 60132, 60073, 60025, 60025, 60073, 60132, 60098, 0,
         0, 60119, 60153, 60094, 60046, 60046, 60094, 60153, 60119, 0,
         0, 60146, 60180, 60121, 60073, 60073, 60121, 60180, 60146, 0,
-        0, 60173, 60207, 60148, 60100, 60100, 60148, 60207, 60173, 0,
+        0, 60333, 60333, 60333, 60333, 60333, 60333, 60333, 60333, 0,
         0, 60196, 60230, 60171, 60123, 60123, 60171, 60230, 60196, 0,
         0, 60224, 60258, 60199, 60151, 60151, 60199, 60258, 60224, 0,
         0, 60287, 60321, 60262, 60214, 60214, 60262, 60321, 60287, 0,
@@ -433,17 +433,24 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                             if q.isupper(): break
                             yield (i, d)
                 else:
+                    elephant = False
                     for j in count(i+d, d):
                         q = self.board[j]
                         # Stay inside the board
                         if q.isspace(): break
                         # Castling
-                        if i == A1 and q == 'K' and self.wc[0]: yield (j, j-2)
-                        if i == H1 and q == 'K' and self.wc[1]: yield (j, j+2)
+                        if i == A1 and q == 'K' and self.wc[0]:
+                            yield (j, j-2)
+                        if i == H1 and q == 'K' and self.wc[1]:
+                            yield (j, j+2)
                         # No friendly captures, except for Wild Horses and Elephants
-                        if p != 'H':
-                            if p != 'E':
-                                if q.isupper(): break
+                        if q.isupper():
+                            if p != 'H' and p != 'E': break
+                            elif p == 'E':
+                                if not self.isPieceInvulnerable(i, j):
+                                    if not elephant:
+                                        elephant = True
+                                        yield(i, j)
                         # Classic pawn stuff
                         if p == 'P' and d in (N+W, N+E) and q == '.' and j not in (self.ep, self.kp): break
                         if p == 'P' and d in (N, 2*N) and q != '.': break
@@ -462,12 +469,12 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
     def isPieceInvulnerable(self, fromPos, toPos):
         distance = lambda fromPos, toPos: int(math.sqrt((toPos // 10 - fromPos // 10)**2 + (toPos % 10 - fromPos % 10)**2))
         if any(var in self.board[fromPos] for var in ('K', 'W', 'U', 'C')):
-            if any(var in self.board[toPos] for var in ('g')):
+            if any(var in self.board[toPos] for var in ('g', ' ', '\n')):
                 return True
         else:
-            if any(var in self.board[toPos] for var in ('m', 'g')):
+            if any(var in self.board[toPos] for var in ('m', 'g', ' ', '\n')):
                 return True
-        if any(var in self.board[toPos] for var in ('e')):
+        if any(var in self.board[toPos] for var in ('e', ' ', '\n')):
             if distance(fromPos, toPos) >= 3:
                 return True
         return False
@@ -490,6 +497,41 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
         # Actual move
         if p == 'T' and q != '.':
             board = put(board, j, '.')
+        elif p == 'E' and q != '.':
+            # 1: move E to next space.
+            # 2: start rampage loop
+            # 3: which direction?
+            # 4: check invulnerability of next square
+            # 5: move to next square
+            # 6: go to step 3 once
+            board = put(board, j, board[i])
+            board = put(board, i, '.')
+            for dr in (1, 2):
+                # is toPos on the same line?
+                if i // 10 - j // 10 == 0: # same line
+                    # is toPos east or west?
+                    if i - j < 0: # west
+                        if not self.isPieceInvulnerable(j + int(dr / 2), j + dr):
+                            board = put(board, j + dr, 'E')
+                            board = put(board, j + int(dr / 2), '.')
+                        else: break
+                    else: # east
+                        if not self.isPieceInvulnerable(j - int(dr / 2), j - dr):
+                            board = put(board, j - dr, 'E')
+                            board = put(board, j - int(dr / 2), '.')
+                        else: break
+                else: # different line
+                    # is toPos north or south?
+                    if i - j > 0: # north
+                        if not self.isPieceInvulnerable(j - int(dr / 2) * 10, j - dr * 10):
+                            board = put(board, j - dr * 10, 'E')
+                            board = put(board, j - int(dr / 2) * 10, '.')
+                        else: break
+                    else: # south
+                        if not self.isPieceInvulnerable(j + int(dr / 2) * 10, j + dr * 10):
+                            board = put(board, j + dr * 10, 'E')
+                            board = put(board, j + int(dr / 2) * 10, '.')
+                        else: break
         else:
             board = put(board, j, board[i])
             board = put(board, i, '.')
@@ -512,7 +554,7 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
             if j - i == N * 2:
                 ep = i + N
             if j - i in (N+W, N+E) and q == '.':
-                board = put(board, j+S, '.')
+                board = put(board, j + S, '.')
         # We rotate the returned position, so it's ready for the next player
         return Position(board, score, wa, ba, ws, bs, wc, bc, ep, kp).rotate()
 
@@ -684,33 +726,35 @@ def main():
 
         # After our move we rotate the board and print it again.
         # This allows us to see the effect of our move.
-        print(' '.join(pos.board))
+        print(' '.join(pos.rotate().board))
+        #print(' '.join(pos.board))
 
         # Fire up the engine to look for a move.
-        #move, score = search(pos)
-        #if score <= -MATE_VALUE:
-            #print("You won")
-            #break
-        #if score >= MATE_VALUE:
-            #print("You lost")
-            #break
+        move, score = search(pos)
+        if score <= -MATE_VALUE:
+            print("You won")
+            break
+        if score >= MATE_VALUE:
+            print("You lost")
+            break
 
-        move = None
-        while move not in pos.genMoves():
-            crdn = input("Your move: ")
-            if crdn == 'exit': sys.exit(0)
-            try:
-              move = parse(crdn[0:2]), parse(crdn[2:4])
-              # Inform the user when invalid input (e.g. "help") is entered
-            except ValueError:
-              print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
-            except IndexError:
-              print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
-        pos = pos.move(move)
+        #move = None
+        #while move not in pos.genMoves():
+            #crdn = input("Your move: ")
+            #if crdn == 'exit': sys.exit(0)
+            #try:
+              #move = parse(crdn[0:2]), parse(crdn[2:4])
+              ## Inform the user when invalid input (e.g. "help") is entered
+            #except ValueError:
+              #print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
+            #except IndexError:
+              #print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
+        #pos = pos.move(move)
+
         # The black player moves from a rotated position, so we have to
         # 'back rotate' the move before printing it.
-        #print("My move:", render(119-move[0]) + render(119-move[1]))
-        #pos = pos.move(move)
+        print("My move:", render(119-move[0]) + render(119-move[1]))
+        pos = pos.move(move)
 
 
 if __name__ == '__main__':
