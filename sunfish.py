@@ -31,9 +31,9 @@ AnimalsSetUp = 'EHTJCTHE'
 ClassicPawns = 'P' * 8
 NemesisPawns = 'L' * 8
 
-blackPieces = ReaperSetUp.lower()
+blackPieces = ClassicSetUp[::-1].lower()
 blackPawns = ClassicPawns.lower()
-whitePieces = AnimalsSetUp
+whitePieces = EmpoweredSetUp
 whitePawns = ClassicPawns
 
 initial = (
@@ -60,18 +60,18 @@ N, E, S, W = -10, 1, 10, -1
 directions = {
     # pawns
     'P': (N, 2*N, N+W, N+E),
-    'L': (N, E, S, W, N+E, N+W),
+    'L': (N, E, S, W, N+E, S+E, S+W, N+W),
     # bishops
     'B': (N+E, S+E, S+W, N+W),
-    'X': (N+E, S+E, S+W, N+W),
+    'X': (N, E, S, W, N+E, S+E, S+W, N+W, 2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W),
     'T': (N+E, S+E, S+W, N+W, (N+E)*2, (S+E)*2, (S+W)*2, (N+W)*2),
     # knights
     'N': (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W),
-    'Y': (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W),
+    'Y': (N, E, S, W, N+E, S+E, S+W, N+W, 2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W),
     'H': (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W),
     # rooks
     'R': (N, E, S, W),
-    'Z': (N, E, S, W),
+    'Z': (N, E, S, W, N+E, S+E, S+W, N+W, 2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W),
     'G': (
         21, 22, 23, 24, 25, 26, 27, 28,
         31, 32, 33, 34, 35, 36, 37, 38,
@@ -420,6 +420,10 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
         # For each of our pieces, iterate through each possible 'ray' of moves,
         # as defined in the 'directions' map. The rays are broken e.g. by
         # captures or immediately in case of pieces such as knights.
+        royal = []
+        for space, char in enumerate(self.board):
+            if any(var in char for var in ('k', 'c', 'u', 'w')):
+                royal.append(space)
         for i, p in enumerate(self.board):
             if not p.isupper(): continue
             for d in directions[p]:
@@ -455,14 +459,64 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                         if p == 'P' and d in (N+W, N+E) and q == '.' and j not in (self.ep, self.kp): break
                         if p == 'P' and d in (N, 2*N) and q != '.': break
                         if p == 'P' and d == 2*N and (i < A1+N or self.board[i+N] != '.'): break
-                        # Nemesis pawn stuff
-                        if p == 'L' and d in (N+W, N+E) and q == '.' and j not in (self.ep, self.kp): break
+                        crawlers = ['P', 'L', 'T', 'N', 'H', 'O', 'U', 'K', 'W', 'C']
                         # Move it
-                        if not self.isPieceInvulnerable(i, j):
-                            yield (i, j)
-                        else: break
+                        if self.isPieceInvulnerable(i, j): break
+                        # Nemesis pawn stuff
+                        elif p == 'L':
+                            if d in (N, E, S, W, S+W, S+E) and q != '.': break
+                            # 1 2 3
+                            # 4   5
+                            # 6 7 8
+                            for k in royal:
+                                if i // 10 - k // 10 > 0: # 1, 2, 3
+                                    if i % 10 - k % 10 > 0 and d in (N, W, N+W): # 1
+                                        yield (i, j)
+                                    elif i % 10 - k % 10 == 0 and d == N: # 2
+                                        yield (i, i+N)
+                                    elif i % 10 - k % 10 < 0 and d in (N, E, N+E): # 3
+                                        yield (i, j)
+                                elif i // 10 - k // 10 == 0: # 4, 5
+                                    if i % 10 - k % 10 > 0 and d == W: # 4
+                                        yield (i, j)
+                                    elif i % 10 - k % 10 < 0 and d == E: # 5
+                                        yield (i, j)
+                                elif i // 10 - k // 10 < 0: # 6, 7, 8
+                                    if i % 10 - k % 10 > 0 and d in (S, W, S+W): # 6
+                                        yield (i, j)
+                                    elif i % 10 - k % 10 == 0 and d == S: # 7
+                                        yield (i, j)
+                                    elif i % 10 - k % 10 < 0 and d in (S, E, S+E): # 8
+                                        yield (i, j)
+                        elif any(var in p for var in ('X', 'Y', 'Z')):
+                            for dr in (N, E, S, W):
+                                if p == 'X':
+                                    if d in (N+E, S+E, S+W, N+W):
+                                        yield(i, j)
+                                    elif self.board[i+dr] == 'Y' and d in (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W):
+                                        yield(i, j)
+                                        crawlers.append('X')
+                                    elif self.board[i+dr] == 'Z' and d in (N, E, S, W):
+                                        yield(i, j)
+                                elif p == 'Y':
+                                    if self.board[i+dr] == 'X' and d in (N+E, S+E, S+W, N+W):
+                                        yield(i, j)
+                                    elif d in (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W):
+                                        yield(i, j)
+                                        crawlers.append('Y')
+                                    elif self.board[i+dr] == 'Z' and d in (N, E, S, W):
+                                        yield(i, j)
+                                elif p == 'Z':
+                                    if self.board[i+dr] == 'X' and d in (N+E, S+E, S+W, N+W):
+                                        yield(i, j)
+                                    elif self.board[i+dr] == 'Y' and d in (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W):
+                                        yield(i, j)
+                                        crawlers.append('Z')
+                                    elif d in (N, E, S, W):
+                                        yield(i, j)
+                        else: yield (i, j)
                         # Stop crawlers from sliding
-                        if p in ('P', 'L', 'T', 'N', 'Y', 'H', 'O', 'U', 'K', 'W', 'C'): break
+                        if p in crawlers: break
                         # No sliding after captures
                         if q.islower(): break
 
@@ -507,9 +561,9 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
             board = put(board, j, board[i])
             board = put(board, i, '.')
             for dr in (1, 2):
-                # is toPos on the same line?
-                if i // 10 - j // 10 == 0: # same line
-                    # is toPos east or west?
+                # is j on the same row?
+                if i // 10 - j // 10 == 0: # same row
+                    # is j east or west?
                     if i - j < 0: # west
                         if not self.isPieceInvulnerable(j + int(dr / 2), j + dr):
                             board = put(board, j + dr, 'E')
@@ -520,8 +574,8 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                             board = put(board, j - dr, 'E')
                             board = put(board, j - int(dr / 2), '.')
                         else: break
-                else: # different line
-                    # is toPos north or south?
+                else: # different row
+                    # is j north or south?
                     if i - j > 0: # north
                         if not self.isPieceInvulnerable(j - int(dr / 2) * 10, j - dr * 10):
                             board = put(board, j - dr * 10, 'E')
