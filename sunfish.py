@@ -6,6 +6,8 @@ import sys
 from itertools import count
 from collections import Counter, OrderedDict, namedtuple
 import math
+import getpass
+import string
 
 # The table size is the maximum number of elements in the transposition table.
 TABLE_SIZE = 1e6
@@ -22,40 +24,11 @@ MATE_VALUE = 30000
 # fast detection of moves that don't stay within the board.
 A1, H1, A8, H8 = 91, 98, 21, 28
 
-ClassicSetUp = 'RNBQKBNR'
-NemesisSetUp = 'RNBMCBNR'
-ReaperSetUp = 'GNBACBNG'
-EmpoweredSetUp = 'ZYXOCXYZ'
-TwoKingsSetUp = 'RNBUWBNR'
-AnimalsSetUp = 'EHTJCTHE'
-ClassicPawns = 'P' * 8
-NemesisPawns = 'L' * 8
-
-blackPieces = ClassicSetUp[::-1].lower()
-blackPawns = ClassicPawns.lower()
-whitePieces = EmpoweredSetUp
-whitePawns = ClassicPawns
-
-initial = (
-    '         \n'  #   0 -  9
-    '         \n'  #  10 - 19
-    ' '+blackPieces+'\n'  #  20 - 29
-    ' '+blackPawns+'\n'  #  30 - 39
-    ' ........\n'  #  40 - 49
-    ' ........\n'  #  50 - 59
-    ' ........\n'  #  60 - 69
-    ' ........\n'  #  70 - 79
-    ' '+whitePawns+'\n'  #  80 - 89
-    ' '+whitePieces+'\n'  #  90 - 99
-    '         \n'  # 100 -109
-    '          '   # 110 -119
-)
-
 ###############################################################################
 # Move and evaluation tables
 ###############################################################################
 
-N, E, S, W = -10, 1, 10, -1
+N, E, S, W, H = -10, 1, 10, -1, 0
 
 directions = {
     # pawns
@@ -92,11 +65,11 @@ directions = {
         61, 62, 63, 64, 65, 66, 67, 68,
         71, 72, 73, 74, 75, 76, 77, 78,
         81, 82, 83, 84, 85, 86, 87, 88),
-    'U': (N, E, S, W, N+E, S+E, S+W, N+W),
+    'U': (N, E, S, W, H, N+E, S+E, S+W, N+W),
     'J': (N, E, S, W, 2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W),
     # kings
     'K': (N, E, S, W, N+E, S+E, S+W, N+W),
-    'W': (N, E, S, W, N+E, S+E, S+W, N+W),
+    'W': (N, E, S, W, H, N+E, S+E, S+W, N+W),
     'C': (N, E, S, W, N+E, S+E, S+W, N+W)
 }
 
@@ -449,7 +422,8 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                             yield (j, j+2)
                         # No friendly captures, except for Wild Horses and Elephants
                         if q.isupper():
-                            if p != 'H' and p != 'E': break
+                            if p == q: pass
+                            elif p != 'H' and p != 'E': break
                             elif p == 'E':
                                 if not self.isPieceInvulnerable(i, j):
                                     if not elephant:
@@ -469,51 +443,62 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                             # 4   5
                             # 6 7 8
                             for k in royal:
-                                if i // 10 - k // 10 > 0: # 1, 2, 3
-                                    if i % 10 - k % 10 > 0 and d in (N, W, N+W): # 1
+                                row = i // 10 - k // 10
+                                column = i % 10 - k % 10
+                                if row > 0: # 1, 2, 3
+                                    if column > 0 and d in (N, W, N+W): # 1
                                         yield (i, j)
-                                    elif i % 10 - k % 10 == 0 and d == N: # 2
-                                        yield (i, i+N)
-                                    elif i % 10 - k % 10 < 0 and d in (N, E, N+E): # 3
+                                    elif column == 0 and d == N: # 2
                                         yield (i, j)
-                                elif i // 10 - k // 10 == 0: # 4, 5
-                                    if i % 10 - k % 10 > 0 and d == W: # 4
+                                    elif column < 0 and d in (N, E, N+E): # 3
                                         yield (i, j)
-                                    elif i % 10 - k % 10 < 0 and d == E: # 5
+                                elif row == 0: # 4, 5
+                                    if column > 0 and d == W: # 4
                                         yield (i, j)
-                                elif i // 10 - k // 10 < 0: # 6, 7, 8
-                                    if i % 10 - k % 10 > 0 and d in (S, W, S+W): # 6
+                                    elif column < 0 and d == E: # 5
                                         yield (i, j)
-                                    elif i % 10 - k % 10 == 0 and d == S: # 7
+                                elif row < 0: # 6, 7, 8
+                                    if column > 0 and d in (S, W, S+W): # 6
                                         yield (i, j)
-                                    elif i % 10 - k % 10 < 0 and d in (S, E, S+E): # 8
+                                    elif column == 0 and d == S: # 7
+                                        yield (i, j)
+                                    elif column < 0 and d in (S, E, S+E): # 8
                                         yield (i, j)
                         elif any(var in p for var in ('X', 'Y', 'Z')):
                             for dr in (N, E, S, W):
+                                idr = i+dr
                                 if p == 'X':
                                     if d in (N+E, S+E, S+W, N+W):
                                         yield(i, j)
-                                    elif self.board[i+dr] == 'Y' and d in (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W):
+                                    elif self.board[idr] == 'Y' and d in (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W):
                                         yield(i, j)
                                         crawlers.append('X')
-                                    elif self.board[i+dr] == 'Z' and d in (N, E, S, W):
+                                    elif self.board[idr] == 'Z' and d in (N, E, S, W):
                                         yield(i, j)
                                 elif p == 'Y':
-                                    if self.board[i+dr] == 'X' and d in (N+E, S+E, S+W, N+W):
+                                    if self.board[idr] == 'X' and d in (N+E, S+E, S+W, N+W):
                                         yield(i, j)
                                     elif d in (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W):
                                         yield(i, j)
                                         crawlers.append('Y')
-                                    elif self.board[i+dr] == 'Z' and d in (N, E, S, W):
+                                    elif self.board[idr] == 'Z' and d in (N, E, S, W):
                                         yield(i, j)
                                 elif p == 'Z':
-                                    if self.board[i+dr] == 'X' and d in (N+E, S+E, S+W, N+W):
+                                    if self.board[idr] == 'X' and d in (N+E, S+E, S+W, N+W):
                                         yield(i, j)
-                                    elif self.board[i+dr] == 'Y' and d in (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W):
+                                    elif self.board[idr] == 'Y' and d in (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W):
                                         yield(i, j)
                                         crawlers.append('Z')
                                     elif d in (N, E, S, W):
                                         yield(i, j)
+                        elif any(var in p for var in ('U', 'W')):
+                            if d == H: # whirlwind
+                                cant = False
+                                for dr in (N, E, S, W, N+E, S+E, S+W, N+W):
+                                    if any(var in self.board[i+dr] for var in ('U', 'W')):
+                                        cant = True
+                                if cant == False: yield(i, j)
+                            else: yield(i, j)
                         else: yield (i, j)
                         # Stop crawlers from sliding
                         if p in crawlers: break
@@ -586,6 +571,14 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                             board = put(board, j + dr * 10, 'E')
                             board = put(board, j + int(dr / 2) * 10, '.')
                         else: break
+        elif any(var in p for var in ('U', 'W')):
+            if i == j:
+                for dr in (N, E, S, W, N+E, S+E, S+W, N+W):
+                    if board[i+dr].isspace(): continue
+                    else: board = put(board, i+dr, '.')
+            else:
+                board = put(board, j, board[i])
+                board = put(board, i, '.')
         else:
             board = put(board, j, board[i])
             board = put(board, i, '.')
@@ -758,7 +751,66 @@ def render(i):
 
 
 def main():
-    pos = Position(initial, 0, 1, 1, 3, 3, (True,True), (True,True), 0, 0)
+
+    print("White Player, choose an army:")
+    print("1. Classic   2. Nemesis   3. Empowered")
+    print("4. Reaper 5. Two Kings 6. Animals")
+    while True:
+        print('Type the number, not the name.')
+        userInput = getpass.getpass('> ')
+        if userInput in string.digits:
+            if int(userInput) < 7:
+                if int(userInput) > 0:
+                    break
+            print('Please enter only one of the above.')
+        else:
+            print('Please enter only one character')
+    wArmy = int(userInput)
+
+    print("Black Player, choose an army:")
+    print("1. Classic   2. Nemesis   3. Empowered")
+    print("4. Reaper 5. Two Kings 6. Animals")
+    while True:
+        print('Type the number, not the name.')
+        userInput = getpass.getpass('> ')
+        if userInput in string.digits:
+            if int(userInput) < 7:
+                if int(userInput) > 0:
+                    break
+            print('Please enter only one of the above.')
+        else:
+            print('Please enter only one of the above.')
+    bArmy = int(userInput)
+
+    army_name_dict = {
+        1: ('RNBQKBNR', 'P' * 8),
+        2: ('RNBMCBNR', 'L' * 8),
+        3: ('GNBACBNG', 'P' * 8),
+        4: ('ZYXOCXYZ', 'P' * 8),
+        5: ('RNBUWBNR', 'P' * 8),
+        6: ('EHTJCTHE', 'P' * 8)}
+
+    blackArmy = str(army_name_dict[bArmy][0][::-1].lower())
+    blackPawns = str(army_name_dict[bArmy][1].lower())
+    whiteArmy = str(army_name_dict[wArmy][0])
+    whitePawns = str(army_name_dict[wArmy][1])
+
+    initial = (
+        '         \n'  #   0 -  9
+        '         \n'  #  10 - 19
+        ' '+blackArmy+'\n'  #  20 - 29
+        ' '+blackPawns+'\n'  #  30 - 39
+        ' ........\n'  #  40 - 49
+        ' ........\n'  #  50 - 59
+        ' ........\n'  #  60 - 69
+        ' ........\n'  #  70 - 79
+        ' '+whitePawns+'\n'  #  80 - 89
+        ' '+whiteArmy+'\n'  #  90 - 99
+        '         \n'  # 100 -109
+        '          '   # 110 -119
+    )
+
+    pos = Position(initial, 0, wArmy, bArmy, 3, 3, (True,True), (True,True), 0, 0)
     while True:
         # We add some spaces to the board before we print it.
         # That makes it more readable and pleasing.
