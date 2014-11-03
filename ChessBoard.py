@@ -262,7 +262,7 @@ class ChessBoard:
              self._fifty)
 
         # board, turn, wkc, wqc, bkc, bqc, epx, epy, game_result, warm, wsts, barm, bsts : fifty
-        s = "{}{}{}{}{}{}{}{}{}{}{}{}{}:{}".format(*d)
+        s = "{}{}{:b}{:b}{:b}{:b}{}{}{}{}{}{}{}:{}".format(*d)
         return s
 
     def loadCurState(self):
@@ -2080,7 +2080,7 @@ class ChessBoard:
             for a in fparts[0]:
                 if a in "cnretaCNRETA":
                     newstate += str(self.army_abr_dict[a.upper()])
-            for s in fparts [1]:
+            for s in fparts[1]:
                 if s in "0123456":
                     newstate += s
         else:
@@ -2166,7 +2166,7 @@ class ChessBoard:
             elif turn == "w" and (self._board[y][x - 1] == 'P' or self._board[y][x + 1] == 'P'):
                 ep = "{}{}".format(("abcdefgh")[x], ("87654321")[y - 1])
 
-        move = (self._state_stack_pointer - self._stack_second_turns + 1) / 2
+        move = (self._state_stack_pointer - self._stack_second_turns + 1) // 2
         return "{} {} {} {} {} {} {}".format(armystones, board, turn, kq, ep, fifty, move)
 
     def getMoveCount(self):
