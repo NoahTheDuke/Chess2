@@ -2078,7 +2078,7 @@ class ChessBoard:
         # ARMIES + STONES
         if len(fparts) == 8:
             for a in fparts[0]:
-                if a in "cnretaCNRETA":
+                if a in "cnertaCNERTA":
                     newstate += str(self.army_abr_dict[a.upper()])
             for s in fparts[1]:
                 if s in "0123456":
