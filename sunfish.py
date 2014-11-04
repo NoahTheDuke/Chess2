@@ -8,6 +8,7 @@ from collections import Counter, OrderedDict, namedtuple
 import math
 import getpass
 import string
+import random
 
 # The table size is the maximum number of elements in the transposition table.
 TABLE_SIZE = 1e6
@@ -19,6 +20,7 @@ NODES_SEARCHED = 1e4
 # King value is set to twice this value such that if the opponent is
 # 8 queens up, but we got the king, we still exceed MATE_VALUE.
 MATE_VALUE = 30000
+MIDLINE_VALUE = 61000
 
 # Our board is represented as a 120 character string. The padding allows for
 # fast detection of moves that don't stay within the board.
@@ -225,7 +227,7 @@ pst = {
         0, 1258, 1263, 1268, 1272, 1272, 1268, 1263, 1258, 0,
         0, 1258, 1263, 1268, 1272, 1272, 1268, 1263, 1258, 0,
         0, 1258, 1263, 1268, 1272, 1272, 1268, 1263, 1258, 0,
-        0, 1258, 1263, 1268, 1272, 1272, 1268, 1263, 1258, 0,
+        0, 1234, 1234, 1234, 1234, 1234, 1234, 1234, 1234, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
     # Animals Elephants
@@ -305,7 +307,7 @@ pst = {
         0, 60098, 60132, 60073, 60025, 60025, 60073, 60132, 60098, 0,
         0, 60119, 60153, 60094, 60046, 60046, 60094, 60153, 60119, 0,
         0, 60146, 60180, 60121, 60073, 60073, 60121, 60180, 60146, 0,
-        0, 60333, 60333, 60333, 60333, 60333, 60333, 60333, 60333, 0,
+        0, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 0,
         0, 60196, 60230, 60171, 60123, 60123, 60171, 60230, 60196, 0,
         0, 60224, 60258, 60199, 60151, 60151, 60199, 60258, 60224, 0,
         0, 60287, 60321, 60262, 60214, 60214, 60262, 60321, 60287, 0,
@@ -333,7 +335,7 @@ pst = {
         0, 60098, 60132, 60073, 60025, 60025, 60073, 60132, 60098, 0,
         0, 60119, 60153, 60094, 60046, 60046, 60094, 60153, 60119, 0,
         0, 60146, 60180, 60121, 60073, 60073, 60121, 60180, 60146, 0,
-        0, 60333, 60333, 60333, 60333, 60333, 60333, 60333, 60333, 0,
+        0, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 0,
         0, 60196, 60230, 60171, 60123, 60123, 60171, 60230, 60196, 0,
         0, 60224, 60258, 60199, 60151, 60151, 60199, 60258, 60224, 0,
         0, 60287, 60321, 60262, 60214, 60214, 60262, 60321, 60287, 0,
@@ -347,7 +349,7 @@ pst = {
         0, 60098, 60132, 60073, 60025, 60025, 60073, 60132, 60098, 0,
         0, 60119, 60153, 60094, 60046, 60046, 60094, 60153, 60119, 0,
         0, 60146, 60180, 60121, 60073, 60073, 60121, 60180, 60146, 0,
-        0, 60333, 60333, 60333, 60333, 60333, 60333, 60333, 60333, 0,
+        0, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 0,
         0, 60196, 60230, 60171, 60123, 60123, 60171, 60230, 60196, 0,
         0, 60224, 60258, 60199, 60151, 60151, 60199, 60258, 60224, 0,
         0, 60287, 60321, 60262, 60214, 60214, 60262, 60321, 60287, 0,
@@ -361,7 +363,7 @@ pst = {
         0, 60098, 60132, 60073, 60025, 60025, 60073, 60132, 60098, 0,
         0, 60119, 60153, 60094, 60046, 60046, 60094, 60153, 60119, 0,
         0, 60146, 60180, 60121, 60073, 60073, 60121, 60180, 60146, 0,
-        0, 60333, 60333, 60333, 60333, 60333, 60333, 60333, 60333, 0,
+        0, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 0,
         0, 60196, 60230, 60171, 60123, 60123, 60171, 60230, 60196, 0,
         0, 60224, 60258, 60199, 60151, 60151, 60199, 60258, 60224, 0,
         0, 60287, 60321, 60262, 60214, 60214, 60262, 60321, 60287, 0,
@@ -501,12 +503,16 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                             else: yield(i, j)
                         else: yield (i, j)
                         # Stop crawlers from sliding
+                        if p == 'E' and self.distance(i, j) > 4: break
+                        if p == 'E' and self.board[j-d].isupper(): break
                         if p in crawlers: break
                         # No sliding after captures
                         if q.islower(): break
 
+    def distance(self, fromPos, toPos):
+        return int(math.sqrt((toPos // 10 - fromPos // 10)**2 + (toPos % 10 - fromPos % 10)**2))
+
     def isPieceInvulnerable(self, fromPos, toPos):
-        distance = lambda fromPos, toPos: int(math.sqrt((toPos // 10 - fromPos // 10)**2 + (toPos % 10 - fromPos % 10)**2))
         if any(var in self.board[fromPos] for var in ('K', 'W', 'U', 'C')):
             if any(var in self.board[toPos] for var in ('g', ' ', '\n')):
                 return True
@@ -514,14 +520,14 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
             if any(var in self.board[toPos] for var in ('m', 'g', ' ', '\n')):
                 return True
         if any(var in self.board[toPos] for var in ('e', ' ', '\n')):
-            if distance(fromPos, toPos) >= 3:
+            if self.distance(fromPos, toPos) >= 3:
                 return True
         return False
 
     def rotate(self):
         return Position(
             self.board[::-1].swapcase(), -self.score,
-            self.wa, self.ba, self.ws, self.bs,
+            self.ba, self.wa, self.bs, self.ws,
             self.bc, self.wc, 119-self.ep, 119-self.kp)
 
     def move(self, move):
@@ -545,32 +551,33 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
             # 6: go to step 3 once
             board = put(board, j, board[i])
             board = put(board, i, '.')
-            for dr in (1, 2):
-                # is j on the same row?
-                if i // 10 - j // 10 == 0: # same row
-                    # is j east or west?
-                    if i - j < 0: # west
-                        if not self.isPieceInvulnerable(j + int(dr / 2), j + dr):
-                            board = put(board, j + dr, 'E')
-                            board = put(board, j + int(dr / 2), '.')
-                        else: break
-                    else: # east
-                        if not self.isPieceInvulnerable(j - int(dr / 2), j - dr):
-                            board = put(board, j - dr, 'E')
-                            board = put(board, j - int(dr / 2), '.')
-                        else: break
-                else: # different row
-                    # is j north or south?
-                    if i - j > 0: # north
-                        if not self.isPieceInvulnerable(j - int(dr / 2) * 10, j - dr * 10):
-                            board = put(board, j - dr * 10, 'E')
-                            board = put(board, j - int(dr / 2) * 10, '.')
-                        else: break
-                    else: # south
-                        if not self.isPieceInvulnerable(j + int(dr / 2) * 10, j + dr * 10):
-                            board = put(board, j + dr * 10, 'E')
-                            board = put(board, j + int(dr / 2) * 10, '.')
-                        else: break
+            if 3 - self.distance(i, j) > 0:
+                for dr in range(abs(4 - self.distance(i, j))):
+                    # is j on the same row?
+                    if i // 10 - j // 10 == 0: # same row
+                        # is j east or west?
+                        if i - j < 0: # west
+                            if not self.isPieceInvulnerable(j + int(dr / 2), j + dr):
+                                board = put(board, j + dr, 'E')
+                                board = put(board, j + int(dr / 2), '.')
+                            else: break
+                        else: # east
+                            if not self.isPieceInvulnerable(j - int(dr / 2), j - dr):
+                                board = put(board, j - dr, 'E')
+                                board = put(board, j - int(dr / 2), '.')
+                            else: break
+                    else: # different row
+                        # is j north or south?
+                        if i - j > 0: # north
+                            if not self.isPieceInvulnerable(j - int(dr / 2) * 10, j - dr * 10):
+                                board = put(board, j - dr * 10, 'E')
+                                board = put(board, j - int(dr / 2) * 10, '.')
+                            else: break
+                        else: # south
+                            if not self.isPieceInvulnerable(j + int(dr / 2) * 10, j + dr * 10):
+                                board = put(board, j + dr * 10, 'E')
+                                board = put(board, j + int(dr / 2) * 10, '.')
+                            else: break
         elif any(var in p for var in ('U', 'W')):
             if i == j:
                 for dr in (N, E, S, W, N+E, S+E, S+W, N+W):
@@ -626,7 +633,9 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                 score += pst['Q'][j] - pst['P'][j]
             if j == self.ep:
                 score += pst['P'][j+S]
-        return score
+        if any(var in p for var in ('K', 'U', 'W', 'C')) and 50 < i < 59:
+            score = MIDLINE_VALUE
+        return score# * random.uniform(.90, 1.1)
 
 Entry = namedtuple('Entry', 'depth score gamma move')
 tp = OrderedDict()
@@ -835,7 +844,7 @@ def main():
         print(' '.join(pos.rotate().board))
         #print(' '.join(pos.board))
 
-        # Fire up the engine to look for a move.
+        #Fire up the engine to look for a move.
         move, score = search(pos)
         if score <= -MATE_VALUE:
             print("You won")
