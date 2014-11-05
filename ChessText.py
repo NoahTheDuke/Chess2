@@ -113,8 +113,10 @@ class ChessClient:
                 elif move == "get": # Displaying available moves for a given space.
                     getter = input("> ")
                     print(str(getter))
-                    getter = chess.parseTextMove(getter)[3:5]
-                    print(chess.getValidMoves(getter))
+                    try:
+                        getter = chess.parseTextMove(getter)[3:5]
+                        print(chess.getValidMoves(getter))
+                    except: pass
                 elif len(move) < 2:
                     print("Type a real move.")
                 elif any(var in move for var in ("whirlwind", "ww", "Whirlwind", "WW")):

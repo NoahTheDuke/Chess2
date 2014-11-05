@@ -16,6 +16,7 @@ from copy import deepcopy
 from collections import OrderedDict
 from itertools import zip_longest
 import numpy as np
+import math
 
 
 class ChessBoard:
@@ -113,6 +114,15 @@ class ChessBoard:
         "U": "Q", "W": "K",
         "T": "B", "H": "N", "E": "R", "J": "Q",
         "C": "K"}
+
+    classic_piece_to_army_piece_dict = {
+        #      c    n    e    r    t    a
+        'P': ['P', 'L', 'P', 'P', 'P', 'P'],
+        'B': ['B', 'B', 'X', 'B', 'B', 'T'],
+        'N': ['N', 'N', 'Y', 'N', 'N', 'H'],
+        'R': ['R', 'R', 'Z', 'G', 'R', 'E'],
+        'Q': ['Q', 'M', 'O', 'A', 'U', 'J'],
+        'K': ['K', 'C', 'C', 'C', 'W', 'C']}
 
     dueling_rank_dict = {
         "P": 1, "B": 2, "N": 2, "R": 3, "Q": 4,
@@ -764,7 +774,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves, specialMoves)
-        return (moves, specialMoves)
+        return (list(OrderedDict.fromkeys(moves)), specialMoves)
 
     def getValidNemesisPawnMoves(self, fromPos):
         moves = []
@@ -840,7 +850,7 @@ class ChessBoard:
 
         moves = self.isInvulnerable(fromPos, moves)
         moves = self.checkKingGuard(fromPos, moves, specialMoves)
-        return (moves, specialMoves)
+        return (list(OrderedDict.fromkeys(moves)), specialMoves)
 
     def getValidClassicBishopMoves(self, fromPos):
         moves = []
@@ -2043,10 +2053,26 @@ class ChessBoard:
         else:
             counter = 0
 
+        # GET ARMIES + STONES
+        armystones = ""
+        if len(fparts) == 8:
+            for a in fparts[0]:
+                if a in "cnertaCNERTA":
+                    armystones += str(self.army_abr_dict[a.upper()])
+            for s in fparts[1]:
+                if s in "0123456":
+                    armystones += s
+        else:
+            armystones += "1133"
+
         # BOARD
+        change = lambda p, a: self.classic_piece_to_army_piece_dict[p][a - 1]
         for c in fparts[counter]:
             if c in "kqrnbpKQRNBP":
-                newstate += c
+                if c.isupper():
+                    newstate += change(c, int(armystones[0]))
+                else:
+                    newstate += change(c.upper(), int(armystones[1])).lower()
             elif c in "12345678":
                 newstate += '.' * int(c)
         counter += 1
@@ -2075,16 +2101,8 @@ class ChessBoard:
         # GAME RESULT
         newstate += "0"
 
-        # ARMIES + STONES
-        if len(fparts) == 8:
-            for a in fparts[0]:
-                if a in "cnertaCNERTA":
-                    newstate += str(self.army_abr_dict[a.upper()])
-            for s in fparts[1]:
-                if s in "0123456":
-                    newstate += s
-        else:
-            newstate += "1133"
+        # SET ARMIES + STONES
+        newstate += armystones
 
         # HALF COUNT
         newstate += ":{}".format(fparts[counter])
@@ -2829,7 +2847,7 @@ class ChessBoard:
         board.append("  +-----------------+")
         rank = 8
         for l in self._board:
-            l = [self.formatPieceNames(var) for var in l]
+            #l = [self.formatPieceNames(var) for var in l]
             board.append("{} | {} {} {} {} {} {} {} {} |".format(rank, *l))
             rank -= 1
         board.append("  +-----------------+")
