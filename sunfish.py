@@ -20,7 +20,7 @@ NODES_SEARCHED = 1e4
 # King value is set to twice this value such that if the opponent is
 # 8 queens up, but we got the king, we still exceed MATE_VALUE.
 MATE_VALUE = 30000
-MIDLINE_VALUE = 61000
+MIDLINE_VALUE = 30000
 
 # Our board is represented as a 120 character string. The padding allows for
 # fast detection of moves that don't stay within the board.
@@ -75,6 +75,7 @@ directions = {
     'C': (N, E, S, W, N+E, S+E, S+W, N+W)
 }
 
+#Piece-Square Tables
 pst = {
     # Classic Pawn
     'P': (
@@ -83,9 +84,9 @@ pst = {
         0, 198, 198, 198, 198, 198, 198, 198, 198, 0,
         0, 178, 198, 198, 198, 198, 198, 198, 178, 0,
         0, 178, 198, 198, 198, 198, 198, 198, 178, 0,
-        0, 178, 198, 208, 218, 218, 208, 198, 178, 0,
-        0, 178, 198, 218, 238, 238, 218, 198, 178, 0,
-        0, 178, 198, 208, 218, 218, 208, 198, 178, 0,
+        0, 178, 208, 208, 208, 208, 208, 208, 178, 0,
+        0, 178, 238, 238, 238, 238, 238, 238, 178, 0,
+        0, 178, 218, 218, 218, 218, 218, 218, 178, 0,
         0, 178, 198, 198, 198, 198, 198, 198, 178, 0,
         0, 198, 198, 198, 198, 198, 198, 198, 198, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -262,14 +263,14 @@ pst = {
     'M': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
-        0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
-        0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
-        0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
-        0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
-        0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
-        0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
-        0, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 2529, 0,
+        0, 7000, 7000, 7000, 7000, 7000, 7000, 7000, 7000, 0,
+        0, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 0,
+        0, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 0,
+        0, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 0,
+        0, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 0,
+        0, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 0,
+        0, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 0,
+        0, -2529, -2529, -2529, -2529, -2529, -2529, -2529, -2529, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
     # Empowered Queen
@@ -372,14 +373,19 @@ pst = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
 
+# Piece Value Tables
+pvt = {
+    'P': 9
+}
 
 ###############################################################################
 # Chess logic
 ###############################################################################
 
-class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
+class Position(namedtuple('Position', 'board color score wa ba ws bs wc bc ep kp')):
     """ A state of a chess game
     board -- a 120 char representation of the board
+    color -- whose turn it is
     score -- the board evaluation
     wa -- white army
     ba -- black army
@@ -436,7 +442,7 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                         if p == 'P' and d in (N, 2*N) and q != '.': break
                         if p == 'P' and d == 2*N and (i < A1+N or self.board[i+N] != '.'): break
                         crawlers = ['P', 'L', 'T', 'N', 'H', 'O', 'U', 'K', 'W', 'C']
-                        # Move it
+                        # Check invinsibility
                         if self.isPieceInvulnerable(i, j): break
                         # Nemesis pawn stuff
                         elif p == 'L':
@@ -499,12 +505,19 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                                 for dr in (N, E, S, W, N+E, S+E, S+W, N+W):
                                     if any(var in self.board[i+dr] for var in ('U', 'W')):
                                         cant = True
-                                if cant == False: yield(i, j)
+                                if not cant: yield(i, j)
                             else: yield(i, j)
+                        elif p == 'T' and d in ((N+E)*2, (S+E)*2, (S+W)*2, (N+W)*2) and self.board[i+(d//2)].isupper():
+                            break
+                        elif p == 'M' and q not in ('k', 'u', 'w', 'c'):
+                            break
+                        # Move it
                         else: yield (i, j)
-                        # Stop crawlers from sliding
+                        # Stop limited movement pieces from going too far
                         if p == 'E' and self.distance(i, j) > 4: break
                         if p == 'E' and self.board[j-d].isupper(): break
+                        # Stop crawlers from sliding
+                        if p == 'J' and d in (2*N+E, N+2*E, S+2*E, 2*S+E, 2*S+W, S+2*W, N+2*W, 2*N+W): break
                         if p in crawlers: break
                         # No sliding after captures
                         if q.islower(): break
@@ -525,17 +538,19 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
         return False
 
     def rotate(self):
+        ep = 119 if self.ep == 0 else self.ep
+        kp = 119 if self.kp == 0 else self.kp
         return Position(
-            self.board[::-1].swapcase(), -self.score,
+            self.board[::-1].swapcase(), not self.color, -self.score,
             self.ba, self.wa, self.bs, self.ws,
-            self.bc, self.wc, 119-self.ep, 119-self.kp)
+            self.bc, self.wc, 119-ep, 119-kp)
 
     def move(self, move):
         i, j = move
         p, q = self.board[i], self.board[j]
         put = lambda board, i, p: board[:i] + p + board[i+1:]
         # Copy variables and reset ep and kp
-        board = self.board
+        board, color = self.board, self.color
         wa, ba, ws, bs = self.wa, self.ba, self.ws, self.bs
         wc, bc, ep, kp = self.wc, self.bc, 0, 0
         score = self.score + self.value(move)
@@ -586,6 +601,10 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
             else:
                 board = put(board, j, board[i])
                 board = put(board, i, '.')
+        elif p == 'M':
+            if any(var in q for var in ('.', 'k', 'u', 'w', 'c')):
+                board = put(board, j, board[i])
+                board = put(board, i, '.')
         else:
             board = put(board, j, board[i])
             board = put(board, i, '.')
@@ -610,7 +629,7 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
             if j - i in (N+W, N+E) and q == '.':
                 board = put(board, j + S, '.')
         # We rotate the returned position, so it's ready for the next player
-        return Position(board, score, wa, ba, ws, bs, wc, bc, ep, kp).rotate()
+        return Position(board, color, score, wa, ba, ws, bs, wc, bc, ep, kp).rotate()
 
     def value(self, move):
         i, j = move
@@ -635,7 +654,9 @@ class Position(namedtuple('Position', 'board score wa ba ws bs wc bc ep kp')):
                 score += pst['P'][j+S]
         if any(var in p for var in ('K', 'U', 'W', 'C')) and 50 < i < 59:
             score = MIDLINE_VALUE
-        return score# * random.uniform(.90, 1.1)
+        if q.isupper() and q in ('K', 'U', 'W', 'C'):
+            score = -30000
+        return score * random.uniform(.999, 1.001)
 
 Entry = namedtuple('Entry', 'depth score gamma move')
 tp = OrderedDict()
@@ -819,7 +840,7 @@ def main():
         '          '   # 110 -119
     )
 
-    pos = Position(initial, 0, wArmy, bArmy, 3, 3, (True,True), (True,True), 0, 0)
+    pos = Position(initial, 0, 0, wArmy, bArmy, 3, 3, (True,True), (True,True), 0, 0)
     while True:
         # We add some spaces to the board before we print it.
         # That makes it more readable and pleasing.
@@ -846,6 +867,13 @@ def main():
 
         #Fire up the engine to look for a move.
         move, score = search(pos)
+
+        # The black player moves from a rotated position, so we have to
+        # 'back rotate' the move before printing it.
+        print(str(move))
+        print("My move:", render(119-move[0]) + render(119-move[1]))
+        pos = pos.move(move)
+
         if score <= -MATE_VALUE:
             print("You won")
             break
@@ -866,10 +894,6 @@ def main():
               #print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
         #pos = pos.move(move)
 
-        # The black player moves from a rotated position, so we have to
-        # 'back rotate' the move before printing it.
-        print("My move:", render(119-move[0]) + render(119-move[1]))
-        pos = pos.move(move)
 
 
 if __name__ == '__main__':
