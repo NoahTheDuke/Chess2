@@ -459,7 +459,7 @@ class Position(namedtuple('Position', 'board color score wa ba ws bs wc bc ep kp
                         try:
                             q = self.board[j]
                         except IndexError:
-                            print("board: {}, i: {}, j: {}".format(self.board, i, j))
+                            print("i: {}, j: {}, board: {}".format(i, j, self.board))
                         # Stay inside the board
                         if q.isspace(): break
                         # Castling
@@ -682,6 +682,8 @@ class Position(namedtuple('Position', 'board color score wa ba ws bs wc bc ep kp
         # Capture
         if q.islower():
             score += pst[q.upper()][j]
+        if q.isupper():
+            score -= pst[q][j]//2
         # Castling check detection
         if abs(j - self.kp) < 2:
             score += pst['K'][j]
@@ -858,8 +860,8 @@ def main():
     army_name_dict = {
         1: ('RNBQKBNR', 'P' * 8),
         2: ('RNBMCBNR', 'L' * 8),
-        3: ('GNBACBNG', 'P' * 8),
-        4: ('ZYXOCXYZ', 'P' * 8),
+        3: ('ZYXOCXYZ', 'P' * 8),
+        4: ('GNBACBNG', 'P' * 8),
         5: ('RNBUWBNR', 'P' * 8),
         6: ('EHTJCTHE', 'P' * 8)}
 
@@ -908,31 +910,33 @@ def main():
         print(' '.join(pos.rotate().board))
         #print(' '.join(pos.board))
 
-        #Fire up the engine to look for a move.
-        #move, score = search(pos)
+        # Fire up the engine to look for a move.
+        move, score = search(pos)
 
         # The black player moves from a rotated position, so we have to
         # 'back rotate' the move before printing it.
-        #print("My move:", render(119-move[0]) + render(119-move[1]))
-        #pos = pos.move(move)
-
-        move = None
-        while move not in pos.genMoves():
-            crdn = input("Your move: ")
-            if crdn == 'exit': sys.exit(0)
-            try:
-              move = parse(crdn[0:2]), parse(crdn[2:4])
-              # Inform the user when invalid input (e.g. "help") is entered
-            except ValueError:
-              print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
-            except IndexError:
-              print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
+        print("My move:", render(119-move[0]) + render(119-move[1]))
         pos = pos.move(move)
 
+        #move = None
+        #while move not in pos.genMoves():
+            #crdn = input("Your move: ")
+            #if crdn == 'exit': sys.exit(0)
+            #try:
+              #move = parse(crdn[0:2]), parse(crdn[2:4])
+              ## Inform the user when invalid input (e.g. "help") is entered
+            #except ValueError:
+              #print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
+            #except IndexError:
+              #print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
+        #pos = pos.move(move)
+
         if score <= -MATE_VALUE:
+            print(' '.join(pos.board))
             print("You won")
             break
         if score >= MATE_VALUE:
+            print(' '.join(pos.board))
             print("You lost")
             break
 
