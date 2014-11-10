@@ -20,7 +20,7 @@ NODES_SEARCHED = 1e4
 # King value is set to twice this value such that if the opponent is
 # 8 queens up, but we got the king, we still exceed MATE_VALUE.
 MATE_VALUE = 30000
-MIDLINE_VALUE = 30000
+MIDLINE_VALUE = 35000
 
 # Our board is represented as a 120 character string. The padding allows for
 # fast detection of moves that don't stay within the board.
@@ -689,8 +689,13 @@ class Position(namedtuple('Position', 'board color second score wa ba ws bs wc b
                 ep = i + N
             if j - i in (N+W, N+E) and q == '.':
                 board = put(board, j + S, '.')
-        # We rotate the returned position, so it's ready for the next player
-        return Position(board, color, second, score, wa, ba, ws, bs, wc, bc, ep, kp).rotate()
+        if second:
+            return Position(board, color, False, score, wa, ba, ws, bs, wc, bc, ep, kp).rotate()
+        else:
+            if wa == 5:
+                return Position(board, color, True, score, wa, ba, ws, bs, wc, bc, ep, kp)
+            else:
+                return Position(board, color, False, score, wa, ba, ws, bs, wc, bc, ep, kp).rotate()
 
     def value(self, move):
         i, j = move
@@ -760,11 +765,14 @@ def bound(pos, gamma, depth):
     # This can be shown equal to maximizing the negative score, with a slightly
     # adjusted gamma value.
     best, bmove = -3*MATE_VALUE, None
-    for move in sorted(pos.genMoves(), key=pos.value, reverse=True):
+    for move in sorted(pos.genMoves(pos.second), key=pos.value, reverse=True):
         # We check captures with the value function, as it also contains ep and kp
         if depth <= 0 and pos.value(move) < 150:
             break
-        score = -bound(pos.move(move), 1-gamma, depth-1)
+        if pos.second:
+            score = bound(pos.move(move), 1-gamma, depth-1)
+        else:
+            score = -bound(pos.move(move), 1-gamma, depth-1)
         if score > best:
             best = score
             bmove = move
@@ -847,7 +855,7 @@ def render(i):
 def main():
 
     print("White Player, choose an army:")
-    print("1. Classic   2. Nemesis   3. Empowered")
+    print("1. Classic  2. Nemesis  3. Empowered")
     print("4. Reaper 5. Two Kings 6. Animals")
     while True:
         print('Type the number, not the name.')
@@ -862,7 +870,7 @@ def main():
     wArmy = int(userInput)
 
     print("Black Player, choose an army:")
-    print("1. Classic   2. Nemesis   3. Empowered")
+    print("1. Classic   2. Nemesis  3. Empowered")
     print("4. Reaper 5. Two Kings 6. Animals")
     while True:
         print('Type the number, not the name.')
@@ -924,18 +932,28 @@ def main():
               print("Invalid input. Please enter a move in the proper format (e.g. g8f6)")
         pos = pos.move(move)
 
-        # After our move we rotate the board and print it again.
-        # This allows us to see the effect of our move.
         print(' '.join(pos.rotate().board))
-        #print(' '.join(pos.board))
-
-        # Fire up the engine to look for a move.
         move, score = search(pos)
-
-        # The black player moves from a rotated position, so we have to
-        # 'back rotate' the move before printing it.
         print("My move:", render(119-move[0]) + render(119-move[1]))
         pos = pos.move(move)
+
+        if pos.second:
+            move, score = search(pos)
+            if move:
+                print(' '.join(pos.rotate().board))
+                print("My move:", render(119-move[0]) + render(119-move[1]))
+                pos = pos.move(move)
+            else:
+                score = 0
+                pos = Position(
+                        pos.board,
+                        pos.color,
+                        False, score,
+                        pos.wa, pos.ba,
+                        pos.ws, pos.bs,
+                        pos.wc, pos.bc,
+                        pos.ep, pos.kp)
+                pos = pos.rotate()
 
         #move = None
         #while move not in pos.genMoves():
