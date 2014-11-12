@@ -8,11 +8,11 @@ Fork and additions written by Noah Bogart, 2013+.
 
 Running
 =======
-As of 2013/12/03, the program is now Python 3-based, not Python 2.7. 819b287 is the last commit to be Python 2.7-compatible. I am sorry for any problems this causes anyone, but Python 3 is just too cool.
-
 To run: clone, cd into Chess2, "python ChessText.py".
 
-Input
+To run sunfish, cd into Chess2, "python sunfish.py".
+
+Input for Chess2
 =====
 * Input moves with: e4, e2e4, e2-e4, Ke2, etc.
 
@@ -28,12 +28,14 @@ Input
 
 * Print out FEN with: fen
 
+Input for sunfish
+=================
+* Input moves in longform: e2e4
+
+* Whirlwind by moving to the same location: e2e2
+
+* Exit with: exit
+
 Issues
 ======
-* Elephants can't check through units.
-
-* ~~Pawns can't choose what they promote to, they just promote to a Queen of their army type (which sucks for Empowered and creates a third Warrior King.)~~
-
-* ~~Move tracking is out of whack with the addition of duels and stones.~~
-
-* ~~Listing moves doesn't correctly note Two Kings second moves.~~
+* Sunfish: can move into check.
