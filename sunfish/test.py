@@ -21,7 +21,7 @@ def selfplay():
     """ Start a game sunfish vs. sunfish """
     wa, ba = (['C', 'N', 'E', 'R', 'T', 'A'])[random.randint(0, 5)], (['c', 'n', 'e', 'r', 't', 'a'])[random.randint(0, 5)]
     #pos = xboard.parseFEN('{}{} 33 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'.format(wa, ba))
-    pos = xboard.parseFEN('Ct 33 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+    pos = xboard.parseFEN('Ca 33 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
     print(' '.join(pos.board))
     print('#' * 10)
     for d in range(100):
@@ -46,13 +46,9 @@ def selfplay():
             else:
                 score = 0
                 pos = sunfish.Position(
-                        pos.board,
-                        pos.color,
-                        False, score,
-                        pos.wa, pos.ba,
-                        pos.ws, pos.bs,
-                        pos.wc, pos.bc,
-                        pos.ep, pos.kp)
+                        pos.board, pos.color, False, pos.score,
+                        pos.wa, pos.ba, pos.ws, pos.bs,
+                        pos.wc, pos.bc, pos.ep, pos.kp)
                 pos = pos.rotate()
         if score <= -30000:
             print("Game over. White wins.")

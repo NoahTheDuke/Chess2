@@ -313,14 +313,14 @@ pst = {
     'U': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 60098, 60132, 60073, 60025, 60025, 60073, 60132, 60098, 0,
-        0, 60119, 60153, 60094, 60046, 60046, 60094, 60153, 60119, 0,
-        0, 60146, 60180, 60121, 60073, 60073, 60121, 60180, 60146, 0,
-        0, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 0,
-        0, 60196, 60230, 60171, 60123, 60123, 60171, 60230, 60196, 0,
-        0, 60224, 60258, 60199, 60151, 60151, 60199, 60258, 60224, 0,
-        0, 60287, 60321, 60262, 60214, 60214, 60262, 60321, 60287, 0,
-        0, 60298, 60332, 60273, 60225, 60225, 60273, 60332, 60298, 0,
+        0, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 0,
+        0, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 0,
+        0, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 0,
+        0, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 0,
+        0, 60200, 60325, 60400, 60400, 60400, 60400, 60325, 60200, 0,
+        0, 60150, 60250, 60300, 60300, 60300, 60300, 60250, 60150, 0,
+        0, 60150, 60175, 60200, 60200, 60200, 60200, 60175, 60150, 0,
+        0, 60100, 60100, 60100, 60100, 60100, 60100, 60100, 60100, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
     # Animals Jungle Queen
@@ -355,14 +355,14 @@ pst = {
     'W': (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 60098, 60132, 60073, 60025, 60025, 60073, 60132, 60098, 0,
-        0, 60119, 60153, 60094, 60046, 60046, 60094, 60153, 60119, 0,
-        0, 60146, 60180, 60121, 60073, 60073, 60121, 60180, 60146, 0,
-        0, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 61000, 0,
-        0, 60196, 60230, 60171, 60123, 60123, 60171, 60230, 60196, 0,
-        0, 60224, 60258, 60199, 60151, 60151, 60199, 60258, 60224, 0,
-        0, 60287, 60321, 60262, 60214, 60214, 60262, 60321, 60287, 0,
-        0, 60298, 60332, 60273, 60225, 60225, 60273, 60332, 60298, 0,
+        0, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 0,
+        0, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 0,
+        0, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 0,
+        0, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 62000, 0,
+        0, 60200, 60325, 60400, 60400, 60400, 60400, 60325, 60200, 0,
+        0, 60150, 60250, 60300, 60300, 60300, 60300, 60250, 60150, 0,
+        0, 60150, 60175, 60200, 60200, 60200, 60200, 60175, 60150, 0,
+        0, 60100, 60100, 60100, 60100, 60100, 60100, 60100, 60100, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
     # Generic King
@@ -741,43 +741,43 @@ def bound(pos, gamma, depth):
     """ returns s(pos) <= r < gamma    if s(pos) < gamma
         returns s(pos) >= r >= gamma   if s(pos) >= gamma """
     global nodes; nodes += 1
-    print("1. gamma: {}, depth: {}".format(gamma, depth))
+    #print("1. gamma: {}, depth: {}".format(gamma, depth))
 
     # Look in the table if we have already searched this position before.
     # We use the table value if it was done with at least as deep a search
     # as ours, and the gamma value is compatible.
     entry = tp.get(pos)
-    print("2. entry: {}".format(entry))
+    #print("2. entry: {}".format(entry))
     if entry is not None and entry.depth >= depth and (
             entry.score < entry.gamma and entry.score < gamma or
             entry.score >= entry.gamma and entry.score >= gamma):
-        print("2.5. entry.score: {}".format(entry.score))
+        #print("2.5. entry.score: {}".format(entry.score))
         return entry.score
 
-    print("inbetween2&3")
+    #print("inbetween2&3")
     # Stop searching if we have won/lost.
     if abs(pos.score) >= MATE_VALUE:
-        print("3. pos.score >= MATE_VALUE?")
-        print("pos.score: {}".format(pos.score))
+        #print("3. pos.score >= MATE_VALUE?")
+        #print("pos.score: {}".format(pos.score))
         return pos.score
-    print("inbetween3&4")
+    #print("inbetween3&4")
 
     # Null move. Is also used for stalemate checking
     if pos.second:
-        print("nullscore -> pos.second ##############\n######################################################################")
-        pos = Position(pos.board, pos.color, False, 0,
+        #print("nullscore -> pos.second ##############\n######################################################################")
+        pos = Position(pos.board, pos.color, False, pos.score,
                 pos.wa, pos.ba, pos.ws, pos.bs,
                 pos.wc, pos.bc, pos.ep, pos.kp)
         nullscore = bound(pos.rotate(), 1-gamma, depth-3) if depth > 0 else pos.score
     else:
         nullscore = -bound(pos.rotate(), 1-gamma, depth-3) if depth > 0 else pos.score
     #nullscore = -MATE_VALUE*3 if depth > 0 else pos.score
-    print("4. nullscore: {}".format(nullscore))
+    #print("4. nullscore: {}".format(nullscore))
     if nullscore >= gamma:
-        print("4.5. nullscore >= gamma?")
-        print("{} >= {}".format(nullscore, gamma))
+        #print("4.5. nullscore >= gamma?")
+        #print("{} >= {}".format(nullscore, gamma))
         return nullscore
-    print("inbetween4&5")
+    #print("inbetween4&5")
 
     # We generate all possible, pseudo legal moves and order them to provoke
     # cuts. At the next level of the tree we are going to minimize the score.
@@ -785,40 +785,40 @@ def bound(pos, gamma, depth):
     # adjusted gamma value.
     best, bmove = -3*MATE_VALUE, None
     for move in sorted(pos.genMoves(pos.second), key=pos.value, reverse=True):
-        print("5. move: {}".format(move))
+        #print("5. move: {}".format(move))
         # We check captures with the value function, as it also contains ep and kp
         if depth <= 0 and pos.value(move) < 150:
-            print("5.5. depth <= 0 and pos.value(move) < 150?")
-            print("depth: {}, pos.value(move): {}".format(depth, pos.value(move)))
+            #print("5.5. depth <= 0 and pos.value(move) < 150?")
+            #print("depth: {}, pos.value(move): {}".format(depth, pos.value(move)))
             break
         if pos.second:
-            print("pos.second into bound")
+            #print("pos.second into bound")
             score = bound(pos.move(move), 1-gamma, depth-1)
         else:
-            print("else into bound")
+            #print("else into bound")
             score = -bound(pos.move(move), 1-gamma, depth-1)
         if score > best:
-            print("5.6. score > best?\n{} > {}?".format(score, best))
+            #print("5.6. score > best?\n{} > {}?".format(score, best))
             best = score
             bmove = move
         if score >= gamma:
-            print("5.7. score >= gamma?\n{} > {}?".format(score, gamma))
+            #print("5.7. score >= gamma?\n{} > {}?".format(score, gamma))
             break
 
-    print("inbetween5&6")
+    #print("inbetween5&6")
     # If there are no captures, or just not any good ones, stand pat
     if depth <= 0 and best < nullscore:
-        print("6. depth <= 0 and best < nullscore?")
-        print("depth: {}, best: {}, nullscore: {}".format(depth, best, nullscore))
+        #print("6. depth <= 0 and best < nullscore?")
+        #print("depth: {}, best: {}, nullscore: {}".format(depth, best, nullscore))
         return nullscore
 
-    print("inbetween6&7")
+    #print("inbetween6&7")
     # Check for stalemate. If best move loses king, but not doing anything
     # would save us. Not at all a perfect check.
     if depth > 0 and best <= -MATE_VALUE is None and nullscore > -MATE_VALUE:
-        print("7. best: 0")
+        #print("7. best: 0")
         best = 0
-    print("inbetween7&8")
+    #print("inbetween7&8")
 
     # We save the found move together with the score, so we can retrieve it in
     # the play loop. We also trim the transposition table in FILO order.
@@ -827,7 +827,7 @@ def bound(pos, gamma, depth):
         tp[pos] = Entry(depth, best, gamma, bmove)
         if len(tp) > TABLE_SIZE:
             tp.pop()
-    print("FINAL. best: {}".format(best))
+    #print("FINAL. best: {}".format(best))
     return best
 
 
@@ -845,7 +845,7 @@ def search(pos, maxn=NODES_SEARCHED):
         # 'lower < upper - margin' as the loop condition.
         lower, upper = -3*MATE_VALUE, 3*MATE_VALUE
         while lower < upper - 3:
-            print("lower: {}, upper: {}".format(lower, upper))
+            #print("lower: {}, upper: {}".format(lower, upper))
             gamma = (lower+upper+1)//2
             score = bound(pos, gamma, depth)
             if score >= gamma:
