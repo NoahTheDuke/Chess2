@@ -357,29 +357,28 @@ class ChessBoard:
     def SurroundedBy(self, fromPos, direction):
         # checks board at the locations: cloister, orthogonal, diagonal
         # returns a tuple of board coordinates that aren't empty
-        fromSquare_x = fromPos[0]
-        fromSquare_y = fromPos[1]
+        fx, fy = fromPos
         pieces = []
-        for y in range(fromSquare_y - 1, fromSquare_y + 2):
-            for x in range(fromSquare_x - 1, fromSquare_x + 2):
+        for y in range(fy - 1, fy + 2):
+            for x in range(fx - 1, fx + 2):
                 if x < 0 or x > 7 or y < 0 or y > 7:
                     continue
                 if direction == 0:  # cloister: all 8 spaces around
                     if not '.' in self._board[y][x]:
                         pieces.append((x, y))
                 elif direction == 1:  # orthogonal
-                    if ((x == fromSquare_x - 1 and y == fromSquare_y - 1) or
-                        (x == fromSquare_x + 1 and y == fromSquare_y - 1) or
-                        (x == fromSquare_x - 1 and y == fromSquare_y + 1) or
-                        (x == fromSquare_x + 1 and y == fromSquare_y + 1)):
+                    if ((x == fx - 1 and y == fy - 1) or
+                        (x == fx + 1 and y == fy - 1) or
+                        (x == fx - 1 and y == fy + 1) or
+                        (x == fx + 1 and y == fy + 1)):
                         continue
                     if not '.' in self._board[y][x]:
                         pieces.append((x, y))
                 elif direction == 2:  # diagonal
-                    if ((x == fromSquare_x - 1 and y == fromSquare_y) or
-                        (x == fromSquare_x + 1 and y == fromSquare_y) or
-                        (x == fromSquare_x and y == fromSquare_y - 1) or
-                        (x == fromSquare_x and y == fromSquare_y + 1)):
+                    if ((x == fx - 1 and y == fy) or
+                        (x == fx + 1 and y == fy) or
+                        (x == fx and y == fy - 1) or
+                        (x == fx and y == fy + 1)):
                         continue
                     if not '.' in self._board[y][x]:
                         pieces.append((x, y))
